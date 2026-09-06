@@ -139,7 +139,7 @@ lámina por lámina y cúmplelo. Mínimos que QA revisa:
 
 | Lámina | Qué lleva |
 |---|---|
-| Portada | La cara de la marca en una situación del tema (retrato del banco `assets/fotos/soul/` o uno nuevo con su Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
+| Portada | La cara de la marca en una situación del tema (foto real del banco `assets/fotos/reales/`, avatar o retrato Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Con `recorte` el título vive en la mitad izquierda: **máximo 6 palabras y ninguna de más de 11 letras**, o el ajuste automático lo encoge por debajo del mínimo (QA lo avisa). Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
 | Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Tres láminas seguidas con el mismo layout **y** el mismo tratamiento visual (sin imagen, sin marcador, sin número) se ven como PDF: varía la imagen o el recurso, no necesariamente el layout |
 | Guardable | Tipográfica (es la que se lee), con `kicker` «Guarda esto» y, si sobra espacio, un ícono pequeño `abajo` |
 | CTA | La cara de la marca como `recorte` grande (o `marca.avatar`) señalando al botón, con la misma fuente de rostro que la portada (todo real o todo Soul) |

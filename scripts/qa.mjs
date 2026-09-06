@@ -174,6 +174,9 @@ function parseColor(s, fondo) {
       const r = slide.getBoundingClientRect();
       const bg = slide.dataset.bg;
       const textos = [];
+      const panelEl = slide.querySelector('.panel');
+      const panelBox = panelEl ? panelEl.getBoundingClientRect() : null;
+      const panelBg = panelEl ? getComputedStyle(panelEl).backgroundColor : null;
       const walker = document.createTreeWalker(slide, NodeFilter.SHOW_TEXT);
       let node;
       while ((node = walker.nextNode())) {
@@ -186,6 +189,7 @@ function parseColor(s, fondo) {
         const critico = !!el.closest('.titulo,.sub,.cuerpo,.item,.cita,.dato,.paso,.cta-boton,.prompt,.loop,.col,.numero');
         let bgPropio = null, anc = el;
         while (anc && anc !== slide) { const b = getComputedStyle(anc).backgroundColor; if (b && !/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\)/.test(b) && b !== 'transparent') { bgPropio = b; break; } anc = anc.parentElement; }
+        if (!bgPropio && panelBox) { const cx = (rr.left + rr.right) / 2, cy = (rr.top + rr.bottom) / 2; if (cx > panelBox.left && cx < panelBox.right && cy > panelBox.top && cy < panelBox.bottom) bgPropio = panelBg; }  // texto sobre el panel (hermano absoluto, no ancestro)
         const esAcento = !!el.closest('.acento,.idx,.numero,.dato,.n,.autor');
         const clase = (el.closest('.titulo,.sub,.cuerpo,.item,.cita,.dato,.paso,.cta-boton,.prompt,.loop,.col,.top,.bottom,.sello,.chip,.kicker,.autor,.numero') || el).className || el.tagName;
         textos.push({ txt: node.textContent.trim().slice(0, 40), fs: parseFloat(cs.fontSize), color: cs.color, bgPropio, esAcento, clase: String(clase).split(' ')[0],
