@@ -1,9 +1,8 @@
 # Ganchos en español para la portada (y para la lámina 2)
 
-La portada decide si el carrusel existe: alrededor de una de cada cuatro personas se va en la
-primera lámina (23.8% según el análisis de Luis López Comunicación sobre carruseles con captions
-por lámina, luislopezcomunicacion.es), y lo que no gana el primer deslizamiento no se guarda ni
-se comparte. Este
+La portada decide si el carrusel existe: lo que no gana el primer deslizamiento no se guarda ni
+se comparte, y en los datos del autor las piezas cuya portada no decía de qué iban se quedaron en
+1,800-2,100 de alcance frente a una mediana de 5,500. Este
 documento es el banco de fórmulas con el que la skill escribe **tres portadas por tema**, las
 puntúa y se queda con una. Las fórmulas vienen de tres fuentes: los carruseles y reels que mejor
 funcionaron en la cuenta del autor (@manueldeleonmjr, cifras públicas de sus posts), creadores
@@ -89,7 +88,8 @@ el ángulo, no la fórmula: vuelve a `referencia.md`.
 
 ## La lámina 2 también es una portada
 
-Instagram vuelve a mostrar el carrusel a quien no deslizó, empezando por la segunda lámina. Por
+Instagram a menudo (no siempre) vuelve a mostrar el carrusel a quien no deslizó, empezando por
+la segunda lámina. Por
 eso la lámina 2 (`rol: rehook`) se escribe como **segunda portada**: reformula la promesa con el
 dato más fuerte, dice qué se lleva el lector al final («al final tienes la frase para cada uno»)
 y cierra con un `loop`. Prohibido «como te decía» o cualquier frase que dependa de la lámina 1.

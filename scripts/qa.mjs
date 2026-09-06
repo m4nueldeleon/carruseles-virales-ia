@@ -31,7 +31,9 @@ const LISTA_NEGRA = [
   'la herramienta definitiva', 'el futuro es ahora', 'sumérgete', 'no se trata solo de', 'en el mundo actual', 'game changer',
   'indetectable', 'éxito garantizado', 'hazte rico', 'ingreso pasivo',
 ];
-const CEBO = ['etiqueta a un amigo', 'etiqueta a', 'dale like', 'sígueme para más', 'link en bio', 'link en la bio', 'métete a mi perfil'];
+const CEBO = ['etiqueta a un amigo', 'etiqueta a', 'dale like', 'sígueme para más', 'sígueme y', 'link en bio', 'link en la bio', 'métete a mi perfil', 'comenta sí', 'comenta con', 'comenta el emoji', 'comparte con 5', 'comparte con 3', 'comparte con 10'];
+const DEPENDE_DE_LA_1 = [/\bcomo te dec[ií]a\b/i, /\bcomo vimos\b/i, /\bcontin[uú]a(mos)?\b/i, /\bcomo dije\b/i];
+const ENVIO = /\b(m[aá]nda(se)?lo|env[ií]a(se)?lo|comp[aá]rte(se)?lo|p[aá]sa(se)?lo|reenv[ií]a(se)?lo)\b/i;
 const FORMULAS_HOOK = [
   /^\s*no\b/i, /\bsin antes\b/i, /\bdeja de\b/i, /\d/, /\bvs\.?\b|\bcontra\b|\bantes\b.*\bahora\b/i, /\?\s*$/,
   /\bnadie te dice\b|\bnadie te enseña\b/i, /\bse nota\b|\bse dan cuenta\b/i, /\bgratis\b/i, /\bmal\b/i, /\berror(es)?\b/i,
@@ -86,6 +88,13 @@ if (!hookOk) aviso(1, 'El gancho no usa ninguna fórmula probada (número, negac
 if (!/\*[^*]+\*/.test(String(portada.titulo || ''))) aviso(1, 'La portada no marca una palabra en acento (*palabra*): la palabra imán guía el ojo.');
 const s2 = data.slides[1];
 if (s2 && !['rehook', 'agitacion', 'cuerpo'].includes(s2.rol || 'cuerpo')) aviso(2, 'La lámina 2 debería re-enganchar (rol rehook/agitacion): promesa concreta + open loop.');
+if (s2 && !s2.loop) aviso(2, 'La lámina 2 no cierra con loop: es la segunda portada (Instagram la muestra a quien no deslizó) y debe obligar a seguir.');
+if (s2 && DEPENDE_DE_LA_1.some(re => re.test(textoDe(s2)))) err(2, 'La lámina 2 depende de la 1 («como te decía», «como vimos», «continúa»): tiene que entenderse sola.');
+data.slides.forEach((s, i) => {
+  const elems = (s.items || []).length || (s.pasos || []).length || (s.chips || []).length;
+  const tope = (s.rol === 'cheatsheet' || ['lista', 'pasos', 'prompt', 'comparativa'].includes(s.layout)) ? 7 : 4;
+  if (elems > tope) aviso(i + 1, `${elems} elementos en una lámina: la memoria de trabajo aguanta ~4 (7 en la guardable). Agrupa o parte.`);
+});
 const cta = data.slides.filter(s => s.rol === 'cta');
 if (cta.length === 0) err(N, 'No hay lámina de CTA (rol "cta").');
 if (cta.length > 1) err(N, 'Más de una lámina de CTA: un carrusel pide UNA sola acción.');
@@ -123,7 +132,10 @@ if (data.caption) {
   if (primera.length > 125) aviso(0, `La primera línea del caption tiene ${primera.length} caracteres; se cortan a ~125 antes de "más".`);
   if (data.palabra_clave && !data.caption.toUpperCase().includes(String(data.palabra_clave).toUpperCase())) err(0, `La palabra clave «${data.palabra_clave}» no aparece en el caption.`);
   if (data.palabra_clave && !cta.some(c => textoDe(c).toUpperCase().includes(String(data.palabra_clave).toUpperCase()))) err(N, `La palabra clave «${data.palabra_clave}» no está en la lámina de CTA.`);
+  if (!ENVIO.test(data.caption) && !data.slides.some(s => ENVIO.test(textoDe(s)))) aviso(0, 'Falta la frase de envío con destinatario («Mándaselo a tu socio que…»): los envíos son la señal #1 de alcance a no seguidores.');
 } else aviso(0, 'No hay caption.');
+const conAlt = data.slides.filter(s => s.alt).length;
+if (conAlt === 0) aviso(0, 'Ninguna lámina trae `alt` (texto alternativo con la palabra clave del tema): Instagram y Google indexan ese texto.');
 const hashtags = data.hashtags || [];
 if (hashtags.length > 5) err(0, `${hashtags.length} hashtags: Instagram limita a 5 desde dic-2025.`);
 if (hashtags.length === 0) aviso(0, 'Sin hashtags: 3-5 de nicho ayudan a la búsqueda.');
@@ -182,7 +194,7 @@ function parseColor(s, fondo) {
   });
   await browser.close();
 
-  const SAFE = 80, UI = 140;
+  const SAFE = 80, UI = 150;
   for (const m of medidas) {
     if (m.desborde > 6) err(m.n, `El contenido desborda ${Math.round(m.desborde)}px aun reduciendo la letra 15%: recorta texto o cambia de layout.`);
     else if (m.ajuste > 8) aviso(m.n, `Hubo que reducir la letra ${m.ajuste}% para que cupiera: recorta el texto.`);
@@ -210,12 +222,17 @@ function parseColor(s, fondo) {
   const errores = problemas.filter(p => p.nivel === 'error');
   const avisos = problemas.filter(p => p.nivel === 'aviso');
   const tiene = re => problemas.some(p => re.test(p.msg));
+  const subConNumero = /\d/.test(String(portada.subtitulo || ''));
+  const portadaAnuncia = (portada.chips || []).length >= 3 || !!portada.imagen;
   const pts = {
-    gancho: (palPortada >= 3 && palPortada <= 7 ? 10 : palPortada <= 9 ? 6 : 0) + (hookOk ? 10 : 0) + (/\*[^*]+\*/.test(String(portada.titulo || '')) ? 4 : 0),
-    estructura: (N >= 7 && N <= 12 ? 8 : N >= 5 ? 4 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 5 : 0) + (conNumero >= 2 ? 6 : conNumero === 1 ? 3 : 0)
-      + (cuerpoN && conLoop / cuerpoN >= 0.5 ? 6 : conLoop ? 3 : 0) + (guardable ? 8 : 0) + (cta.length === 1 && data.palabra_clave ? 8 : cta.length === 1 ? 5 : 0),
-    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 8) + (tiene(/palabras: máximo/) ? 0 : 6) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste mínimo|contraste \d/) ? 3 : 6) + (tiene(/desborda|margen seguro/) ? 0 : 8),
-    copy: (tiene(/Frase de IA/) ? 0 : 6) + (data.caption && data.caption.split('\n')[0].length <= 125 ? 3 : 0) + (hashtags.length >= 3 && hashtags.length <= 5 ? 3 : 0) + (tiene(/Cebo de interacción/) ? 0 : 3),
+    gancho: (palPortada >= 3 && palPortada <= 7 ? 10 : palPortada <= 9 ? 6 : 0) + (hookOk ? 10 : 0) + (/\*[^*]+\*/.test(String(portada.titulo || '')) ? 4 : 0)
+      + (subConNumero ? 3 : 0) + (portadaAnuncia ? 3 : 0),
+    estructura: (N >= 7 && N <= 12 ? 6 : N >= 5 ? 3 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) && s2.loop ? 4 : s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 2 : 0)
+      + (conNumero >= 2 ? 5 : conNumero === 1 ? 2 : 0) + (cuerpoN && conLoop / cuerpoN >= 0.5 ? 5 : conLoop ? 2 : 0) + (guardable ? 7 : 0)
+      + (cta.length === 1 && data.palabra_clave ? 8 : cta.length === 1 ? 5 : 0),
+    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 6) + (tiene(/palabras: máximo/) ? 0 : 4) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 6),
+    copy: (tiene(/Frase de IA/) ? 0 : 5) + (data.caption && data.caption.split('\n')[0].length <= 125 ? 2 : 0) + (hashtags.length >= 3 && hashtags.length <= 5 ? 2 : 0)
+      + (tiene(/Cebo de interacción/) ? 0 : 3) + (tiene(/frase de envío/) ? 0 : 3),
   };
   const indice = Math.max(0, Math.min(100, Object.values(pts).reduce((a, b) => a + b, 0) - errores.length * 4));
   const veredicto = errores.length ? 'BLOQUEADO' : indice >= 80 ? 'LISTO' : indice >= 65 ? 'MEJORABLE' : 'REHACER';
@@ -224,7 +241,7 @@ function parseColor(s, fondo) {
   if (salidaJson) console.log(JSON.stringify(informe, null, 2));
   else {
     console.log(`\nQA · ${data.slug || path.basename(carpeta)} · ${N} láminas · look ${data.look}`);
-    console.log(`Índice de viralidad: ${indice}/100 → ${veredicto}   (gancho ${pts.gancho}/24 · estructura ${pts.estructura}/41 · legibilidad ${pts.legibilidad}/28 · copy ${pts.copy}/15)`);
+    console.log(`Índice de viralidad: ${indice}/100 → ${veredicto}   (gancho ${pts.gancho}/30 · estructura ${pts.estructura}/35 · legibilidad ${pts.legibilidad}/20 · copy ${pts.copy}/15)`);
     for (const p of errores) console.log(`  ✗ [${p.slide || '-'}] ${p.msg}`);
     for (const p of avisos) console.log(`  · [${p.slide || '-'}] ${p.msg}`);
     if (!problemas.length) console.log('  ✓ sin observaciones');

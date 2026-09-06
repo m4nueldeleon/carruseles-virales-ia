@@ -2,6 +2,8 @@ Tu cotización pierde dinero antes de mandarla. 5 errores, 5 arreglos de 2 minut
 
 De cada 10 cotizaciones, 7 no se contestan. Casi nunca es el precio.
 
+Mándaselo a tu socio o a quien cotiza en tu negocio: es lo que falta en el documento, no en el precio.
+
 Es que falta la vigencia. O el anticipo con link. O las tres exclusiones que el cliente da por incluidas.
 
 Comenta COTIZA y te mando la plantilla con los 5 puntos ya resueltos.
@@ -12,3 +14,5 @@ Comenta COTIZA y te mando la plantilla con los 5 puntos ya resueltos.
 Palabra clave: COTIZA
 Entregable por DM: plantilla de cotización con los 5 puntos resueltos (PDF)
 Orden de subida: slides/01.png → 08.png
+Texto alternativo por lámina: en carrusel.json (campo alt); pégalo al subir cada imagen.
+Al subir: agrega una pista de música de la librería (elegible para la pestaña Reels). Si son más de 10 láminas, se sube a mano desde la app.

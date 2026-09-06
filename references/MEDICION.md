@@ -251,3 +251,5 @@ Reglas de la bitácora:
 ## Claves de metadata.json
 
 Las claves canónicas están en `templates/metadata.ejemplo.json` (`slug, fecha, tema, tipo, objetivo, look, laminas, hook, palabra_clave, entregable, entregable_existe, referencia, indice_qa, veredicto_qa, rondas_qa, imagenes, fuentes, mediciones, notas`). `medir.py` lee `slug, fecha, look, tipo, hook, palabra_clave` para el histórico y añade `mediciones[]`.
+
+`medir.py` también calcula `like_rate` (likes ÷ alcance). Se comparan tasas contra la mediana de la cuenta, nunca totales: la señal de ranking es interacción sobre alcance.

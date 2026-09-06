@@ -40,7 +40,7 @@ motor en `scripts/`, las plantillas en `templates/` y el conocimiento en `refere
 | Look | El que diga `node "<skill>/scripts/siguiente-look.mjs" <carpeta-de-trabajo> --tipo <tipo>` (ver §2) |
 | Palabra clave | Una de las ya conectadas en `MI-MARCA.md` §4 **si su entregable coincide**; si no, una palabra nueva de ≤8 letras que nombre el entregable, y `caption.txt` avisa que hay que conectarla antes de publicar |
 | Entregable por DM | Algo que NO está en el carrusel (plantilla, prompt completo, guion, link). Confirma que existe o que se va a crear antes de publicar; queda en `metadata.entregable_existe` |
-| Formato | `4:5` (1080x1350). Nunca 1:1 |
+| Formato | `4:5` (1080x1350). Nunca 1:1. `3:4` (1080x1440) es válido y encaja en la cuadrícula: úsalo solo en una prueba A/B, sin mezclar |
 
 ## 1. La entrada: tema, link o captura → `referencia.md`
 
@@ -117,6 +117,18 @@ Reglas que QA no puede medir y tú sí (léelas en voz alta antes de renderizar)
 - **Un recurso, un idioma**: si recomiendas un curso o certificado, di en qué idioma está y si
   el certificado es gratis de verdad (edX y otras plataformas cobran el certificado).
 - **Cadencia**: cuatro láminas con el mismo esqueleto de frase suenan a máquina; rompe una.
+- **Registro emocional de la portada**: asombro («esto ya es posible hoy») o indignación útil
+  («te cobran por algo que la IA hace gratis»); nunca lástima, nostalgia ni miedo que paraliza.
+  Lo que activa se reenvía; lo que deprime, no.
+- **Frase de envío con destinatario**: en el caption (línea 2-4) o en el subtítulo de la lámina
+  guardable: «Mándaselo a tu socio que sigue cotizando a mano». Los envíos son la señal que más
+  pesa para llegar a no seguidores; «comparte con 5» y «comenta SÍ» son cebo y bajan alcance.
+- **Originalidad explícita**: cero capturas ajenas, cero memes con texto encima; toda cita
+  externa lleva ángulo propio. Desde abril de 2026 la política de contenido original cubre fotos
+  y carruseles.
+- **`alt` por lámina** (≤1,000 caracteres, lenguaje natural con la palabra clave del tema): no se
+  renderiza, pero Instagram y Google indexan ese texto. `caption.txt` los lista para pegarlos al
+  subir.
 
 Guarda el JSON en `<carpeta-de-trabajo>/<AAAA-MM-DD>-<slug>/carrusel.json`.
 
@@ -181,13 +193,17 @@ de `templates/metadata.ejemplo.json`: `slug, fecha, tema, tipo, objetivo, look, 
 palabra_clave, entregable, entregable_existe, referencia, indice_qa, veredicto_qa, rondas_qa,
 imagenes, fuentes, mediciones, notas`). Cierra con: qué palabra clave hay que conectar en la
 automatización de DM (ManyChat u otra) y si ya existe, qué entregable prometiste y si ya existe,
-y en qué orden subir las imágenes. **Nunca publicas**: el usuario sube el post.
+y en qué orden subir las imágenes. En las notas de `caption.txt` van siempre dos avisos: al
+subir, agrega una pista de música de la librería (un carrusel 100% fotos con música es elegible
+para la pestaña Reels) y, si son más de 10 láminas, se suben a mano desde la app (la API acepta
+10). **Nunca publicas**: el usuario sube el post.
 
 ## 8. Medir y aprender
 
 A las 48 h y a los 7 días: `python3 "<skill>/scripts/medir.py" <carpeta> --permalink <url>` (con
 Windsor.ai) o `--manual reach=… saves=… shares=… comments=…` desde Insights de la app. El script
-anota `metadata.json` y actualiza `historico.json`. Antes del siguiente carrusel, lee el histórico:
+anota `metadata.json` (con `save_rate`, `share_rate` y `like_rate` sobre alcance: se comparan
+tasas, no totales) y actualiza `historico.json`. Antes del siguiente carrusel, lee el histórico:
 hit (≥3x la mediana) → repite formato y haz serie; flop (<0.5x) → no repitas ese gancho ni ese
 tema tal cual. Detalle en `references/MEDICION.md`.
 

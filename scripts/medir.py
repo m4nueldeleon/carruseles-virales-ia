@@ -68,6 +68,7 @@ def main() -> int:
     if reach:
         m["save_rate"] = round(100 * (m.get("saves") or 0) / reach, 2)
         m["share_rate"] = round(100 * (m.get("shares") or 0) / reach, 2)
+        m["like_rate"] = round(100 * (m.get("likes") or 0) / reach, 2)
     m["medido_en"] = dt.datetime.now().isoformat(timespec="minutes")
     nuevo = dict(meta)
     nuevo["mediciones"] = list(meta.get("mediciones", [])) + [m]

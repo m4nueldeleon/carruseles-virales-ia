@@ -56,6 +56,9 @@ Un `look` mal escrito no rompe el render: cae a `guia-rapida` sin avisar. Revisa
 
 ## Campos de cada slide
 
+> `alt` (opcional, ≤1,000 caracteres): texto alternativo de la lámina para Instagram, en lenguaje natural y con la palabra clave del tema. No se renderiza; `caption.txt` lo lista para pegarlo al subir. QA avisa si ninguna lámina lo trae.
+
+
 > `cta-cara` omite la barra inferior por omisión: el `@` ya va en el sello junto al botón. `sin_bottom: false` la fuerza; en cualquier otro layout `sin_bottom: true` la quita (solo con foto a sangre y nunca en portada).
 
 

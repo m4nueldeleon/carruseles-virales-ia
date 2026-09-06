@@ -48,6 +48,7 @@
           "chips": { "type": "array", "items": { "type": "string" } },
           "imagen": { "type": "object", "properties": { "src": { "type": "string" }, "pos": { "enum": ["fondo", "abajo", "derecha", "centro"] }, "sangra": { "type": "boolean" }, "prompt": { "type": "string", "description": "si hay que generarla: el prompt (sin texto dentro de la imagen)" } } },
           "pie": { "type": "string" }, "etiqueta_top": { "type": "string" },
+          "alt": { "type": "string", "maxLength": 1000, "description": "texto alternativo de la lámina para Instagram (con la palabra clave del tema, en lenguaje natural); no se renderiza, se pega al subir" },
           "alinea": { "enum": ["centro", "arriba", "abajo"] }, "centrado": { "type": "boolean" },
           "clase": { "type": "string" }, "sin_top": { "type": "boolean" }, "sin_bottom": { "type": "boolean" }
         }
