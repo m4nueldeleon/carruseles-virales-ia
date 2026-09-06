@@ -1,0 +1,26 @@
+{
+  "carpeta": "2026-09-06-cotizar-sin-perder-dinero",
+  "laminas": 8,
+  "look": "editorial-mono",
+  "indice": 100,
+  "veredicto": "LISTO",
+  "puntos": {
+    "gancho": 24,
+    "estructura": 41,
+    "legibilidad": 25,
+    "copy": 15
+  },
+  "errores": [],
+  "avisos": [
+    {
+      "nivel": "aviso",
+      "slide": 6,
+      "msg": "El texto principal tiene contraste 5.8:1 — el ideal para 35-60 años es ≥7:1."
+    },
+    {
+      "nivel": "aviso",
+      "slide": 8,
+      "msg": "El texto principal tiene contraste 5.8:1 — el ideal para 35-60 años es ≥7:1."
+    }
+  ]
+}

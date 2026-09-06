@@ -1,0 +1,21 @@
+/* LOOK guia-rapida — hueso + azul eléctrico + negro. Titular en mayúsculas, subtítulo condensado,
+   chips que anuncian el recorrido, ilustración abajo. Es el look del carrusel de las 5 generaciones
+   (98,609 de alcance, 3,345 guardados). Úsalo para guías, listas y "N cosas. N formas de X". */
+:root {
+  --bg: #EDE7DC; --ink: #0E0E10; --ink-dim: #3E3E44; --acento: #0044DD; --acento-ink: #FFFFFF;
+  --filete: rgba(14,14,16,.16); --card: rgba(255,255,255,.55);
+  --scrim: linear-gradient(180deg, rgba(237,231,220,0) 40%, rgba(237,231,220,.92) 100%);
+  --f-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --f-sub: 'Oswald', system-ui, sans-serif;
+  --caso-display: uppercase; --track-display: -0.03em; --caso-sub: uppercase; --track-sub: .01em;
+}
+.kicker { background: var(--acento); color: #fff; }
+.chip { background: var(--ink); color: #fff; }
+.chip:nth-child(odd) { background: var(--acento); color: #fff; }
+.slide::before { content: ''; position: absolute; z-index: 0; width: 620px; height: 620px; border-radius: 50%;
+  background: rgba(255,255,255,.55); right: -260px; top: -220px; }
+.slide::after { content: ''; position: absolute; z-index: 0; width: 420px; height: 420px; border-radius: 50%;
+  background: rgba(255,255,255,.45); left: -200px; bottom: -160px; }
+.numero-fantasma { opacity: .07; color: var(--acento); }
+.cta-boton { background: var(--ink); color: #fff; }
+.avatar { border-color: var(--acento); }

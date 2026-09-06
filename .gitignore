@@ -1,0 +1,22 @@
+# Entorno
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+dist/
+
+# Tipografías: se bajan con scripts/setup.sh (licencia OFL, no se versionan)
+assets/fonts/*.ttf
+
+# Salidas de la skill: viven en la carpeta de trabajo del usuario, no aquí
+MI-MARCA.md
+!templates/MI-MARCA.md
+historico.json
+qa.json
+preview.jpg
+slides/
+slides-src/
+!ejemplos/**/slides/
+!ejemplos/**/preview.jpg
+!ejemplos/**/qa.json

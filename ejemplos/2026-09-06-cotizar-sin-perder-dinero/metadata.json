@@ -1,0 +1,21 @@
+{
+  "slug": "cotizar-sin-perder-dinero",
+  "fecha": "2026-09-06",
+  "tema": "Los 5 errores que hacen que una cotización pierda dinero",
+  "tipo": "lista",
+  "objetivo": ["saves", "shares"],
+  "look": "editorial-mono",
+  "laminas": 8,
+  "hook": "Tu cotización pierde dinero antes de mandarla.",
+  "palabra_clave": "COTIZA",
+  "entregable": "plantilla de cotización con los 5 puntos resueltos (PDF)",
+  "entregable_existe": false,
+  "referencia": null,
+  "indice_qa": 97,
+  "veredicto_qa": "LISTO",
+  "rondas_qa": 1,
+  "imagenes": ["ninguna: look tipográfico"],
+  "fuentes": [],
+  "mediciones": [],
+  "notas": "La cifra «7 de cada 10» es ilustrativa: en un carrusel real va con fuente o no va."
+}

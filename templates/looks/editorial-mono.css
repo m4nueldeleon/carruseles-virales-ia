@@ -1,0 +1,19 @@
+/* LOOK editorial-mono — papel + tinta + UN golpe rojo. Números gigantes, filetes, sin adornos.
+   Úsalo para contrarian, mitos vs realidad, manifiestos y "lo que nadie te dice". Rota con los
+   demás: si el carrusel anterior fue oscuro, este descansa la vista. */
+:root {
+  --bg: #F4F3EF; --ink: #0A0A0A; --ink-dim: #4B4B46; --acento: #C81E12; --acento-ink: #FFFFFF;
+  --filete: rgba(10,10,10,.22); --card: #FFFFFF;
+  --scrim: linear-gradient(180deg, rgba(244,243,239,0) 40%, rgba(244,243,239,.94) 100%);
+  --f-display: 'Archivo Black', 'Inter Tight', system-ui, sans-serif;
+  --f-sub: 'Space Grotesk', system-ui, sans-serif;
+  --caso-display: none; --track-display: -0.02em; --peso-display: 400;
+}
+.titulo { line-height: 1.0; }
+.contenido::before { content: ''; display: block; height: 6px; background: var(--ink); width: 160px; margin-bottom: 12px; }
+.numero-fantasma { opacity: 1; color: var(--acento); font-size: 260px; top: 130px; font-family: 'Archivo Black'; }
+.con-numero .contenido { top: 420px; }
+.kicker { background: var(--ink); color: #fff; }
+.chip { background: var(--ink); color: #fff; } .chip:nth-child(odd) { background: var(--acento); color: #fff; }
+.cta-boton { background: var(--acento); color: #fff; }
+.sub { font-weight: 700; font-size: 52px; }

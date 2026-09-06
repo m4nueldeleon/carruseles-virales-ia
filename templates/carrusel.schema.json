@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "carrusel.json — contrato entre quien escribe (Claude, Hermes, una persona) y quien renderiza",
+  "type": "object",
+  "required": ["slug", "marca", "look", "slides", "caption"],
+  "properties": {
+    "version": { "type": "integer", "const": 1 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "fecha": { "type": "string", "description": "AAAA-MM-DD de publicación prevista" },
+    "marca": {
+      "type": "object", "required": ["handle"],
+      "properties": {
+        "nombre": { "type": "string" }, "handle": { "type": "string" },
+        "avatar": { "type": "string", "description": "ruta a la foto para la lámina de CTA" },
+        "sello": { "type": "string", "description": "lo que acompaña al @ en la lámina final" }
+      }
+    },
+    "look": { "enum": ["guia-rapida", "noticia", "oscuro-tech", "recurso", "bosque", "editorial-mono"] },
+    "formato": { "enum": ["4:5", "3:4", "1:1", "9:16"], "default": "4:5" },
+    "serie": { "type": "string", "description": "etiqueta arriba a la izquierda (ej. «Guía rápida»)" },
+    "tema": { "type": "string" },
+    "tipo": { "enum": ["guia", "lista", "recurso", "noticia", "tutorial", "contrarian", "historia", "comparativa", "prompt"] },
+    "objetivo": { "anyOf": [ { "enum": ["saves", "shares", "comments", "follows"] }, { "type": "array", "items": { "enum": ["saves", "shares", "comments", "follows"] }, "minItems": 1, "maxItems": 2 } ], "description": "señal principal (o principal + secundaria) que persigue el carrusel" },
+    "palabra_clave": { "type": "string", "description": "la palabra del CTA (misma en lámina y caption)" },
+    "entregable": { "type": "string", "description": "qué se manda por DM cuando comentan la palabra" },
+    "referencia": { "type": "string", "description": "link o archivo de origen, si lo hubo" },
+    "slides": {
+      "type": "array", "minItems": 5, "maxItems": 20,
+      "items": {
+        "type": "object", "required": ["layout"],
+        "properties": {
+          "rol": { "enum": ["portada", "rehook", "agitacion", "cuerpo", "cheatsheet", "cta"] },
+          "layout": { "enum": ["portada-titulo", "portada-foto", "punto-numero", "dato-hero", "lista", "comparativa", "pasos", "cita", "texto-pleno", "prompt", "cta-cara"] },
+          "kicker": { "type": "string", "description": "píldora arriba del título; máximo 1 cada 3 láminas" },
+          "titulo": { "type": "string", "description": "usa *palabra* para el acento; 4-7 palabras en portada" },
+          "subtitulo": { "type": "string" },
+          "cuerpo": { "type": "string", "description": "≤ 25 palabras; **negrita** permitida" },
+          "loop": { "type": "string", "description": "frase al pie que obliga a deslizar (open loop)" },
+          "numero": { "type": "string" }, "numero_fantasma": { "type": "string" },
+          "dato": { "type": "string", "description": "el número gigante en dato-hero" },
+          "items": { "type": "array", "items": { "anyOf": [ { "type": "string" }, { "type": "object", "properties": { "idx": { "type": "string" }, "texto": { "type": "string" }, "nota": { "type": "string" } }, "required": ["texto"] } ] } },
+          "a": { "type": "object", "properties": { "titulo": { "type": "string" }, "items": { "type": "array", "items": { "type": "string" } } } },
+          "b": { "type": "object", "properties": { "titulo": { "type": "string" }, "items": { "type": "array", "items": { "type": "string" } } } },
+          "pasos": { "type": "array", "items": { "type": "object", "properties": { "n": { "type": "string" }, "titulo": { "type": "string" }, "detalle": { "type": "string" } }, "required": ["titulo"] } },
+          "cita": { "type": "string" }, "autor": { "type": "string" },
+          "prompt": { "type": "string" }, "etiqueta": { "type": "string" },
+          "boton": { "type": "string", "description": "texto de la píldora en el CTA (una sola acción)" },
+          "chips": { "type": "array", "items": { "type": "string" } },
+          "imagen": { "type": "object", "properties": { "src": { "type": "string" }, "pos": { "enum": ["fondo", "abajo", "derecha", "centro"] }, "sangra": { "type": "boolean" }, "prompt": { "type": "string", "description": "si hay que generarla: el prompt (sin texto dentro de la imagen)" } } },
+          "pie": { "type": "string" }, "etiqueta_top": { "type": "string" },
+          "alinea": { "enum": ["centro", "arriba", "abajo"] }, "centrado": { "type": "boolean" },
+          "clase": { "type": "string" }, "sin_top": { "type": "boolean" }, "sin_bottom": { "type": "boolean" }
+        }
+      }
+    },
+    "caption": { "type": "string", "description": "primera línea ≤125 caracteres = segundo gancho" },
+    "hashtags": { "type": "array", "maxItems": 5, "items": { "type": "string" } },
+    "notas": { "type": "string" }
+  }
+}

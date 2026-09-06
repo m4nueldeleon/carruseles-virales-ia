@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "slug": "cotizar-sin-perder-dinero",
+  "fecha": "2026-09-06",
+  "marca": { "nombre": "Tu Marca", "handle": "@tumarca", "sello": "Negocios que no dependen de ti" },
+  "look": "editorial-mono",
+  "formato": "4:5",
+  "serie": "Guía rápida",
+  "tema": "Los 5 errores que hacen que una cotización pierda dinero",
+  "tipo": "lista",
+  "objetivo": ["saves", "shares"],
+  "palabra_clave": "COTIZA",
+  "entregable": "La plantilla de cotización con los 5 puntos ya resueltos (PDF)",
+  "slides": [
+    { "rol": "portada", "layout": "portada-titulo", "kicker": "Guía rápida", "titulo": "Tu cotización *pierde dinero* antes de mandarla.", "subtitulo": "5 errores. 5 arreglos de 2 minutos.", "chips": ["Precio", "Alcance", "Vigencia", "Anticipo", "Seguimiento"] },
+    { "rol": "rehook", "layout": "texto-pleno", "titulo": "De cada 10 cotizaciones, *7 no se contestan.*", "cuerpo": "No es el precio. Es lo que falta en el documento. Al final tienes la plantilla corregida.", "loop": "El primer error lo cometen casi todos" },
+    { "rol": "cuerpo", "layout": "punto-numero", "numero": "01 · Precio", "numero_fantasma": "1", "titulo": "Un solo número, *sin opciones.*", "cuerpo": "Ofrece tres niveles. El cliente deja de decidir «sí o no» y empieza a decidir «cuál».", "loop": "El segundo te cuesta horas después" },
+    { "rol": "cuerpo", "layout": "punto-numero", "numero": "02 · Alcance", "numero_fantasma": "2", "titulo": "No dice qué *NO incluye.*", "cuerpo": "Lo que no está escrito, el cliente lo asume gratis. Escribe las tres exclusiones más caras.", "loop": "El tercero es el más fácil de arreglar" },
+    { "rol": "cuerpo", "layout": "dato-hero", "dato": "7 días", "titulo": "de *vigencia*, siempre", "cuerpo": "Una cotización sin fecha límite no tiene urgencia. Con vigencia corta, la decisión llega antes.", "loop": "El cuarto decide si cobras" },
+    { "rol": "cuerpo", "layout": "comparativa", "titulo": "Anticipo: *cómo se pide*", "a": { "titulo": "Así no", "items": ["«Si gustas un anticipo…»", "50% sin fecha", "Transferencia y ya"] }, "b": { "titulo": "Así sí", "items": ["«Se aparta con el 30%»", "Fecha y monto exactos", "Link de pago en el PDF"] }, "loop": "El quinto es donde se va el 48%" },
+    { "rol": "cheatsheet", "layout": "lista", "kicker": "Guarda esto", "titulo": "Checklist antes de *enviar*", "items": [ { "texto": "Tres niveles de precio", "nota": "básico · recomendado · completo" }, { "texto": "Tres exclusiones escritas", "nota": "lo que más te han pedido «de regalo»" }, { "texto": "Vigencia de 7 días", "nota": "con fecha exacta, no «una semana»" }, { "texto": "Anticipo con link", "nota": "monto, fecha y botón de pago" }, { "texto": "Seguimiento agendado", "nota": "a las 48 h, en el calendario, antes de enviar" } ] },
+    { "rol": "cta", "layout": "cta-cara", "titulo": "¿Quieres la *plantilla* lista?", "cuerpo": "Comenta COTIZA y te la mando por DM con los 5 puntos resueltos.", "boton": "Comenta COTIZA" }
+  ],
+  "caption": "Tu cotización pierde dinero antes de mandarla. 5 errores, 5 arreglos de 2 minutos.\n\nDe cada 10 cotizaciones, 7 no se contestan. Casi nunca es el precio.\n\nEs que falta la vigencia. O el anticipo con link. O las tres exclusiones que el cliente da por incluidas.\n\nComenta COTIZA y te mando la plantilla con los 5 puntos ya resueltos.",
+  "hashtags": ["#cotizaciones", "#ventas", "#emprendedores", "#negocios"],
+  "notas": "Ejemplo con marca ficticia. La cifra «7 de cada 10» es ilustrativa: en un carrusel real va con fuente o no va."
+}

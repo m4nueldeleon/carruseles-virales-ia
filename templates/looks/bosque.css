@@ -1,0 +1,17 @@
+/* LOOK bosque — verde profundo + hueso + ámbar. Es el sistema "1+1=3" de Sinergéticos refinado:
+   60% verde, 30% hueso, 10% ámbar como ÚNICO acento. Úsalo cuando la pieza es del Club, de eventos
+   o quiere firmar Sinergéticos; también como descanso cuando los otros looks ya se usaron. */
+:root {
+  --bg: #0F3D2E; --ink: #F3EDE0; --ink-dim: rgba(243,237,224,.82); --acento: #E0B24A; --acento-ink: #0F3D2E;
+  --filete: rgba(243,237,224,.18); --card: rgba(243,237,224,.06);
+  --scrim: linear-gradient(180deg, rgba(15,61,46,.15) 0%, rgba(15,61,46,.85) 100%);
+  --f-display: 'Bricolage Grotesque', 'Inter Tight', system-ui, sans-serif;
+  --f-sub: 'Manrope', system-ui, sans-serif;
+  --caso-display: none; --track-display: -0.03em; --peso-display: 800;
+}
+.slide { background: radial-gradient(80% 60% at 20% 10%, #16513C 0%, #0F3D2E 55%, #0A2C21 100%); }
+.slide.claro { background: #F3EDE0; color: #10241C; --ink: #10241C; --ink-dim: #3F5A4E; --filete: rgba(16,36,28,.16); --card: #fff; }
+.slide.claro .top, .slide.claro .bottom { color: #3F5A4E; }
+.sub { font-weight: 600; font-size: 54px; }
+.kicker { background: var(--acento); color: var(--acento-ink); }
+.cta-boton { background: var(--acento); color: var(--acento-ink); }

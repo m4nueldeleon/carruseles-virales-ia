@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://carruseles-virales-ia/hermes/esquema-salida.json",
+  "title": "Salida de la rutina Hermes «carrusel»",
+  "description": "Envoltura que devuelve un modelo sin herramientas. El carrusel interno sigue el contrato de templates/carrusel.schema.json.",
+  "type": "object",
+  "required": ["rutina", "carrusel", "faltantes", "confianza", "escalar_a_claude", "motivo"],
+  "additionalProperties": false,
+  "properties": {
+    "rutina": { "const": "carrusel" },
+    "carrusel": {
+      "description": "carrusel.json completo. Solo puede ser null cuando escalar_a_claude es true.",
+      "anyOf": [
+        { "$ref": "../templates/carrusel.schema.json" },
+        { "type": "null" }
+      ]
+    },
+    "faltantes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Datos que no venían en la entrada y se dejaron en null. Vacío si no faltó nada."
+    },
+    "confianza": { "type": "number", "minimum": 0, "maximum": 1 },
+    "escalar_a_claude": { "type": "boolean" },
+    "motivo": { "type": ["string", "null"] },
+    "revisar_humano": { "type": "boolean", "description": "Obligatorio en true cuando confianza < 0.6." },
+    "ronda": { "type": "integer", "minimum": 0, "maximum": 2, "description": "0 primera salida; 1 y 2 rondas de corrección con qa_previo." }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "escalar_a_claude": { "const": true } } },
+      "then": { "properties": { "motivo": { "type": "string", "minLength": 1 } } }
+    },
+    {
+      "if": { "properties": { "escalar_a_claude": { "const": false } } },
+      "then": { "properties": { "carrusel": { "type": "object" } } }
+    },
+    {
+      "if": { "properties": { "confianza": { "exclusiveMaximum": 0.6 } } },
+      "then": { "required": ["revisar_humano"], "properties": { "revisar_humano": { "const": true } } }
+    }
+  ],
+  "$defs": {
+    "entrada": {
+      "title": "Entrada de la rutina (documentación; no es parte de la salida)",
+      "type": "object",
+      "required": ["marca"],
+      "properties": {
+        "tema": { "type": ["string", "null"] },
+        "referencia_texto": { "type": ["string", "null"], "description": "link o texto ajeno del que se extrae el ángulo" },
+        "marca": {
+          "type": "object",
+          "required": ["handle", "palabra_clave"],
+          "properties": {
+            "handle": { "type": "string" },
+            "sello": { "type": ["string", "null"] },
+            "audiencia": { "type": ["string", "null"] },
+            "voz": { "type": ["string", "null"] },
+            "palabras_prohibidas": { "type": "array", "items": { "type": "string" } },
+            "palabra_clave": { "type": "string" },
+            "entregable": { "type": ["string", "null"] }
+          }
+        },
+        "look_anterior": { "type": ["string", "null"], "enum": ["guia-rapida", "noticia", "oscuro-tech", "recurso", "bosque", "editorial-mono", null] },
+        "tipo_sugerido": { "type": ["string", "null"], "enum": ["guia", "lista", "recurso", "noticia", "tutorial", "contrarian", "historia", "comparativa", "prompt", null] },
+        "qa_previo": { "type": ["object", "null"], "description": "contenido de qa.json en rondas de corrección" }
+      },
+      "anyOf": [
+        { "required": ["tema"], "properties": { "tema": { "type": "string", "minLength": 1 } } },
+        { "required": ["referencia_texto"], "properties": { "referencia_texto": { "type": "string", "minLength": 1 } } }
+      ]
+    }
+  }
+}

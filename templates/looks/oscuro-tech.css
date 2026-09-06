@@ -1,0 +1,19 @@
+/* LOOK oscuro-tech — negro con halo cálido, titular blanco en caja baja con la palabra clave en
+   degradado. Es el look de "Conecta tu Instagram a Claude" (54,866 de alcance, 3,087 guardados,
+   334 seguidores reales). Úsalo para herramientas, integraciones y "X + IA = resultado". */
+:root {
+  --bg: #0B0B0D; --ink: #FFFFFF; --ink-dim: rgba(255,255,255,.76); --acento: #FF7A1A; --acento-ink: #0B0B0D;
+  --filete: rgba(255,255,255,.14); --card: rgba(255,255,255,.05);
+  --scrim: linear-gradient(180deg, rgba(11,11,13,.05) 0%, rgba(11,11,13,.55) 50%, rgba(11,11,13,.96) 100%);
+  --f-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --f-sub: 'Manrope', system-ui, sans-serif;
+  --caso-display: none; --track-display: -0.035em;
+}
+.slide { background: radial-gradient(60% 45% at 50% 42%, rgba(255,140,60,.22) 0%, rgba(11,11,13,0) 70%), #0B0B0D; }
+.acento { background: linear-gradient(90deg, #FF7A1A 0%, #FF3D6E 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dato, .item .idx, .paso .n, .numero { color: var(--acento); }
+.sub { font-weight: 600; font-size: 52px; color: var(--ink-dim); }
+.kicker { background: rgba(255,255,255,.1); color: var(--ink); }
+.chip { background: rgba(255,255,255,.1); color: var(--ink); }
+.chip:nth-child(odd) { background: var(--acento); color: var(--acento-ink); }
+.cta-boton { background: var(--ink); color: #0B0B0D; }

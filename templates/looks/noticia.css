@@ -1,0 +1,17 @@
+/* LOOK noticia — foto a sangre o azul profundo, titular blanco en mayúsculas con UNA palabra en
+   amarillo. Es el look del carrusel de Wall Street (34,882 de alcance, 1,474 guardados). Úsalo para
+   news-jacking: lanzamientos, datos, "X acaba de hacer Y" con el subtítulo que respalda el dato. */
+:root {
+  --bg: #071B4A; --ink: #FFFFFF; --ink-dim: rgba(255,255,255,.86); --acento: #FFD200; --acento-ink: #0B0B0D;
+  --filete: rgba(255,255,255,.22); --card: rgba(255,255,255,.08);
+  --scrim: linear-gradient(180deg, rgba(7,27,74,.10) 0%, rgba(7,27,74,.55) 45%, rgba(7,27,74,.96) 100%);
+  --f-display: 'Archivo Black', 'Inter Tight', system-ui, sans-serif;
+  --f-sub: 'Manrope', system-ui, sans-serif;
+  --caso-display: uppercase; --track-display: 0; --peso-display: 400;
+}
+.slide { background: radial-gradient(120% 80% at 50% 0%, #143B8F 0%, #071B4A 60%, #040F2B 100%); }
+.titulo { line-height: 1.04; }
+.sub { font-weight: 600; font-size: 52px; }
+.kicker { background: var(--acento); color: var(--acento-ink); }
+.cta-boton { background: var(--acento); color: var(--acento-ink); }
+.item .idx { color: var(--acento); }
