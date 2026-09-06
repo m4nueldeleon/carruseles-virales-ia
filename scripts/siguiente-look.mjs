@@ -37,10 +37,11 @@ const orden = [...vistos.values()].filter(r => r.look).sort((a, b) => (b.fecha +
 const ultimo = orden[0];
 const ultimos4 = orden.slice(0, 4).map(r => r.look);
 const vetados = new Set();
-if (ultimo) vetados.add(ultimo.look);
+if (ultimo) { vetados.add(ultimo.look); for (const r of orden) if (r.fecha === ultimo.fecha) vetados.add(r.look); }  // todo lo del mismo día, medido o no
 for (const l of ROTACION) if (ultimos4.filter(x => x === l).length >= 2) vetados.add(l);
 const grupoPreferido = ultimo ? (CLAROS.includes(ultimo.look) ? OSCUROS : CLAROS) : ROTACION;
-const candidatos = ROTACION.filter(l => !vetados.has(l));
+let candidatos = ROTACION.filter(l => !vetados.has(l));
+if (!candidatos.length) candidatos = ROTACION.filter(l => !(ultimo && l === ultimo.look));  // si el día ya agotó los looks, solo veta el último
 const empuje = tipo && POR_TIPO[tipo] ? POR_TIPO[tipo] : [];
 const puntua = l => (grupoPreferido.includes(l) ? 10 : 0) + (empuje.includes(l) ? 5 - empuje.indexOf(l) : 0) - ROTACION.indexOf(l) * 0.1;
 const ranking = candidatos.sort((a, b) => puntua(b) - puntua(a));

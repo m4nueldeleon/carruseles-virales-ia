@@ -72,6 +72,8 @@ echo "▶ Opcionales"
 command -v montage >/dev/null 2>&1 && echo "  ✓ ImageMagick (montage) — vista previa en mosaico" || echo "  · ImageMagick no está (opcional): brew install imagemagick"
 command -v yt-dlp  >/dev/null 2>&1 && echo "  ✓ yt-dlp — transcripciones de YouTube" || echo "  · yt-dlp no está (para links de YouTube): brew install yt-dlp  ·  o  pip3 install yt-dlp"
 python3 -c "import PIL" >/dev/null 2>&1 && echo "  ✓ Pillow — quitar fondos lisos en local (scripts/quitar-fondo.py)" || echo "  · Pillow no está (para quitar fondos en local): pip3 install pillow"
+command -v uvx >/dev/null 2>&1 && echo "  ✓ uv — recortes de fotos reales con rembg (scripts/banco-fotos.py recortar)" || echo "  · uv no está (para recortar fotos reales en local): curl -LsSf https://astral.sh/uv/install.sh | sh  ·  o usa --motor higgsfield"
+command -v osascript >/dev/null 2>&1 && echo "  ✓ Fotos.app — banco-fotos.py cosechar --album funciona en este Mac" || echo "  · Sin Fotos.app (Linux/WSL): cosecha con --carpeta"
 command -v python3 >/dev/null 2>&1 && echo "  ✓ $(python3 -V 2>&1)" || echo "  · Python 3 no está (opcional, para leer links y PDFs)"
 echo
 echo "✅ Listo. Abre Claude Code en tu carpeta de carruseles y escribe: Hazme un carrusel sobre <tema>"

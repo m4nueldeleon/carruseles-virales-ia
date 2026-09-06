@@ -133,7 +133,8 @@ export function construirHTML({ data, dirCarrusel, dirSalida, dirSkill, embeberF
     const img = bloqueImagen(s, dirCarrusel, dirSalida);
     const clases = ['slide', `l-${s.layout}`, `r-${s.rol || 'cuerpo'}`, img.clase, s.numero_fantasma ? 'con-numero' : '', s.clase || '', s.centrado ? 'centrado' : '', s.imagen?.duotono ? 'duotono' : '', s.grano ? 'grano' : ''].filter(Boolean).join(' ');
     const fantasma = s.numero_fantasma ? `<div class="numero-fantasma">${esc(s.numero_fantasma)}</div>` : '';
-    const sticker = s.sticker ? `<div class="sticker ${s.sticker_lado === 'izquierda' ? 'izquierda' : ''}">${esc(s.sticker)}</div>` : '';
+    const ladoSticker = s.sticker_lado || (s.imagen && s.imagen.pos === 'recorte' ? 'izquierda' : 'derecha');
+    const sticker = s.sticker ? `<div class="sticker ${ladoSticker === 'izquierda' ? 'izquierda' : ''}">${esc(s.sticker)}</div>` : '';
     const esPortada = s.rol === 'portada' || n === 1;
     const top = s.sin_top ? '' : `<div class="top"><span class="etiqueta">${esc(s.etiqueta_top ?? data.serie ?? '')}</span><span class="pager">${String(n).padStart(2, '0')}/${String(total).padStart(2, '0')}</span></div>`;
     const derecha = esPortada ? `<span class="desliza">${esc(s.pie ?? 'Desliza')}</span>` : (s.pie ? `<span>${esc(s.pie)}</span>` : `<span class="pager">${n} de ${total}</span>`);
@@ -171,9 +172,11 @@ ${slides}
   function fit(){
     document.querySelectorAll('.slide').forEach(function(slide){
       var cont = slide.querySelector('.contenido'); if(!cont) return;
+      var pctAncho = 0;
       slide.querySelectorAll('.titulo,.sub,.dato,.cita,.loop').forEach(function(el){
         var fs = parseFloat(getComputedStyle(el).fontSize), base = fs;
         while (el.scrollWidth > el.clientWidth + 1 && fs > base * 0.7) { fs -= 4; el.style.fontSize = fs + 'px'; }
+        pctAncho = Math.max(pctAncho, Math.round(100 * (base - fs) / base));
       });
       var pct = 0;
       while (cont.scrollHeight > cont.clientHeight + 6 && pct < 15) {
@@ -183,7 +186,7 @@ ${slides}
           el.style.fontSize = (el.dataset.fs0 * (1 - pct/100)) + 'px';
         });
       }
-      slide.dataset.ajuste = String(pct);
+      slide.dataset.ajuste = String(Math.max(pct, pctAncho));
     });
   }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit); else fit();

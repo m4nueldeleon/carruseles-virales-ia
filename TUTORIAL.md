@@ -133,6 +133,27 @@ Si algo no lo sabes, escribe «no sé». La skill lo deja en blanco y no inventa
 
 Lo más valioso de la ficha son las 3 frases que sí dices y la palabra clave. Las frases hacen que el carrusel suene a ti. La palabra clave es lo que la gente comenta para recibir el regalo por mensaje directo: una sola palabra, corta, fácil de escribir en el celular.
 
+## Paso 7b. Tus fotos: el banco de rostro
+
+Un carrusel con tu cara en cada pieza se reconoce en el feed; sin ella parece un PDF. La skill
+trabaja con tres bancos, y el primero es el que importa:
+
+1. **Fotos reales.** Dile a Claude «arma mi banco de fotos con la carpeta X» (o «con el álbum X de
+   Fotos» si estás en Mac). La skill cosecha candidatas, te enseña hojas de contacto numeradas,
+   tú (o Claude) eliges las buenas, y las recorta sin fondo y las anota (situación, fondo, para qué
+   temas sirven). Con 10-15 fotos en poses distintas basta: a cámara, señalando, explicando con las
+   manos, riendo, pensando, con el celular, en tu negocio. Mejor con fondo liso.
+2. **Avatares.** Con 2-3 fotos reales limpias, Claude genera tu cara dibujada en el estilo de cada
+   look (vector, pop-art, grabado…) para las láminas que piden dibujo. Ver `references/AVATARES.md`.
+3. **Personaje generado.** Si tienes un personaje entrenado (por ejemplo un Soul de Higgsfield),
+   anota su id en `MI-MARCA.md` y la skill genera poses nuevas por tema.
+
+**Ponlo en la nube.** Si vas a usar la skill desde más de una máquina, desde claude.ai o desde un
+agente en un servidor, di «sube mi banco de fotos a la nube»: la skill lo manda a un almacén con
+URL pública (Vercel Blob, gratis en el plan básico; el setup te dice cómo crear el store y guardar
+el token en `~/.vercel-blob-cli/.env`) y anota la URL base en `MI-MARCA.md`. En otra máquina,
+«baja mi banco de fotos» lo trae entero.
+
 ## Paso 8. Recibe tu primer carrusel
 
 Con la ficha guardada, Claude sigue solo. Verás que va narrando:

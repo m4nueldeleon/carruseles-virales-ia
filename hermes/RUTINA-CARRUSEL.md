@@ -8,7 +8,7 @@ Este documento trae el prompt listo para pegar, el contrato de entrada y salida,
 
 | Hace | No hace |
 |---|---|
-| Escribe el `carrusel.json` completo: láminas, caption, hashtags, palabra clave. | No genera imágenes. Si una lámina necesita foto, escribe `imagen.prompt` y deja `imagen.src` fuera. |
+| Escribe el `carrusel.json` completo: láminas, caption, hashtags, palabra clave. | No genera imágenes. Si la entrada trae `banco` (el `catalogo.json` del banco de fotos en la nube), elige por `temas` y `looks` y escribe en `imagen.src` la `recorte_url` (recortes) o `url` (fotos) de esa foto; si no hay foto que encaje, escribe `imagen.prompt` y deja `imagen.src` fuera. |
 | Elige tipo, look, objetivo y número de láminas dentro de las reglas. | No renderiza ni mide píxeles. Eso lo hace `scripts/render.mjs` y `scripts/qa.mjs`. |
 | Convierte un link o texto ajeno (`referencia_texto`) en un ángulo propio, en la voz de la marca. | No publica, no programa, no manda DMs. |
 | Corrige su propio JSON cuando recibe el `qa.json` de vuelta (máximo 2 rondas). | No inventa cifras, precios, nombres ni resultados. Lo que falta va en `null` y en `faltantes`. |
@@ -253,7 +253,7 @@ entrada JSON ──► Hermes ──► respuesta JSON
 
 Paso a paso:
 
-1. **Armar la entrada.** El sistema que llama lee `MI-MARCA.md` y llena `marca` (handle, sello, audiencia, voz, palabras_prohibidas, palabra_clave, entregable). Lee `historico.json` para poner `look_anterior` con el look del último carrusel publicado. `tipo_sugerido` es opcional.
+1. **Armar la entrada.** El sistema que llama lee `MI-MARCA.md` y llena `marca` (handle, sello, audiencia, voz, palabras_prohibidas, palabra_clave, entregable). Lee `historico.json` para poner `look_anterior` con el look del último carrusel publicado. `tipo_sugerido` es opcional. Si `MI-MARCA.md` trae `banco_url`, descarga `<banco_url>/catalogo.json` y pásalo como `banco` (solo `fotos` y `avatares` con `situacion`, `fondo`, `sujeto`, `looks`, `temas`, `url`, `recorte_url`): Hermes elige la foto de portada y de CTA de ahí y el render la carga por URL.
 2. **Llamar a Hermes** con el system prompt de la sección 2 y la entrada. Exigir JSON en la respuesta.
 3. **Validar la forma.** Comprobar la respuesta contra `hermes/esquema-salida.json`. Si `escalar_a_claude` es `true`, parar aquí y pasar `motivo` y `faltantes` a Claude o a la persona. Si el JSON no es válido, repetir la llamada una sola vez.
 4. **Guardar.** Extraer `carrusel`, añadir `marca.avatar` con la ruta de la foto de `MI-MARCA.md` y escribirlo en `<carpeta>/carrusel.json`. La carpeta se llama como el `slug`.

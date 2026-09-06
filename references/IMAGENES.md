@@ -233,22 +233,52 @@ Si una lámina no pasa el checklist y no hay tiempo de arreglar la imagen, quít
 5. **`abajo` corta la parte baja.** Una imagen con `pos: "abajo"` termina 110 px arriba del borde para no chocar con la barra del handle; si la imagen es apaisada (16:9) queda chica. Genera en 4:3 o 1:1 y con el sujeto centrado.
 6. **Ilustración en el cuerpo: una, no cinco.** Un ícono 3D o personaje en una lámina de cuerpo reactiva la atención; en todas, cansa y compite con el texto.
 
-## El banco de retratos del usuario (obligatorio en cada carrusel)
+## Los tres bancos de rostro (obligatorio en cada carrusel)
 
 La cara del usuario en una situación del tema es lo que da personalidad y lo que la audiencia
-reconoce en el feed. La carpeta de trabajo guarda un banco en `assets/fotos/soul/` con un
-`catalogo.json` que describe cada retrato: situación, fondo (claro/oscuro/color), de qué lado
-está el sujeto y qué lado queda libre para el texto, y con qué looks combina. Regla de uso:
+reconoce en el feed. La carpeta de trabajo guarda tres bancos, y se usan en este orden:
 
-1. Portada: elige del banco el retrato cuya situación cuente el tema (laptop = trabajar con IA,
-   celular = WhatsApp, pizarrón = método, mostrador = dueño de negocio, escenario = mensaje
-   fuerte, señalando = dato o CTA). Si ninguno encaja, genera uno nuevo con `soul_2` y el
-   `soul_id` del usuario: «Editorial photo of the man <situación del tema>, <fondo del look>,
-   subject on the <right/left> third, photorealistic. Absolutely no text…».
+| Banco | Dónde | Qué tiene | Cuándo |
+|---|---|---|---|
+| **Fotos reales** | `assets/fotos/reales/` + `catalogo.json` (`fotos`) | Fotos de estudio y de eventos ya curadas, reducidas a 3000 px, con `recorte` PNG con alfa y `url` pública si el banco está en la nube. Cada una anotada: situación, fondo, lado del sujeto, lado libre para el texto, looks y temas afines | Primera opción siempre. Portada y CTA salen de aquí salvo que el tema pida dibujo |
+| **Avatares** | mismo `catalogo.json` (`avatares`) | La cara real dibujada en el estilo de cada look (vector, pop-art, pintura con neón, papel recortado, linograbado, grabado), con su `-recorte.png` | Láminas de cuerpo con humor, cheatsheets, carruseles donde la foto pesa demasiado. Receta en `AVATARES.md` |
+| **Personaje generado** | `assets/fotos/soul/` + `catalogo.json` | Retratos fotorrealistas del personaje entrenado (Soul) en situaciones: laptop, pizarrón, café, escenario, mostrador… | Cuando ninguna foto real cuenta la situación del tema y no hay tiempo de sesión. Nueva pose: `soul_2` + `soul_id` de `MI-MARCA.md`, «subject on the right/left third, plain background, no text» |
+
+Reglas de uso:
+
+1. Portada: elige la foto cuya situación cuente el tema (celular = WhatsApp, café en evento =
+   autoridad, mano en el mentón = decidir, señalando = dato o CTA, riendo = contrarian). El
+   catálogo tiene `temas` justo para esto: búscalo antes de generar nada.
 2. Recortes con alfa (`recortes/`): sirven para `pos: "recorte"` sobre un `panel` o sobre el
-   fondo del look. Se hacen con `remove_background` de la herramienta pasando el `job_id` de la
-   generación (el catálogo guarda los `job_ids`). El recorte local por inundación
-   (`quitar-fondo.py`) solo sirve para ilustraciones sobre fondo liso, no para retratos.
-3. Un carrusel usa una sola fuente de rostro (todo del banco o todo fotos reales), dos o tres
-   apariciones (portada, una lámina de cuerpo, CTA) y nunca la misma pose dos veces.
-4. Cada retrato nuevo se guarda en el banco con su línea en `catalogo.json` para la próxima vez.
+   fondo del look. Los de fotos reales se hacen con `scripts/banco-fotos.py recortar` (rembg,
+   modelo `birefnet-portrait`, el único que respetó traje oscuro sobre fondo oscuro) o con
+   `remove_background` de Higgsfield (subiendo la foto: `media_upload` → `curl PUT` →
+   `media_confirm`). Los de generaciones, con `remove_background` y el `job_id`. El recorte local
+   por inundación (`quitar-fondo.py`) solo sirve para ilustraciones sobre fondo liso.
+3. Un carrusel usa **una sola fuente de rostro** (todo real, todo avatar del mismo estilo o todo
+   Soul), dos o tres apariciones (portada, una lámina de cuerpo, CTA) y nunca la misma pose dos veces.
+4. Todo lo nuevo entra al banco con su línea en `catalogo.json` para la próxima vez.
+
+### Cómo se alimenta el banco de fotos reales (`scripts/banco-fotos.py`)
+
+```
+banco-fotos.py --banco <carpeta>/assets/fotos/reales cosechar --carpeta ~/Fotos/Sesion --paso 5 --max 52
+banco-fotos.py --banco … cosechar --album "Eventos 2026" --max 40      # Fotos.app de macOS, por AppleScript
+banco-fotos.py --banco … hoja                                          # hojas de contacto numeradas
+banco-fotos.py --banco … curar --aceptar "3:traje-azul-brazos-cruzados,7:camisa-blanca-riendo" --rechazar-resto
+banco-fotos.py --banco … recortar --todos                               # PNG con alfa (rembg vía uvx)
+banco-fotos.py --banco … anotar real-01 --situacion "…" --fondo "…" --sujeto centro --looks guia-rapida,recurso --temas decidir,dudas
+banco-fotos.py --banco … subir                                          # Vercel Blob → url en el catálogo
+```
+
+- **Cosechar** copia candidatas a `_entrada/` reducidas a 3000 px, salta capturas de pantalla,
+  miniaturas y repetidas. La búsqueda por nombre en Fotos.app devuelve capturas donde aparece
+  el nombre, no la persona: usa **álbumes** («sesión de estudio», «eventos») o carpetas del disco.
+- **Hoja** genera `hoja-N.jpg` con 24 fotos numeradas; se eligen mirando (Claude puede verlas con
+  la herramienta de lectura de imágenes) por nitidez, fondo limpio y pose útil.
+- **Curar** acepta con un slug y borra el resto; **recortar** hace el PNG con alfa y limpia el
+  halo; **anotar** escribe lo que la skill usa para elegir.
+- **Subir** manda fotos, recortes y avatares a un almacén con URL pública (Vercel Blob; token en
+  `~/.vercel-blob-cli/.env`) y escribe `url`, `recorte_url` y `base_url` en el catálogo. Así el
+  banco está disponible desde cualquier máquina (`banco-fotos.py bajar <base_url>`), desde
+  claude.ai (las láminas cargan la imagen por URL) y para Higgsfield (`media_import_url`).

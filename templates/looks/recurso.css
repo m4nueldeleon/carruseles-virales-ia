@@ -3,7 +3,7 @@
    dominar Claude" (921 guardados sobre 12,055 de alcance = 7.6%). Úsalo para recursos, herramientas
    gratis y listas numeradas de cosas concretas. */
 :root {
-  --bg: #FBF7F0; --ink: #141210; --ink-dim: #5A5650; --acento: #BE4B2F; --acento-ink: #FFFFFF;
+  --bg: #FBF7F0; --ink: #141210; --ink-dim: #4E4A45; --acento: #BE4B2F; --acento-ink: #FFFFFF;
   --filete: rgba(20,18,16,.14); --card: #FFFFFF;
   --scrim: linear-gradient(180deg, rgba(251,247,240,0) 45%, rgba(251,247,240,.95) 100%);
   --f-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
@@ -23,3 +23,8 @@
 .cta-boton { background: var(--acento); color: #fff; }
 .desliza { border: 3px solid var(--acento); color: var(--acento); border-radius: 999px; padding: 10px 26px; }
 .avatar { border-color: var(--acento); }
+/* el pie crema del look queda encima del panel: el panel termina antes y el pie conserva su color */
+.panel { bottom: 120px; }
+.con-panel .bottom .desliza, .con-panel .bottom .pager { color: var(--acento); }
+.con-panel .bottom .desliza::after { color: var(--acento); }
+.con-panel .top .pager { color: #FFF7F2; }

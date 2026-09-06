@@ -117,7 +117,7 @@ data.slides.forEach((s, i) => {
   const acentos = (String(s.titulo || '').match(/\*[^*]+\*/g) || []).length;
   if (acentos > 1) aviso(i + 1, `${acentos} palabras en acento en el título: solo una (la palabra imán).`);
 });
-const puntos = data.slides.filter(s => s.layout === 'punto-numero');
+const puntos = data.slides.filter(s => s.layout === 'punto-numero' && !(s.imagen && /recorte|derecha/.test(s.imagen.pos || '')));
 if (puntos.length >= 2) { const conF = puntos.filter(s => s.numero_fantasma).length; if (conF > 0 && conF < puntos.length) aviso(0, `numero_fantasma en ${conF} de ${puntos.length} láminas punto-numero: o en todas o en ninguna.`); }
 for (const frase of CEBO) if (todoTexto.toLowerCase().includes(frase)) aviso(0, `Cebo de interacción o CTA vago: «${frase}». Cambia por una sola acción concreta.`);
 data.slides.forEach((s, i) => {
@@ -193,14 +193,24 @@ function parseColor(s, fondo) {
       }
       const cont = slide.querySelector('.contenido');
       const desborde = cont ? cont.scrollHeight - cont.clientHeight : 0;
-      out.push({ n: Number(slide.dataset.n), layout: slide.dataset.layout, bg, w: r.width, h: r.height, desborde, ajuste: Number(slide.dataset.ajuste || 0), textos });
+      const cajas = {};
+      for (const sel of ['.recorte', '.img-derecha', '.img-abajo', '.img-centro', '.panel', '.foto']) { const el = slide.querySelector(sel); if (el) { const b = el.getBoundingClientRect(); cajas[sel] = { left: b.left - r.left, right: b.right - r.left, top: b.top - r.top, bottom: b.bottom - r.top }; } }
+      const acentos = [...slide.querySelectorAll('.contenido .acento')].map(a => { const b = a.getBoundingClientRect(); return { txt: a.textContent.trim().slice(0, 30), left: b.left - r.left, right: b.right - r.left, top: b.top - r.top, bottom: b.bottom - r.top }; });
+      out.push({ n: Number(slide.dataset.n), layout: slide.dataset.layout, bg, w: r.width, h: r.height, desborde, ajuste: Number(slide.dataset.ajuste || 0), textos, cajas, acentos });
     });
     return out;
   });
   await browser.close();
 
   const SAFE = 80, UI = 150;
+  const cruza = (a, b) => a.left < b.right - 12 && a.right > b.left + 12 && a.top < b.bottom - 12 && a.bottom > b.top + 12;
   for (const m of medidas) {
+    for (const sel of ['.recorte', '.img-derecha', '.img-centro']) {
+      const caja = m.cajas[sel]; if (!caja) continue;
+      const tapados = m.textos.filter(t => t.critico && cruza(t, caja));
+      if (tapados.length) aviso(m.n, `La imagen (${sel.slice(1)}) se traslapa con el texto «${tapados[0].txt}»: acorta el texto o usa una foto con el sujeto en su mitad.`);
+    }
+    if (m.cajas['.panel']) for (const a of m.acentos) if (cruza(a, m.cajas['.panel'])) aviso(m.n, `La palabra en acento «${a.txt}» cae sobre el panel del mismo color: se pierde. Acorta el título o quita el panel.`);
     if (m.desborde > 6) err(m.n, `El contenido desborda ${Math.round(m.desborde)}px aun reduciendo la letra 15%: recorta texto o cambia de layout.`);
     else if (m.ajuste > 8) aviso(m.n, `Hubo que reducir la letra ${m.ajuste}% para que cupiera: recorta el texto.`);
     const fondo = parseColor(m.bg) || [17, 17, 17];

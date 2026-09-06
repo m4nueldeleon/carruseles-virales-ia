@@ -37,6 +37,10 @@
 ## 5. Cómo te ves
 
 - **Fotos reales tuyas (rutas en `assets/fotos/`):** [ej. assets/fotos/avatar.jpg — cara para la lámina de CTA]
+- **Banco de fotos reales (`assets/fotos/reales/` + `catalogo.json`):** [de dónde salen: carpeta de la sesión de estudio, álbum «X» de Fotos, carpeta de eventos. 10-17 fotos en poses distintas, con `recorte` PNG sin fondo y anotadas por situación, fondo, lado del sujeto, looks y temas. Se alimenta con `scripts/banco-fotos.py` (cosechar → hoja → curar → recortar → anotar)]
+- **Avatares (`assets/fotos/reales/avatares/`):** [un estilo por look generado desde 2-3 fotos reales limpias; ver references/AVATARES.md. Anota qué fotos son las referencias]
+- **banco_url:** [URL base del banco en la nube, p. ej. https://<store>.public.blob.vercel-storage.com/banco — la escribe `banco-fotos.py subir`; en otra máquina `banco-fotos.py bajar <banco_url>`. Token en ~/.vercel-blob-cli/.env, nunca en esta ficha]
+- **Personaje generado (`assets/fotos/soul/` + `catalogo.json`):** [opcional: si tienes un personaje entrenado (Higgsfield Soul), anota el id y la skill genera poses nuevas por tema]
 - **Logo (ruta en `assets/logos/`, PNG con fondo transparente):** [ ]
 - **Colores de marca (si tienes, en hex):** [ ]
 - **Looks que prefieres de la skill:** [guia-rapida · noticia · oscuro-tech · recurso · bosque · editorial-mono]

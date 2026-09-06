@@ -140,7 +140,7 @@ lámina por lámina y cúmplelo. Mínimos que QA revisa:
 | Lámina | Qué lleva |
 |---|---|
 | Portada | La cara de la marca en una situación del tema (retrato del banco `assets/fotos/soul/` o uno nuevo con su Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
-| Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Ninguna lámina de cuerpo se repite con el mismo layout tres veces seguidas |
+| Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Tres láminas seguidas con el mismo layout **y** el mismo tratamiento visual (sin imagen, sin marcador, sin número) se ven como PDF: varía la imagen o el recurso, no necesariamente el layout |
 | Guardable | Tipográfica (es la que se lee), con `kicker` «Guarda esto» y, si sobra espacio, un ícono pequeño `abajo` |
 | CTA | La cara de la marca como `recorte` grande (o `marca.avatar`) señalando al botón, con la misma fuente de rostro que la portada (todo real o todo Soul) |
 
@@ -150,11 +150,16 @@ Recursos de personalidad que existen en el motor (úsalos, con medida: dos o tre
 `grano` textura fina · `foto-texto` (foto arriba, texto abajo) · `numero_fantasma` · chips.
 
 Cómo se consigue cada imagen (`references/IMAGENES.md`):
-- **La cara de la marca**: primero el banco (`assets/fotos/soul/catalogo.json`: situación, fondo,
-  lado libre para el texto, looks afines). Si ninguna encaja con el tema, genera una nueva con
-  `generate_image` (`soul_2` + `soul_id` de `MI-MARCA.md`), pidiendo la situación concreta del
-  tema y «subject on the right/left third» para dejar sitio al texto. Recorte con alfa:
-  `scripts/quitar-fondo.py` (fondo liso) o `remove_background` con el `job_id`.
+- **La cara de la marca, en este orden**: (1) el banco de **fotos reales**
+  (`assets/fotos/reales/catalogo.json`: situación, fondo, lado del sujeto, looks y temas afines,
+  `recorte` PNG con alfa y `url` pública); (2) los **avatares** ilustrados del mismo catálogo
+  (`avatares`, un estilo por look, `references/AVATARES.md`) cuando el tono pide dibujo;
+  (3) el personaje generado (`assets/fotos/soul/catalogo.json`, o uno nuevo con `soul_2` +
+  `soul_id` de `MI-MARCA.md` pidiendo «subject on the right/left third»). Un carrusel usa una
+  sola de las tres fuentes. Si el banco no tiene la pose que pide el tema, se amplía con
+  `scripts/banco-fotos.py` (cosechar → hoja → curar → recortar → anotar → subir) y queda para
+  la próxima vez. Si `MI-MARCA.md` trae `banco_url`, el banco vive en la nube: en una máquina
+  nueva `banco-fotos.py bajar <banco_url>` lo trae entero, y `imagen.src` acepta esas URL.
 - **Objetos, íconos e ilustraciones**: `nano_banana_pro` (la herramienta puede servirlo como
   `nano_banana_2`), estilo del look (plano y cálido para guía/recurso; 3D con halo para
   oscuro-tech; fotográfico para noticia), fondo liso del color del look o transparente.
@@ -236,6 +241,9 @@ tema tal cual. Detalle en `references/MEDICION.md`.
 | «Empaqueta la skill» | `bash scripts/empaquetar.sh` → `dist/*.skill` para subir a claude.ai |
 | «Haz una serie» | 3-5 carruseles con el mismo look y esqueleto, numerados, un tema por pieza (anota en `notas` que el look se repite a propósito) |
 | «Otro carrusel hoy» | Corre `siguiente-look.mjs`: mira las carpetas hermanas del día, no solo el histórico |
+| «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
+| «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
+| «Sube / baja mi banco a la nube» | `banco-fotos.py subir` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`; anota `banco_url` en `MI-MARCA.md` |
 
 ## Reglas que no se rompen
 

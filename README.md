@@ -12,7 +12,8 @@ IA lo ejecute con criterio sobre tu marca.
 - 🪝 **Ganchos que funcionan en español** — fórmulas probadas con ejemplos reales y un sistema de 3 ángulos puntuados.
 - ✍️ **Voz humana** — lista negra de frases de IA, longitudes por lámina, prueba de leer en voz alta.
 - 🎨 **6 looks rotativos diseñados por código** — guía rápida, noticia, oscuro-tech, recurso, bosque, editorial-mono. Cero look genérico de IA.
-- 🖼️ **Tu cara en cada carrusel** — banco de retratos tuyos en situaciones (con tu personaje de Higgsfield o fotos reales), recortes sobre paneles de color, stickers, marcador de plumón, foto arriba + texto abajo, íconos 3D generados. Todo el texto va por código; ninguna imagen lleva letras.
+- 🖼️ **Tu cara en cada carrusel** — banco de fotos reales tuyas (cosechadas de una carpeta o de Fotos de Mac, curadas por hojas de contacto, recortadas sin fondo y anotadas por tema), avatares dibujados en el estilo de cada look y, si lo tienes, tu personaje generado. Recortes sobre paneles de color, stickers, marcador de plumón, foto arriba + texto abajo, íconos 3D. Todo el texto va por código; ninguna imagen lleva letras.
+- ☁️ **Banco en la nube** — `banco-fotos.py subir` manda fotos, recortes y avatares a un almacén con URL pública (Vercel Blob) y `bajar` lo trae en otra máquina; las láminas aceptan esas URL, así que la skill funciona igual en tu laptop, en un servidor o en claude.ai.
 - ✅ **Puerta de calidad medible** — `qa.mjs` revisa desbordes, tamaños mínimos, contraste, palabras por lámina, clichés, CTA y palabra clave, y calcula un índice de viralidad 0-100.
 - 📈 **Aprende de tus resultados** — anota alcance, guardados y compartidos a las 48 h y 7 días; el histórico rota looks y repite lo que ganó.
 - 🤖 **Contrato JSON** — `carrusel.json` lo puede escribir Claude, otra IA barata (ver `hermes/`) o una persona; el render es el mismo.
@@ -66,7 +67,8 @@ Mide este carrusel: https://www.instagram.com/p/...
 ```
 mis-carruseles/
 ├── MI-MARCA.md                       tu ficha (una vez)
-├── assets/fotos/                     tus fotos y logo
+├── assets/fotos/reales/              tu banco: fotos, recortes/, avatares/ y catalogo.json
+├── assets/fotos/soul/                retratos de tu personaje generado (opcional)
 ├── historico.json                    lo que ya publicaste y cómo le fue
 └── 2026-09-06-cotizar-sin-perder-dinero/
     ├── carrusel.json                 el guion (fuente de verdad)
@@ -106,7 +108,7 @@ node scripts/escribir.mjs --tema "5 errores al cotizar" --carpeta ./mis-carrusel
 - macOS, Linux o Windows (WSL)
 - [Claude Code](https://claude.com/claude-code)
 - Node.js 18+ (el setup instala Playwright si falta)
-- Opcional: Python 3 (links y PDFs), `yt-dlp` (YouTube), un MCP de imágenes (Higgsfield, Gemini, fal.ai…) para ilustraciones y personajes
+- Opcional: Python 3 + Pillow (links, PDFs y el banco de fotos), `yt-dlp` (YouTube), `uv` (recortes de fotos con rembg en local), un MCP de imágenes (Higgsfield, Gemini, fal.ai…) para ilustraciones, avatares y personajes, y una cuenta de Vercel (gratis) si quieres el banco en la nube
 
 ## Filosofía
 

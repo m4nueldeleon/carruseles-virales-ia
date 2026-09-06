@@ -34,7 +34,7 @@ Tres niveles tipográficos por lámina, no más: título (84 a 156 px), subtítu
 | `serie` | no | texto | Etiqueta de la barra superior en todas las láminas. 1 a 3 palabras |
 | `tema` | no | texto | Una frase. No se renderiza |
 | `tipo` | no | enum | `guia`, `lista`, `recurso`, `noticia`, `tutorial`, `contrarian`, `historia`, `comparativa`, `prompt` |
-| `objetivo` | no | enum | `saves`, `shares`, `comments`, `follows` |
+| `objetivo` | no | enum o arreglo de 2 | `saves`, `shares`, `comments`, `follows` (o `["saves","shares"]`: principal + secundaria) |
 | `palabra_clave` | no | texto | La palabra del CTA. Debe aparecer en la lámina `cta` y en el `caption`; si falta en alguno, QA da error |
 | `entregable` | no | texto | Qué se manda por DM cuando comentan la palabra |
 | `referencia` | no | texto | Link o archivo de origen |
@@ -59,7 +59,7 @@ Un `look` mal escrito no rompe el render: cae a `guia-rapida` sin avisar. Revisa
 > `alt` (opcional, ≤1,000 caracteres): texto alternativo de la lámina para Instagram, en lenguaje natural y con la palabra clave del tema. No se renderiza; `caption.txt` lo lista para pegarlo al subir. QA avisa si ninguna lámina lo trae.
 
 
-> `cta-cara` omite la barra inferior por omisión: el `@` ya va en el sello junto al botón. `sin_bottom: false` la fuerza; en cualquier otro layout `sin_bottom: true` la quita (solo con foto a sangre y nunca en portada).
+> `cta-cara` con `imagen` (recorte o derecha) omite el avatar circular: la imagen es el rostro. Sin `imagen`, pinta `marca.avatar`. Además omite la barra inferior por omisión: el `@` ya va en el sello junto al botón. `sin_bottom: false` la fuerza; en cualquier otro layout `sin_bottom: true` la quita (solo con foto a sangre y nunca en portada).
 
 
 Solo `layout` es obligatorio. `rol` vale `cuerpo` si lo omites.
@@ -89,7 +89,7 @@ Solo `layout` es obligatorio. `rol` vale `cuerpo` si lo omites.
 | `alinea` | `centro` (default), `arriba`, `abajo` | Los layouts densos van `arriba` solos |
 | `centrado` | `true` centra texto y píldoras | Úsalo en citas y CTA |
 | `sin_top`, `sin_bottom` | `true` quita la barra correspondiente | Solo con foto a sangre que ya trae su propia jerarquía |
-| `clase` | Clase CSS extra | No la uses salvo que tengas CSS propio |
+| `clase` | Clase CSS extra | Solo dos valores tienen efecto sin CSS propio: `recorte-suave` (con `imagen.pos: "derecha"` la foto se ajusta entera, pegada abajo a la derecha, en vez de recortarse a cubrir; sirve para recortes con alfa en layouts que no aceptan `recorte`) y `centrado`. Cualquier otra clase se ignora salvo que la definas en tu look |
 
 ### Qué renderiza cada layout
 
