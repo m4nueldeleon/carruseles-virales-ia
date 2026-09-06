@@ -12,7 +12,7 @@ IA lo ejecute con criterio sobre tu marca.
 - 🪝 **Ganchos que funcionan en español** — fórmulas probadas con ejemplos reales y un sistema de 3 ángulos puntuados.
 - ✍️ **Voz humana** — lista negra de frases de IA, longitudes por lámina, prueba de leer en voz alta.
 - 🎨 **6 looks rotativos diseñados por código** — guía rápida, noticia, oscuro-tech, recurso, bosque, editorial-mono. Cero look genérico de IA.
-- 🖼️ **Imágenes con reglas** — todo el texto va por código; las imágenes nunca llevan letras; tu foto real en el CTA.
+- 🖼️ **Tu cara en cada carrusel** — banco de retratos tuyos en situaciones (con tu personaje de Higgsfield o fotos reales), recortes sobre paneles de color, stickers, marcador de plumón, foto arriba + texto abajo, íconos 3D generados. Todo el texto va por código; ninguna imagen lleva letras.
 - ✅ **Puerta de calidad medible** — `qa.mjs` revisa desbordes, tamaños mínimos, contraste, palabras por lámina, clichés, CTA y palabra clave, y calcula un índice de viralidad 0-100.
 - 📈 **Aprende de tus resultados** — anota alcance, guardados y compartidos a las 48 h y 7 días; el histórico rota looks y repite lo que ganó.
 - 🤖 **Contrato JSON** — `carrusel.json` lo puede escribir Claude, otra IA barata (ver `hermes/`) o una persona; el render es el mismo.
@@ -85,10 +85,21 @@ Mira un ejemplo completo con marca ficticia en [`ejemplos/`](ejemplos/).
 |---|---|
 | `SKILL.md` | El cerebro: las 8 fases, valores por omisión, reglas que no se rompen |
 | `references/` | Psicología de la viralidad (con fuentes) · ganchos en español · formatos y estructura · dirección de arte y los 6 looks · contrato JSON y layouts · imágenes · copy con voz humana · referencias de entrada · medición |
-| `scripts/` | `render.mjs` (JSON → PNG + preview + portada a tamaño de cuadrícula) · `qa.mjs` (puerta de calidad + índice) · `siguiente-look.mjs` (qué look toca) · `referencia.py` (link o captura → ficha) · `quitar-fondo.py` (fondo liso → transparencia) · `medir.py` (resultados → histórico) · `setup.sh` · `empaquetar.sh` |
+| `scripts/` | `render.mjs` (JSON → PNG + preview + portada a tamaño de cuadrícula) · `qa.mjs` (puerta de calidad + índice) · `siguiente-look.mjs` (qué look toca) · `referencia.py` (link o captura → ficha) · `quitar-fondo.py` (fondo liso → transparencia) · `medir.py` (resultados → histórico) · `escribir.mjs` (escribe el guion con la API de Anthropic, para servidores y asistentes) · `setup.sh` · `empaquetar.sh` |
 | `templates/` | `MI-MARCA.md` · `carrusel.schema.json` · `base.css` · `looks/*.css` |
 | `hermes/` | Rutina y esquema para que un modelo barato escriba el `carrusel.json` y este motor lo renderice |
 | `ejemplos/` | Un carrusel completo renderizado |
+
+## Sin Claude Code: la API de Anthropic
+
+`scripts/escribir.mjs` escribe el `carrusel.json` y el caption con Claude por API (llave en
+`ANTHROPIC_API_KEY` o en `~/.anthropic-cli/.env`), renderiza, corre QA y corrige una ronda. Sirve
+para un servidor, un cron o un asistente como Hermes; las imágenes se generan aparte con la
+herramienta que tengas.
+
+```bash
+node scripts/escribir.mjs --tema "5 errores al cotizar" --carpeta ./mis-carruseles --tipo lista
+```
 
 ## Requisitos
 

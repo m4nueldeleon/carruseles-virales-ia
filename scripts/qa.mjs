@@ -134,6 +134,11 @@ if (data.caption) {
   if (data.palabra_clave && !cta.some(c => textoDe(c).toUpperCase().includes(String(data.palabra_clave).toUpperCase()))) err(N, `La palabra clave «${data.palabra_clave}» no está en la lámina de CTA.`);
   if (!ENVIO.test(data.caption) && !data.slides.some(s => ENVIO.test(textoDe(s)))) aviso(0, 'Falta la frase de envío con destinatario («Mándaselo a tu socio que…»): los envíos son la señal #1 de alcance a no seguidores.');
 } else aviso(0, 'No hay caption.');
+const conImagen = data.slides.filter(s => s.imagen && s.imagen.src);
+if (!portada.imagen || !portada.imagen.src) aviso(1, 'La portada no lleva imagen: la cara de la marca en una situación del tema sube la atención y la identidad.');
+const cuerpoConImg = data.slides.filter(s => (s.rol || 'cuerpo') === 'cuerpo' && s.imagen && s.imagen.src).length;
+if (cuerpoConImg < 2) aviso(0, `Solo ${cuerpoConImg} lámina(s) de cuerpo con imagen: el plan visual pide al menos 2 (ícono/ilustración, foto en situación o captura).`);
+{ const seq = data.slides.map(s => s.layout); let rep = 1; for (let i = 1; i < seq.length; i++) { rep = seq[i] === seq[i - 1] ? rep + 1 : 1; if (rep === 4) { aviso(i + 1, `Cuatro láminas seguidas con el layout ${seq[i]}: rompe el ritmo con una imagen, un dato-hero o una foto-texto.`); break; } } }
 const conAlt = data.slides.filter(s => s.alt).length;
 if (conAlt === 0) aviso(0, 'Ninguna lámina trae `alt` (texto alternativo con la palabra clave del tema): Instagram y Google indexan ese texto.');
 const hashtags = data.hashtags || [];
@@ -201,7 +206,7 @@ function parseColor(s, fondo) {
     const fondo = parseColor(m.bg) || [17, 17, 17];
     let minContraste = 21, minTinta = 21, peor = '';
     for (const t of m.textos) {
-      const esMicro = /top|bottom|sello|chip|autor|pager|handle|kicker/.test(t.clase);
+      const esMicro = /top|bottom|sello|chip|autor|pager|handle|kicker|sticker/.test(t.clase);
       const minFs = /titulo|cita|dato/.test(t.clase) ? 84 : esMicro ? 30 : 38;
       if (t.fs < minFs) (t.fs < 30 ? err : aviso)(m.n, `Texto de ${Math.round(t.fs)}px en .${t.clase} («${t.txt}»): mínimo ${minFs}px.`);
       if (t.left < SAFE - 2 || t.right > m.w - SAFE + 2 || t.top < 0 || t.bottom > m.h) {
@@ -223,14 +228,14 @@ function parseColor(s, fondo) {
   const avisos = problemas.filter(p => p.nivel === 'aviso');
   const tiene = re => problemas.some(p => re.test(p.msg));
   const subConNumero = /\d/.test(String(portada.subtitulo || ''));
-  const portadaAnuncia = (portada.chips || []).length >= 3 || !!portada.imagen;
+  const portadaAnuncia = (portada.chips || []).length >= 3 || !!(portada.imagen && portada.imagen.src);
   const pts = {
     gancho: (palPortada >= 3 && palPortada <= 7 ? 10 : palPortada <= 9 ? 6 : 0) + (hookOk ? 10 : 0) + (/\*[^*]+\*/.test(String(portada.titulo || '')) ? 4 : 0)
       + (subConNumero ? 3 : 0) + (portadaAnuncia ? 3 : 0),
     estructura: (N >= 7 && N <= 12 ? 6 : N >= 5 ? 3 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) && s2.loop ? 4 : s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 2 : 0)
       + (conNumero >= 2 ? 5 : conNumero === 1 ? 2 : 0) + (cuerpoN && conLoop / cuerpoN >= 0.5 ? 5 : conLoop ? 2 : 0) + (guardable ? 7 : 0)
       + (cta.length === 1 && data.palabra_clave ? 8 : cta.length === 1 ? 5 : 0),
-    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 6) + (tiene(/palabras: máximo/) ? 0 : 4) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 6),
+    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 5) + (tiene(/palabras: máximo/) ? 0 : 3) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 4) + (cuerpoConImg >= 2 && portada.imagen && portada.imagen.src ? 4 : cuerpoConImg >= 1 ? 2 : 0),
     copy: (tiene(/Frase de IA/) ? 0 : 5) + (data.caption && data.caption.split('\n')[0].length <= 125 ? 2 : 0) + (hashtags.length >= 3 && hashtags.length <= 5 ? 2 : 0)
       + (tiene(/Cebo de interacción/) ? 0 : 3) + (tiene(/frase de envío/) ? 0 : 3),
   };

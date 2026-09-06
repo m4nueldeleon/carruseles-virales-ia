@@ -306,3 +306,15 @@ Ponlo en la lámina 2 y en al menos la mitad de las de `cuerpo`. No lo pongas en
 - **Idioma y costo real** en `recurso` y `lista` de recursos: cada ítem dice en qué idioma está y si el certificado (no solo el curso) es gratis. edX/HarvardX cobran el certificado verificado; Google AI Essentials cobra por mes; CS50 da certificado gratis. Verificar el día que se escribe.
 - **El loop compromete**: si el `loop` de la lámina N promete «el error que lo tira todo», el título de la lámina N+1 nombra ese error. QA no lo mide; se revisa leyendo en voz alta.
 - **CTA de una sola acción**: `boton: "Comenta PALABRA"`, título con la pregunta, cuerpo ≤15 palabras que dice qué llega por DM. La lámina guardable ya pidió el guardado con el kicker «Guarda esto».
+
+## Plan visual por tipo (mínimos)
+
+| Tipo | Portada | Cuerpo con imagen | CTA |
+|---|---|---|---|
+| guia / lista | recorte de la persona sobre panel + chips | ilustración de los ítems (`abajo`) + persona señalando en el `dato-hero` (`recorte`) | recorte de la persona |
+| recurso | persona con laptop o tablet (`derecha` o `recorte`) | ícono 3D del recurso (`centro`) + captura real de la página (`foto-texto`) | avatar |
+| noticia | foto de escena con `duotono` y scrim (`fondo`) | persona en escenario o señalando (`recorte`) + objeto de la noticia (`abajo`) | recorte |
+| tutorial | persona con el dispositivo del tutorial (`foto-texto` o `derecha`) | captura real de cada paso clave (`foto-texto`) + ícono 3D | recorte señalando |
+| contrarian | persona pensando o con manos abiertas (`recorte-izquierda`) | una foto en `duotono` para el mito + ilustración para la realidad | recorte |
+| historia | foto en situación a sangre (`fondo`) | dos fotos más de la secuencia (`foto-texto`) | avatar |
+| comparativa / prompt | persona señalando (`recorte`) | ícono 3D del objeto + `prompt` tipográfico | recorte |

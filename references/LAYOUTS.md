@@ -425,3 +425,16 @@ Corre `node scripts/qa.mjs <carpeta>` después de cada cambio al JSON. Sale con 
 13. **`sin_bottom` en la portada.** Quita el `Desliza →`, que es lo único que le dice al lector que hay más láminas.
 14. **`hashtags` como texto.** Es un arreglo: `["#uno", "#dos"]`, no `"#uno #dos"`.
 15. **Dos ideas en una lámina.** Si escribes "además" o "también" dos veces, QA avisa. Parte la lámina en dos.
+
+## Recursos de personalidad (añadidos el 2026-09-06)
+
+| Recurso | Cómo se pide en el JSON | Para qué |
+|---|---|---|
+| Recorte de persona sobre panel | `"imagen": {"src": "assets/img/01-manuel.png", "pos": "recorte", "panel": true}` (PNG con alfa; el sujeto sale por el borde derecho; `recorte-izquierda` para el otro lado) | Portada y CTA con presencia; el texto ocupa la mitad izquierda |
+| Foto arriba, texto abajo | `"layout": "foto-texto"` + `"imagen": {"src": "…", "pos": "arriba"}` | Rehook con la persona en situación, tutoriales con captura |
+| Marcador de plumón | `==palabras==` en título o cuerpo | Subrayar el dato o la frase que se lleva el lector (una por lámina) |
+| Sticker | `"sticker": "gratis"`, `"sticker_lado": "izquierda"` (≤22 caracteres) | Portada y una lámina de cuerpo, máximo dos por carrusel |
+| Duotono | `"imagen": {…, "duotono": true}` | Foto de fondo o derecha teñida con el acento del look (noticia, oscuro-tech, editorial-mono) |
+| Grano | `"grano": true` | Textura fina en láminas tipográficas de looks claros |
+
+Regla de dosis: dos o tres recursos por carrusel, no todos en todas las láminas. El esqueleto (barras, pager, tipografía) es lo que da consistencia; los recursos dan ritmo.

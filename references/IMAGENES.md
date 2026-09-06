@@ -232,3 +232,23 @@ Si una lámina no pasa el checklist y no hay tiempo de arreglar la imagen, quít
 4. **Retrato de fondo en la portada (`portada-foto`).** El sujeto ocupa un lado (o la mitad superior) y el titular el otro; con `alinea: "abajo"` el título queda bajo el rostro, nunca encima de la cara ni sobre ropa oscura que baje el contraste. Pide el retrato con «plain background, subject on the right third» o recórtalo con `pos: "derecha"`.
 5. **`abajo` corta la parte baja.** Una imagen con `pos: "abajo"` termina 110 px arriba del borde para no chocar con la barra del handle; si la imagen es apaisada (16:9) queda chica. Genera en 4:3 o 1:1 y con el sujeto centrado.
 6. **Ilustración en el cuerpo: una, no cinco.** Un ícono 3D o personaje en una lámina de cuerpo reactiva la atención; en todas, cansa y compite con el texto.
+
+## El banco de retratos del usuario (obligatorio en cada carrusel)
+
+La cara del usuario en una situación del tema es lo que da personalidad y lo que la audiencia
+reconoce en el feed. La carpeta de trabajo guarda un banco en `assets/fotos/soul/` con un
+`catalogo.json` que describe cada retrato: situación, fondo (claro/oscuro/color), de qué lado
+está el sujeto y qué lado queda libre para el texto, y con qué looks combina. Regla de uso:
+
+1. Portada: elige del banco el retrato cuya situación cuente el tema (laptop = trabajar con IA,
+   celular = WhatsApp, pizarrón = método, mostrador = dueño de negocio, escenario = mensaje
+   fuerte, señalando = dato o CTA). Si ninguno encaja, genera uno nuevo con `soul_2` y el
+   `soul_id` del usuario: «Editorial photo of the man <situación del tema>, <fondo del look>,
+   subject on the <right/left> third, photorealistic. Absolutely no text…».
+2. Recortes con alfa (`recortes/`): sirven para `pos: "recorte"` sobre un `panel` o sobre el
+   fondo del look. Se hacen con `remove_background` de la herramienta pasando el `job_id` de la
+   generación (el catálogo guarda los `job_ids`). El recorte local por inundación
+   (`quitar-fondo.py`) solo sirve para ilustraciones sobre fondo liso, no para retratos.
+3. Un carrusel usa una sola fuente de rostro (todo del banco o todo fotos reales), dos o tres
+   apariciones (portada, una lámina de cuerpo, CTA) y nunca la misma pose dos veces.
+4. Cada retrato nuevo se guarda en el banco con su línea en `catalogo.json` para la próxima vez.

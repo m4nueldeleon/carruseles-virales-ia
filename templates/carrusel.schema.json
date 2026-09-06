@@ -30,7 +30,7 @@
         "type": "object", "required": ["layout"],
         "properties": {
           "rol": { "enum": ["portada", "rehook", "agitacion", "cuerpo", "cheatsheet", "cta"] },
-          "layout": { "enum": ["portada-titulo", "portada-foto", "punto-numero", "dato-hero", "lista", "comparativa", "pasos", "cita", "texto-pleno", "prompt", "cta-cara"] },
+          "layout": { "enum": ["portada-titulo", "portada-foto", "punto-numero", "dato-hero", "lista", "comparativa", "pasos", "cita", "texto-pleno", "prompt", "cta-cara", "foto-texto"] },
           "kicker": { "type": "string", "description": "píldora arriba del título; máximo 1 cada 3 láminas" },
           "titulo": { "type": "string", "description": "usa *palabra* para el acento; 4-7 palabras en portada" },
           "subtitulo": { "type": "string" },
@@ -46,10 +46,12 @@
           "prompt": { "type": "string" }, "etiqueta": { "type": "string" },
           "boton": { "type": "string", "description": "texto de la píldora en el CTA (una sola acción)" },
           "chips": { "type": "array", "items": { "type": "string" } },
-          "imagen": { "type": "object", "properties": { "src": { "type": "string" }, "pos": { "enum": ["fondo", "abajo", "derecha", "centro"] }, "sangra": { "type": "boolean" }, "prompt": { "type": "string", "description": "si hay que generarla: el prompt (sin texto dentro de la imagen)" } } },
+          "imagen": { "type": "object", "properties": { "src": { "type": "string" }, "pos": { "enum": ["fondo", "abajo", "derecha", "centro", "recorte", "recorte-izquierda", "arriba"] }, "sangra": { "type": "boolean" }, "panel": { "type": "boolean", "description": "bloque de color de acento detrás del recorte" }, "duotono": { "type": "boolean", "description": "foto a un solo tono con el acento del look" }, "prompt": { "type": "string", "description": "si hay que generarla: el prompt (sin texto dentro de la imagen)" } } },
           "pie": { "type": "string" }, "etiqueta_top": { "type": "string" },
           "alt": { "type": "string", "maxLength": 1000, "description": "texto alternativo de la lámina para Instagram (con la palabra clave del tema, en lenguaje natural); no se renderiza, se pega al subir" },
           "alinea": { "enum": ["centro", "arriba", "abajo"] }, "centrado": { "type": "boolean" },
+          "sticker": { "type": "string", "maxLength": 22, "description": "píldora girada arriba a la derecha (ej. «gratis», «paso 1 de 4»)" }, "sticker_lado": { "enum": ["derecha", "izquierda"] },
+          "grano": { "type": "boolean", "description": "textura fina de grano sobre la lámina" },
           "clase": { "type": "string" }, "sin_top": { "type": "boolean" }, "sin_bottom": { "type": "boolean" }
         }
       }

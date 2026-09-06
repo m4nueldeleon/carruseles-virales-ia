@@ -6,7 +6,7 @@ import path from 'node:path';
 export const FORMATOS = { '4:5': [1080, 1350], '3:4': [1080, 1440], '1:1': [1080, 1080], '9:16': [1080, 1920] };
 export const LOOKS = ['guia-rapida', 'noticia', 'oscuro-tech', 'recurso', 'bosque', 'editorial-mono'];
 export const LAYOUTS = ['portada-titulo', 'portada-foto', 'punto-numero', 'dato-hero', 'lista', 'comparativa',
-  'pasos', 'cita', 'texto-pleno', 'prompt', 'cta-cara'];
+  'pasos', 'cita', 'texto-pleno', 'prompt', 'cta-cara', 'foto-texto'];
 
 // Fondo efectivo de cada look (para calcular contraste en QA cuando hay foto + scrim)
 export const FONDO_EFECTIVO = {
@@ -28,6 +28,7 @@ export function marcado(s) {
   let t = esc(s);
   t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   t = t.replace(/\*(.+?)\*/g, '<span class="acento">$1</span>');
+  t = t.replace(/==(.+?)==/g, '<span class="marca">$1</span>');
   return t.replace(/\n/g, '<br>');
 }
 export function palabras(s) { return String(s ?? '').replace(/[*_]/g, '').trim().split(/\s+/).filter(Boolean).length; }
@@ -62,10 +63,13 @@ function bloqueImagen(slide, dirCarrusel, dirSalida) {
   const img = slide.imagen;
   if (!img || !img.src) return { html: '', clase: '' };
   const url = rutaImg(img.src, dirCarrusel, dirSalida);
-  const pos = img.pos || (slide.layout === 'portada-foto' ? 'fondo' : 'abajo');
+  const pos = img.pos || (slide.layout === 'portada-foto' ? 'fondo' : slide.layout === 'foto-texto' ? 'arriba' : 'abajo');
   if (pos === 'fondo') return { html: `<div class="bg" style="background-image:url('${url}')"></div><div class="scrim"></div>`, clase: 'con-img-fondo' };
   if (pos === 'derecha') return { html: `<div class="img-derecha" style="background-image:url('${url}')"></div>`, clase: 'con-img-derecha' };
   if (pos === 'centro') return { html: `<div class="img-centro" style="background-image:url('${url}')"></div>`, clase: 'con-img-centro' };
+  if (pos === 'recorte') return { html: `${img.panel ? '<div class="panel"></div>' : ''}<div class="recorte" style="background-image:url('${url}')"></div>`, clase: `con-recorte${img.panel ? ' con-panel' : ''}` };
+  if (pos === 'recorte-izquierda') return { html: `${img.panel ? '<div class="panel" style="right:auto;left:0"></div>' : ''}<div class="recorte izquierda" style="background-image:url('${url}')"></div>`, clase: `con-recorte recorte-izq${img.panel ? ' con-panel' : ''}` };
+  if (pos === 'arriba') return { html: `<div class="foto" style="background-image:url('${url}')"></div>`, clase: 'con-foto-arriba' };
   return { html: `<div class="img-abajo ${img.sangra ? 'sangra' : ''}" style="background-image:url('${url}')"></div>`, clase: 'con-img-abajo' };
 }
 
@@ -78,7 +82,7 @@ function cuerpoSlide(s, marca, dirCarrusel, dirSalida) {
   const loop = s.loop ? `<p class="loop">${marcado(s.loop)}</p>` : '';
   const chips = s.chips?.length ? `<div class="chips">${s.chips.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : '';
   switch (L) {
-    case 'portada-titulo': case 'portada-foto': case 'texto-pleno':
+    case 'portada-titulo': case 'portada-foto': case 'texto-pleno': case 'foto-texto':
       return k + t + sub + chips + cu + loop;
     case 'punto-numero':
       return `${s.numero ? `<div class="numero">${esc(s.numero)}</div>` : ''}${t}${sub}${cu}${loop}`;
@@ -127,8 +131,9 @@ export function construirHTML({ data, dirCarrusel, dirSalida, dirSkill, embeberF
   const slides = data.slides.map((s, i) => {
     const n = i + 1;
     const img = bloqueImagen(s, dirCarrusel, dirSalida);
-    const clases = ['slide', `l-${s.layout}`, `r-${s.rol || 'cuerpo'}`, img.clase, s.numero_fantasma ? 'con-numero' : '', s.clase || '', s.centrado ? 'centrado' : ''].filter(Boolean).join(' ');
+    const clases = ['slide', `l-${s.layout}`, `r-${s.rol || 'cuerpo'}`, img.clase, s.numero_fantasma ? 'con-numero' : '', s.clase || '', s.centrado ? 'centrado' : '', s.imagen?.duotono ? 'duotono' : '', s.grano ? 'grano' : ''].filter(Boolean).join(' ');
     const fantasma = s.numero_fantasma ? `<div class="numero-fantasma">${esc(s.numero_fantasma)}</div>` : '';
+    const sticker = s.sticker ? `<div class="sticker ${s.sticker_lado === 'izquierda' ? 'izquierda' : ''}">${esc(s.sticker)}</div>` : '';
     const esPortada = s.rol === 'portada' || n === 1;
     const top = s.sin_top ? '' : `<div class="top"><span class="etiqueta">${esc(s.etiqueta_top ?? data.serie ?? '')}</span><span class="pager">${String(n).padStart(2, '0')}/${String(total).padStart(2, '0')}</span></div>`;
     const derecha = esPortada ? `<span class="desliza">${esc(s.pie ?? 'Desliza')}</span>` : (s.pie ? `<span>${esc(s.pie)}</span>` : `<span class="pager">${n} de ${total}</span>`);
@@ -137,7 +142,7 @@ export function construirHTML({ data, dirCarrusel, dirSalida, dirSkill, embeberF
     // Las láminas densas van centradas como las demás; si desbordan, el ajuste automático reduce la letra y QA avisa.
     const alinea = s.alinea === 'arriba' ? 'arriba' : s.alinea === 'abajo' ? 'abajo' : '';
     return `<section class="${clases}" data-n="${n}" data-bg="${fondo}" data-layout="${s.layout}" data-rol="${s.rol || 'cuerpo'}">
-${img.html}${fantasma}${top}
+${img.html}${fantasma}${sticker}${top}
 <div class="contenido ${alinea}">
 ${cuerpoSlide(s, marca, dirCarrusel, dirSalida)}
 </div>

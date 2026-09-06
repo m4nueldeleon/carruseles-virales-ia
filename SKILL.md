@@ -132,24 +132,38 @@ Reglas que QA no puede medir y tú sí (léelas en voz alta antes de renderizar)
 
 Guarda el JSON en `<carpeta-de-trabajo>/<AAAA-MM-DD>-<slug>/carrusel.json`.
 
-## 5. Imágenes
+## 5. Imágenes y personalidad (obligatorio, no opcional)
 
-Decide por lámina con `references/IMAGENES.md`: portada con personaje, ilustración o foto real
-cuando el tema lo admite (rostro o personajes suben la atención); cuerpo casi siempre
-tipográfico (una ilustración o ícono en una lámina de cuerpo, no en todas); CTA con
-`marca.avatar`. **Todo el texto va por código; ninguna imagen lleva letras.** Reglas de taller:
-- **Un solo rostro por carrusel**: o todas las fotos son reales o todas son del personaje
-  generado; nunca las dos en la misma pieza (se ven dos personas distintas).
-- Genera con la herramienta de imagen disponible (Higgsfield primero; si no hay ninguna, look
-  tipográfico). La herramienta puede sustituir el modelo pedido (por ejemplo `nano_banana_pro` →
-  `nano_banana_2`): anótalo en `imagen.prompt`, no importa. Descarga el resultado con `curl`
-  desde la URL que devuelve el trabajo a `assets/img/NN-nombre.png` dentro de la carpeta del
-  carrusel; copia ahí también las fotos reales que uses (la carpeta viaja completa).
-- Fondo liso que hay que quitar: `remove_background` acepta el `job_id` de la generación; para un
-  archivo local, `python3 "<skill>/scripts/quitar-fondo.py" entrada.png salida.png`.
-- Portada con foto de fondo: el sujeto a un lado y el texto al otro (o `alinea: "abajo"` con el
-  rostro arriba); nunca el título encima de la cara o del pecho oscuro.
-- Logos de terceros: reales y verificados, pequeños, nunca protagonistas de la portada.
+Un carrusel sin imágenes se ve como un PDF. Antes de renderizar, escribe el **plan visual**
+lámina por lámina y cúmplelo. Mínimos que QA revisa:
+
+| Lámina | Qué lleva |
+|---|---|
+| Portada | La cara de la marca en una situación del tema (retrato del banco `assets/fotos/soul/` o uno nuevo con su Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
+| Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Ninguna lámina de cuerpo se repite con el mismo layout tres veces seguidas |
+| Guardable | Tipográfica (es la que se lee), con `kicker` «Guarda esto» y, si sobra espacio, un ícono pequeño `abajo` |
+| CTA | La cara de la marca como `recorte` grande (o `marca.avatar`) señalando al botón, con la misma fuente de rostro que la portada (todo real o todo Soul) |
+
+Recursos de personalidad que existen en el motor (úsalos, con medida: dos o tres por carrusel):
+`==palabra==` marcador tipo plumón en título o cuerpo · `sticker` píldora girada ·
+`imagen.panel` bloque de acento detrás del recorte · `imagen.duotono` foto a un tono del look ·
+`grano` textura fina · `foto-texto` (foto arriba, texto abajo) · `numero_fantasma` · chips.
+
+Cómo se consigue cada imagen (`references/IMAGENES.md`):
+- **La cara de la marca**: primero el banco (`assets/fotos/soul/catalogo.json`: situación, fondo,
+  lado libre para el texto, looks afines). Si ninguna encaja con el tema, genera una nueva con
+  `generate_image` (`soul_2` + `soul_id` de `MI-MARCA.md`), pidiendo la situación concreta del
+  tema y «subject on the right/left third» para dejar sitio al texto. Recorte con alfa:
+  `scripts/quitar-fondo.py` (fondo liso) o `remove_background` con el `job_id`.
+- **Objetos, íconos e ilustraciones**: `nano_banana_pro` (la herramienta puede servirlo como
+  `nano_banana_2`), estilo del look (plano y cálido para guía/recurso; 3D con halo para
+  oscuro-tech; fotográfico para noticia), fondo liso del color del look o transparente.
+- **Escenas de fondo**: `soul_location` para portada-foto sin persona.
+- **Capturas reales** de la herramienta cuando el tema es un tutorial: sin datos personales.
+- **Un solo rostro por carrusel**: todo real o todo generado con el Soul. Nunca mezclar.
+- **Todo el texto va por código; ninguna imagen lleva letras.** Descarga con `curl` desde la URL
+  del trabajo a `assets/img/NN-nombre.png` dentro de la carpeta del carrusel.
+- Logos de terceros: reales, pequeños, nunca protagonistas de la portada.
 
 ## 6. Render y puerta de calidad (bloqueante)
 
