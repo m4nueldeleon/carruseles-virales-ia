@@ -10,6 +10,8 @@
   "palabra_clave": "COTIZA",
   "entregable": "plantilla de cotización con los 5 puntos resueltos (PDF)",
   "entregable_existe": false,
+  "palabra_clave_conectada": false,
+  "publicaría": false,
   "referencia": null,
   "indice_qa": 97,
   "veredicto_qa": "LISTO",

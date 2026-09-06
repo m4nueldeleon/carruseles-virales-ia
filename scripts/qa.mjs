@@ -112,6 +112,7 @@ const todoTexto = data.slides.map(textoDe).join('\n') + '\n' + (data.caption || 
 for (const frase of LISTA_NEGRA) if (todoTexto.toLowerCase().includes(frase)) err(0, `Frase de IA en el copy: «${frase}». Bórrala y reescribe.`);
 for (const pal of prohibidasMarca) { const re = new RegExp(`\\b${pal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i'); if (re.test(todoTexto)) aviso(0, `Palabra prohibida en MI-MARCA.md: «${pal}».`); }
 if (/—/.test(data.slides.map(textoDe).join(' '))) aviso(0, 'Raya larga (—) en una lámina: usa punto, dos puntos o coma.');
+if (/—/.test(String(data.caption || ''))) aviso(0, 'Raya larga (—) en el caption: usa punto, dos puntos o coma.');
 if (masReciente && masReciente.look === data.look) aviso(0, `Mismo look (${data.look}) que el carrusel más reciente «${masReciente.slug}»: rota (node scripts/siguiente-look.mjs).`);
 data.slides.forEach((s, i) => {
   const acentos = (String(s.titulo || '').match(/\*[^*]+\*/g) || []).length;
@@ -190,7 +191,7 @@ function parseColor(s, fondo) {
         let bgPropio = null, anc = el;
         while (anc && anc !== slide) { const b = getComputedStyle(anc).backgroundColor; if (b && !/rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\)/.test(b) && b !== 'transparent') { bgPropio = b; break; } anc = anc.parentElement; }
         if (!bgPropio && panelBox) { const cx = (rr.left + rr.right) / 2, cy = (rr.top + rr.bottom) / 2; if (cx > panelBox.left && cx < panelBox.right && cy > panelBox.top && cy < panelBox.bottom) bgPropio = panelBg; }  // texto sobre el panel (hermano absoluto, no ancestro)
-        const esAcento = !!el.closest('.acento,.idx,.numero,.dato,.n,.autor');
+        const esAcento = !!el.closest('.acento,.idx,.numero,.dato,.n,.autor,.cta-boton,.col h3,.kicker,.chip');  // superficies de acento: exigen ≥4.5, no el ideal 7 del texto corrido
         const clase = (el.closest('.titulo,.sub,.cuerpo,.item,.cita,.dato,.paso,.cta-boton,.prompt,.loop,.col,.top,.bottom,.sello,.chip,.kicker,.autor,.numero') || el).className || el.tagName;
         textos.push({ txt: node.textContent.trim().slice(0, 40), fs: parseFloat(cs.fontSize), color: cs.color, bgPropio, esAcento, clase: String(clase).split(' ')[0],
           top: rr.top - r.top, bottom: rr.bottom - r.top, left: rr.left - r.left, right: rr.right - r.left, critico });

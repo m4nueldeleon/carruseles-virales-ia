@@ -162,7 +162,8 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
   filter: drop-shadow(0 30px 50px rgba(0,0,0,.28)); }
 .recorte.izquierda { right: auto; left: -40px; background-position: bottom left; }
 .con-recorte .contenido { right: 52%; }
-.con-recorte .titulo.t-xl, .con-recorte .titulo.t-l { font-size: 108px; }
+.con-recorte .titulo.t-xl, .con-recorte .titulo.t-l { font-size: 96px; }
+.con-recorte.con-panel .titulo.t-xl, .con-recorte.con-panel .titulo.t-l { font-size: 92px; }
 .con-panel .top .pager, .con-panel .bottom .desliza, .con-panel .bottom .pager { color: #fff; }
 .con-panel .bottom .desliza::after { color: #fff; }
 .con-panel .contenido { padding-right: 32px; }

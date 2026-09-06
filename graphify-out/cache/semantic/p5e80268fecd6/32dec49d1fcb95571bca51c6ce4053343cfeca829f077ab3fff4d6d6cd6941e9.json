@@ -1,0 +1,1 @@
+{"nodes": [{"id": "hermes_rutina", "label": "Hermes Routine", "file_type": "concept", "source_file": "hermes/RUTINA-CARRUSEL.md", "rationale": "A pattern for using cheaper LLM models to generate the JSON script following strict rules."}], "edges": [], "hyperedges": []}

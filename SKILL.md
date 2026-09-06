@@ -209,8 +209,10 @@ La carpeta queda así y se la muestras al usuario con el preview:
 
 Escribe `caption.txt` y `metadata.json` tú (el render no los genera; usa exactamente las claves
 de `templates/metadata.ejemplo.json`: `slug, fecha, tema, tipo, objetivo, look, laminas, hook,
-palabra_clave, entregable, entregable_existe, referencia, indice_qa, veredicto_qa, rondas_qa,
-imagenes, fuentes, mediciones, notas`). Cierra con: qué palabra clave hay que conectar en la
+palabra_clave, entregable, entregable_existe, palabra_clave_conectada, publicaría, referencia,
+indice_qa, veredicto_qa, rondas_qa, imagenes, fuentes, mediciones, notas`; `publicaría` es tu
+veredicto honesto de si lo subirías tal cual, y `palabra_clave_conectada` si el flujo de DM ya
+responde a esa palabra). Cierra con: qué palabra clave hay que conectar en la
 automatización de DM (ManyChat u otra) y si ya existe, qué entregable prometiste y si ya existe,
 y en qué orden subir las imágenes. En las notas de `caption.txt` van siempre dos avisos: al
 subir, agrega una pista de música de la librería (un carrusel 100% fotos con música es elegible

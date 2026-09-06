@@ -28,3 +28,5 @@
 .con-panel .bottom .desliza, .con-panel .bottom .pager { color: var(--acento); }
 .con-panel .bottom .desliza::after { color: var(--acento); }
 .con-panel .top .pager { color: #FFF7F2; }
+/* la barra superior es del color del acento: el sticker baja y cambia a tinta para no fundirse */
+.sticker { top: 150px; background: var(--ink); color: var(--bg); }
