@@ -654,6 +654,11 @@
       "degree": 8
     },
     {
+      "id": "scripts_banco_fotos_incorporar",
+      "label": "incorporar()",
+      "degree": 8
+    },
+    {
       "id": "scripts_banco_fotos_cmd_cosechar",
       "label": "cmd_cosechar()",
       "degree": 8
@@ -662,36 +667,9 @@
       "id": "scripts_banco_fotos_cmd_curar",
       "label": "cmd_curar()",
       "degree": 8
-    },
-    {
-      "id": "scripts_banco_fotos_incorporar",
-      "label": "incorporar()",
-      "degree": 8
     }
   ],
   "surprises": [
-    {
-      "source": "enum",
-      "target": "bosque",
-      "source_files": [
-        "templates/carrusel.schema.json",
-        "hermes/esquema-salida.json"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "extends",
-      "why": "connects across different repos/directories; peripheral node `bosque` unexpectedly reaches hub `enum`"
-    },
-    {
-      "source": "enum",
-      "target": "editorial-mono",
-      "source_files": [
-        "templates/carrusel.schema.json",
-        "hermes/esquema-salida.json"
-      ],
-      "confidence": "EXTRACTED",
-      "relation": "extends",
-      "why": "connects across different repos/directories; peripheral node `editorial-mono` unexpectedly reaches hub `enum`"
-    },
     {
       "source": "enum",
       "target": "guia-rapida",
@@ -716,51 +694,40 @@
     },
     {
       "source": "enum",
-      "target": "contrarian",
+      "target": "bosque",
       "source_files": [
         "templates/carrusel.schema.json",
         "hermes/esquema-salida.json"
       ],
       "confidence": "EXTRACTED",
       "relation": "extends",
-      "why": "connects across different repos/directories; peripheral node `contrarian` unexpectedly reaches hub `enum`"
+      "why": "connects across different repos/directories; peripheral node `bosque` unexpectedly reaches hub `enum`"
+    },
+    {
+      "source": "enum",
+      "target": "editorial-mono",
+      "source_files": [
+        "templates/carrusel.schema.json",
+        "hermes/esquema-salida.json"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "extends",
+      "why": "connects across different repos/directories; peripheral node `editorial-mono` unexpectedly reaches hub `enum`"
+    },
+    {
+      "source": "enum",
+      "target": "tutorial",
+      "source_files": [
+        "templates/carrusel.schema.json",
+        "hermes/esquema-salida.json"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "extends",
+      "why": "connects across different repos/directories; peripheral node `tutorial` unexpectedly reaches hub `enum`"
     }
   ],
-  "questions": [
-    {
-      "type": "bridge_node",
-      "question": "Why does `properties` connect `Slide Element Properties` to `Editorial Content Types`, `pie`, `sin_top`, `subtitulo`, `Layout and Social Elements`, `Generic Schema Properties`, `Image Styling Properties`, `Marketing Copy Components`, `Text Alignment Options`, `Side Placement Options`, `Alt Text Schema`, `Sticker Element Schema`, `Button Element Schema`, `Body Text Schema`, `Data Point Schema`, `Visual Texture Schema`, `Kicker Text Schema`, `Loop Element Schema`?",
-      "why": "High betweenness centrality (0.202) - this node is a cross-community bridge."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `properties` connect `JSON Schema Metadata` to `Brand Profile Metadata`, `Editorial Content Types`, `Layout and Social Elements`, `Carousel Schema Definition`?",
-      "why": "High betweenness centrality (0.148) - this node is a cross-community bridge."
-    },
-    {
-      "type": "bridge_node",
-      "question": "Why does `enum` connect `Editorial Content Types` to `Content Schema Definitions`?",
-      "why": "High betweenness centrality (0.114) - this node is a cross-community bridge."
-    },
-    {
-      "type": "verify_inferred",
-      "question": "Are the 9 inferred relationships involving `construir_parser()` (e.g. with `cmd_anotar()` and `cmd_avatar()`) actually correct?",
-      "why": "`construir_parser()` has 9 INFERRED edges - model-reasoned connections that need verification."
-    },
-    {
-      "type": "isolated_nodes",
-      "question": "What connects `description`, `type`, `description` to the rest of the system?",
-      "why": "247 weakly-connected nodes found - possible documentation gaps or missing edges."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `JSON Schema Metadata` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `Content Schema Definitions` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.08095238095238096 - nodes in this community are weakly interconnected."
-    }
-  ]
+  "tokens": {
+    "input": 54837,
+    "output": 3894
+  }
 }

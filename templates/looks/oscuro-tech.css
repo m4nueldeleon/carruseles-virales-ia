@@ -17,3 +17,6 @@
 .chip { background: rgba(255,255,255,.1); color: var(--ink); }
 .chip:nth-child(odd) { background: var(--acento); color: var(--acento-ink); }
 .cta-boton { background: var(--ink); color: #0B0B0D; }
+/* sobre el panel naranja, contador y «Desliza» van en tinta oscura (blanco daba 2.6:1) */
+.con-panel .top .pager, .con-panel .bottom .pager, .con-panel .bottom .desliza { color: var(--acento-ink); }
+.con-panel .bottom .desliza::after { color: var(--acento-ink); }
