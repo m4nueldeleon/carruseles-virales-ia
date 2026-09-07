@@ -285,6 +285,7 @@ lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md
 | «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
 | «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
 | «Sube / baja mi banco a la nube» | `banco-fotos.py subir --mi-marca MI-MARCA.md` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`. Con `--rotar` cambia el prefijo y mata las URL viejas; el almacén publica `robots.txt` con `Disallow: /` para no indexarse |
+| «Móntame el generador en el servidor» | `worker/README.md`: el worker que atiende los pedidos del módulo «Generador de carruseles» del Centro de Control de Marca en un VPS con Docker (Supabase + Vercel Blob + esta skill); se despliega con `docker compose up -d --build` |
 
 ## Reglas que no se rompen
 
