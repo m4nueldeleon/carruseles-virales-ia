@@ -47,7 +47,11 @@ motor en `scripts/`, las plantillas en `templates/` y el conocimiento en `refere
 - **Tema en texto:** anota en una línea qué le duele a la audiencia con eso y qué se lleva.
 - **Link:** corre `python3 "<skill>/scripts/referencia.py" "<url>" --out <carpeta-del-carrusel>`.
   Trae la transcripción (YouTube), el texto (artículo, PDF) o la transcripción del reel (si hay
-  `APIFY_TOKEN`). Si no consigue texto, dilo y pide que lo peguen; no inventes el contenido.
+  `APIFY_TOKEN`). Un post de Instagram (`/p/`, `/reel/`) trae además caption, dueño, likes,
+  comentarios y baja las láminas a `_referencia/NN.jpg`: léelas con visión como una captura (o, sin
+  Claude Code, `node "<skill>/scripts/leer-imagen.mjs" <carpeta>/_referencia --out
+  <carpeta>/referencia.md --append` escribe la sección «Lectura visual» por API). Si no consigue
+  texto, dilo y pide que lo peguen; no inventes el contenido.
 - **Captura o PNG de un carrusel ajeno:** léelo con visión, lámina por lámina, y llena la ficha
   de `references/REFERENCIAS-ENTRADA.md` (gancho literal, promesa, estructura, mecanismo, qué
   aplica a tu audiencia). **Se replica el ángulo y la estructura, nunca el texto, las imágenes ni
@@ -91,6 +95,14 @@ la del formato de la referencia, una **imagen única** (meme, tuit o dato en una
 **carrusel corto** de 5 láminas y un **carrusel de 8 a 10**. `references/PROTOCOLOS-FORMATO.md`
 dice qué exige cada formato y cómo elegir. Se produce entera la que gane; las portadas
 descartadas se guardan en `_versiones/` de la carpeta del carrusel por si el usuario quiere otra.
+
+Por API (un worker, un cron, sin Claude Code) cada versión la escribe Claude Opus con
+`node "<skill>/scripts/escribir.mjs" --formato-plan <imagen-unica|carrusel-5|carrusel-8|referencia>
+--salida <carpeta>/_versiones/<plan> --json`: el prompt lleva solo el capítulo del protocolo que
+toca; `--banco <catalogo.json>` le da el banco de rostro, `--logos "CapCut,Claude"` los iconos
+oficiales, `--correccion "texto" --base carrusel.json` aplica una corrección del usuario y
+`--simular carrusel.json` prueba render, QA y entrega sin gastar API. Banderas completas en la
+cabecera del script; una imagen única se revisa con `qa.mjs --imagen-unica`.
 
 ### 3c. La portada se decide a concurso, no de una
 
@@ -202,6 +214,7 @@ Cómo se consigue cada imagen (`references/IMAGENES.md`):
 ```bash
 node "<skill>/scripts/render.mjs" "<carpeta-del-carrusel>"   # slides/01.png… + preview.jpg
 node "<skill>/scripts/qa.mjs" "<carpeta-del-carrusel>"       # índice 0-100 + errores/avisos
+node "<skill>/scripts/qa.mjs" "<carpeta>" --imagen-unica      # pieza de 1 lámina: sin rehook, guardable ni lámina de CTA
 ```
 
 - QA **BLOQUEADO** → corrige el JSON (no el HTML) y vuelve a correr. Máximo tres rondas; si
@@ -272,6 +285,7 @@ lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md
 |---|---|
 | «Hazme un carrusel sobre X» / «/carrusel X» | Las 8 fases, sin preguntas, con valores por omisión |
 | «De este link» / «de esta captura» | Fase 1 con `referencia.py` o visión, y luego todo |
+| «Las 3 versiones por API» / un worker sin Claude Code | `scripts/escribir.mjs --formato-plan …` una vez por formato (§3b), con `--banco`, `--logos` y `--json` |
 | «Dame 3 opciones» / «3 ganchos» | Muestra los 3 ángulos puntuados y espera elección |
 | «Cambia el look» / «hazlo oscuro» | Cambia `look` en el JSON, re-render, re-QA |
 | «Otra portada» | 3 portadas nuevas (título + subtítulo + imagen) y eliges o preguntas |

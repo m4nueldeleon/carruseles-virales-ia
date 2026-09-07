@@ -87,21 +87,35 @@ Mira un ejemplo completo con marca ficticia en [`ejemplos/`](ejemplos/).
 |---|---|
 | `SKILL.md` | El cerebro: las 8 fases, valores por omisión, reglas que no se rompen |
 | `references/` | Psicología de la viralidad (con fuentes) · ganchos en español · formatos y estructura · dirección de arte y los 6 looks · contrato JSON y layouts · imágenes · copy con voz humana · referencias de entrada · medición |
-| `scripts/` | `render.mjs` (JSON → PNG + preview + portada a tamaño de cuadrícula) · `qa.mjs` (puerta de calidad + índice) · `siguiente-look.mjs` (qué look toca) · `referencia.py` (link o captura → ficha) · `quitar-fondo.py` (fondo liso → transparencia) · `medir.py` (resultados → histórico) · `escribir.mjs` (escribe el guion con la API de Anthropic, para servidores y asistentes) · `setup.sh` · `empaquetar.sh` |
+| `scripts/` | `render.mjs` (JSON → PNG + preview + portada a tamaño de cuadrícula) · `qa.mjs` (puerta de calidad + índice) · `siguiente-look.mjs` (qué look toca) · `referencia.py` (link o captura → ficha) · `quitar-fondo.py` (fondo liso → transparencia) · `medir.py` (resultados → histórico) · `escribir.mjs` (escribe el guion con la API de Anthropic: versiones por formato, banco de rostro, logos reales, corrección) · `leer-imagen.mjs` (lee una captura o las láminas de una referencia con visión por API) · `setup.sh` · `empaquetar.sh` |
 | `templates/` | `MI-MARCA.md` · `carrusel.schema.json` · `base.css` · `looks/*.css` |
 | `hermes/` | Rutina y esquema para que un modelo barato escriba el `carrusel.json` y este motor lo renderice |
 | `ejemplos/` | Un carrusel completo renderizado |
 
 ## Sin Claude Code: la API de Anthropic
 
-`scripts/escribir.mjs` escribe el `carrusel.json` y el caption con Claude por API (llave en
-`ANTHROPIC_API_KEY` o en `~/.anthropic-cli/.env`), renderiza, corre QA y corrige una ronda. Sirve
-para un servidor, un cron o un asistente como Hermes; las imágenes se generan aparte con la
-herramienta que tengas.
+`scripts/escribir.mjs` escribe el `carrusel.json`, el `caption.txt` y el `metadata.json` con Claude
+Opus por API (llave en `ANTHROPIC_API_KEY` o en `~/.anthropic-cli/.env`), renderiza, corre QA y
+corrige hasta dos rondas. Sirve para un servidor, un cron o un worker: las banderas y la línea
+`--json` final son un contrato estable (detalle en la cabecera del script).
 
 ```bash
-node scripts/escribir.mjs --tema "5 errores al cotizar" --carpeta ./mis-carruseles --tipo lista
+# un carrusel de 8 con el protocolo de formato que toca
+node scripts/escribir.mjs --tema "5 errores al cotizar" --carpeta ./mis-carruseles --tipo lista --formato-plan carrusel-8 --json
+# las versiones por formato de una misma idea (una llamada por formato)
+node scripts/escribir.mjs --referencia ./ref/referencia.md --carpeta ./mis-carruseles --formato-plan imagen-unica --salida ./mis-carruseles/x/_versiones/unica --json
+# con el banco de rostro en la nube y los iconos oficiales de las apps que se nombran
+node scripts/escribir.mjs --tema "CapCut + Claude para editar" --carpeta . --banco https://<store>.public.blob.vercel-storage.com/banco --logos "CapCut,Claude"
+# aplicar una corrección del usuario a un carrusel ya escrito
+node scripts/escribir.mjs --correccion "la portada en pregunta" --base ./mis-carruseles/2026-09-07-x/carrusel.json --carpeta ./mis-carruseles
+# probar render, QA y entrega sin gastar API
+node scripts/escribir.mjs --simular ejemplos/2026-09-06-cotizar-sin-perder-dinero/carrusel.json --carpeta . --json
 ```
+
+Las referencias también se leen sin Claude Code: `python3 scripts/referencia.py <url-de-instagram>
+--out <carpeta>` baja el post (caption, dueño, likes, comentarios y las láminas) con `APIFY_TOKEN`, y
+`node scripts/leer-imagen.mjs <carpeta>/_referencia --out <carpeta>/referencia.md --append` escribe
+la ficha de ingeniería inversa con visión.
 
 ## Requisitos
 
