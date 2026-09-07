@@ -23,3 +23,8 @@ _versiones/
 !ejemplos/**/slides/
 !ejemplos/**/preview.jpg
 !ejemplos/**/qa.json
+
+# Worker del Generador de carruseles (worker/): lo privado del servidor nunca entra al repo
+worker/.env
+worker/privado/
+worker/trabajo/

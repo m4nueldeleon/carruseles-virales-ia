@@ -1,0 +1,33 @@
+{
+  "_nota": "Pedido de prueba para `node worker/index.mjs --una-vez --simular`. Marca ficticia; ningún dato real. Con `versiones: 2` se producen carrusel-5 e imagen-unica y después la corrección genera la v3.",
+  "pedido": {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "workspace_id": "00000000-0000-4000-8000-0000000000aa",
+    "creado_por": "00000000-0000-4000-8000-0000000000bb",
+    "entrada_tipo": "idea",
+    "entrada_texto": "Los 5 errores que hacen que una cotización pierda dinero, y cómo arreglarlos con ChatGPT y Excel en 2 minutos",
+    "entrada_url": null,
+    "entrada_imagen_url": null,
+    "instrucciones": "Tono directo, sin tecnicismos. El CTA pide la palabra COTIZA.",
+    "versiones": 2,
+    "estado": "pendiente",
+    "error": null,
+    "titulo": null,
+    "worker_inicio": null,
+    "worker_fin": null,
+    "created_at": "2026-09-07T12:00:00.000Z",
+    "updated_at": "2026-09-07T12:00:00.000Z"
+  },
+  "correccion": {
+    "id": "00000000-0000-4000-8000-0000000000c1",
+    "pedido_id": "00000000-0000-4000-8000-000000000001",
+    "version_id": null,
+    "texto": "Cambia el título de la portada para que mencione el anticipo.",
+    "creado_por": "00000000-0000-4000-8000-0000000000bb",
+    "estado": "pendiente",
+    "error": null,
+    "version_resultado_id": null,
+    "created_at": "2026-09-07T12:30:00.000Z",
+    "aplicada_en": null
+  }
+}
