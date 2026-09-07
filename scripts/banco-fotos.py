@@ -19,7 +19,7 @@ Uso:
   banco-fotos.py anotar real-01 --situacion "..." --fondo "azul liso" --sujeto centro --looks guia-rapida,noticia --temas ventas
   banco-fotos.py catalogo
   banco-fotos.py avatar avatar-01-vector.png --estilo vector --look guia-rapida --pose "brazos cruzados" --origen <job_id>
-  banco-fotos.py subir                     # a Vercel Blob (token en ~/.vercel-blob-cli/.env) → URLs en catalogo.json
+  banco-fotos.py subir [--rotar --mi-marca MI-MARCA.md]   # Vercel Blob; --rotar cambia el prefijo y borra el viejo
   banco-fotos.py bajar https://<store>.public.blob.vercel-storage.com/banco   # en otra máquina
 Opciones globales: --banco <carpeta>  (por omisión ./assets/fotos/reales)
 """
@@ -36,8 +36,13 @@ from pathlib import Path
 
 try:
     from PIL import Image, ImageDraw
-except ImportError:  # pragma: no cover
-    sys.exit("Falta Pillow: pip3 install pillow")
+except ImportError:  # subir/bajar no la necesitan; el resto avisa al usarla
+    Image = ImageDraw = None
+
+
+def exigir_pillow() -> None:
+    if Image is None:
+        sys.exit("Falta Pillow para este comando: pip3 install pillow")
 
 EXT_FOTO = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".tif", ".tiff", ".webp"}
 EXT_VIDEO = {".mov", ".mp4", ".m4v"}
@@ -171,6 +176,7 @@ def incorporar(rutas: list, origen_tag: str, entrada: Path, lista: list, sin_fil
 
 
 def cmd_cosechar(args) -> None:
+    exigir_pillow()
     entrada = args.banco / "_entrada"
     entrada.mkdir(parents=True, exist_ok=True)
     lista = cargar_entrada(entrada)
@@ -196,6 +202,7 @@ def cmd_cosechar(args) -> None:
 # ---------- hoja de contacto ----------
 
 def cmd_hoja(args) -> None:
+    exigir_pillow()
     entrada = args.banco / "_entrada"
     lista = cargar_entrada(entrada)
     if not lista:
@@ -229,6 +236,7 @@ def siguiente_indice(catalogo: dict) -> int:
 
 
 def cmd_curar(args) -> None:
+    exigir_pillow()
     entrada = args.banco / "_entrada"
     lista = cargar_entrada(entrada)
     por_n = {e["n"]: e for e in lista}
@@ -291,6 +299,7 @@ def recortar_rembg(origen: Path, destino: Path) -> str:
 
 
 def cmd_recortar(args) -> None:
+    exigir_pillow()
     catalogo = cargar_catalogo(args.banco)
     nombres = list(catalogo["fotos"]) if args.todos else args.nombres
     if not nombres:
@@ -344,8 +353,9 @@ def cmd_catalogo(args) -> None:
 def cmd_subir(args) -> None:
     sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
     from banco_nube import subir_banco
-    nuevo = subir_banco(args.banco, args.prefijo, cargar_catalogo(args.banco))
-    print(f"Banco en la nube: {nuevo['base_url']}/catalogo.json — pon esa URL en MI-MARCA.md (banco_url).")
+    mi_marca = Path(args.mi_marca).expanduser() if args.mi_marca else None
+    nuevo = subir_banco(args.banco, args.prefijo, cargar_catalogo(args.banco), rotar=args.rotar, mi_marca=mi_marca)
+    print(f"Banco en la nube: {nuevo['base_url']}/catalogo.json" + ("" if mi_marca else " — pon esa URL en MI-MARCA.md (banco_url)."))
 
 
 def cmd_bajar(args) -> None:
@@ -397,7 +407,9 @@ def construir_parser() -> argparse.ArgumentParser:
     a.set_defaults(fn=cmd_anotar)
     sub.add_parser("catalogo").set_defaults(fn=cmd_catalogo)
     su = sub.add_parser("subir", help="sube el banco a Vercel Blob y escribe las URL en el catálogo")
-    su.add_argument("--prefijo", default="banco")
+    su.add_argument("--prefijo", default="banco", help="carpeta en el almacén; con --rotar se genera una impredecible")
+    su.add_argument("--rotar", action="store_true", help="prefijo nuevo, borra el anterior: las URL viejas dejan de servir")
+    su.add_argument("--mi-marca", help="ruta de MI-MARCA.md para actualizar banco_url")
     su.set_defaults(fn=cmd_subir)
     ba = sub.add_parser("bajar", help="descarga el banco desde su URL base (otra máquina)")
     ba.add_argument("base_url")

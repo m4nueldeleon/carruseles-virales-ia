@@ -245,7 +245,7 @@ tema tal cual. Detalle en `references/MEDICION.md`.
 | «Otro carrusel hoy» | Corre `siguiente-look.mjs`: mira las carpetas hermanas del día, no solo el histórico |
 | «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
 | «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
-| «Sube / baja mi banco a la nube» | `banco-fotos.py subir` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`; anota `banco_url` en `MI-MARCA.md` |
+| «Sube / baja mi banco a la nube» | `banco-fotos.py subir --mi-marca MI-MARCA.md` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`. Con `--rotar` cambia el prefijo y mata las URL viejas; el almacén publica `robots.txt` con `Disallow: /` para no indexarse |
 
 ## Reglas que no se rompen
 

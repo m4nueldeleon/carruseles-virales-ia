@@ -282,3 +282,11 @@ banco-fotos.py --banco … subir                                          # Verc
   `~/.vercel-blob-cli/.env`) y escribe `url`, `recorte_url` y `base_url` en el catálogo. Así el
   banco está disponible desde cualquier máquina (`banco-fotos.py bajar <base_url>`), desde
   claude.ai (las láminas cargan la imagen por URL) y para Higgsfield (`media_import_url`).
+- **Público pero invisible.** Cada `subir` publica un `robots.txt` con `Disallow: /` en la raíz
+  del almacén: nada se indexa en buscadores. Con `--rotar`, el banco se vuelve a subir bajo un
+  prefijo impredecible (`banco-<12 hex>`), se borra el prefijo anterior y, si pasas
+  `--mi-marca MI-MARCA.md`, la ficha recibe la nueva `banco_url`. Un link filtrado deja de servir
+  en la siguiente rotación. Prográmala mensual (launchd, cron) si el banco lleva fotos personales;
+  los entregables (`entregables/`) no rotan porque viven en los DM ya enviados. Consecuencia: un
+  `carrusel.json` que apunte a la URL de la nube se re-renderiza solo si copiaste la imagen a
+  `assets/img/` del carrusel, que es lo que la skill hace siempre.

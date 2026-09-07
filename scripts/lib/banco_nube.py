@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import re
+import secrets
 import urllib.request
 from pathlib import Path
 
@@ -49,13 +51,69 @@ def subir_archivo(ruta: Path, destino: str, token: str) -> str:
         return json.loads(respuesta.read().decode("utf-8"))["url"]
 
 
+ROBOTS = "User-agent: *\nDisallow: /\n"  # el dominio del almacén no se indexa: público por URL, invisible para buscadores
+
+
+def listar_blobs(prefijo: str, token: str) -> list:
+    """Lista los blobs bajo un prefijo (paginado)."""
+    urls, cursor = [], None
+    while True:
+        q = f"?prefix={prefijo}&limit=1000" + (f"&cursor={cursor}" if cursor else "")
+        peticion = urllib.request.Request(f"{API}/{q}", headers={"Authorization": f"Bearer {token}", "x-api-version": "7"})
+        with urllib.request.urlopen(peticion, timeout=60) as r:
+            datos = json.loads(r.read().decode("utf-8"))
+        urls += [b["url"] for b in datos.get("blobs", [])]
+        if not datos.get("hasMore"):
+            return urls
+        cursor = datos.get("cursor")
+
+
+def borrar_blobs(urls: list, token: str) -> int:
+    """Borra blobs por URL, de 100 en 100."""
+    for i in range(0, len(urls), 100):
+        cuerpo = json.dumps({"urls": urls[i:i + 100]}).encode("utf-8")
+        peticion = urllib.request.Request(f"{API}/delete", data=cuerpo, method="POST", headers={"Authorization": f"Bearer {token}", "x-api-version": "7", "Content-Type": "application/json"})
+        with urllib.request.urlopen(peticion, timeout=120) as r:
+            r.read()
+    return len(urls)
+
+
+def nuevo_prefijo() -> str:
+    """Prefijo impredecible: la rotación deja sin efecto cualquier URL vieja que se haya filtrado."""
+    return f"banco-{secrets.token_hex(6)}"
+
+
+def prefijo_de(base_url: str | None) -> str | None:
+    if not base_url:
+        return None
+    return base_url.rstrip("/").rsplit("/", 1)[-1] or None
+
+
+def actualizar_mi_marca(ruta: Path, base_url: str) -> bool:
+    """Reemplaza la URL entre acentos graves de la línea **banco_url:** de la ficha."""
+    if not ruta.exists():
+        return False
+    texto = ruta.read_text(encoding="utf-8")
+    nuevo = re.sub(r"(\*\*banco_url:\*\*\s*`)[^`]+(`)", lambda m: m.group(1) + base_url + m.group(2), texto, count=1)
+    if nuevo == texto:
+        return False
+    ruta.write_text(nuevo, encoding="utf-8")
+    return True
+
+
 def archivos_del_banco(banco: Path) -> list:
     return [p for p in sorted(banco.rglob("*")) if p.is_file() and p.suffix.lower() in EXT_SUBIBLES and "_entrada" not in p.parts and not p.name.startswith(".")]
 
 
-def subir_banco(banco: Path, prefijo: str, catalogo: dict) -> dict:
-    """Sube fotos, recortes y avatares; devuelve el catálogo con `url` por archivo y `base_url`."""
+def subir_banco(banco: Path, prefijo: str, catalogo: dict, rotar: bool = False, mi_marca: Path | None = None) -> dict:
+    """Sube fotos, recortes y avatares; devuelve el catálogo con `url` por archivo y `base_url`.
+
+    Con `rotar`, sube todo bajo un prefijo nuevo impredecible, borra el prefijo anterior y
+    actualiza `banco_url` en la ficha (`mi_marca`). Siempre publica robots.txt (Disallow: /)."""
     token = token_o_error()
+    prefijo_viejo = prefijo_de(catalogo.get("base_url"))
+    if rotar:
+        prefijo = nuevo_prefijo()
     urls = {}
     for ruta in archivos_del_banco(banco):
         if ruta.name == "catalogo.json":
@@ -71,6 +129,15 @@ def subir_banco(banco: Path, prefijo: str, catalogo: dict) -> dict:
     ruta_catalogo.write_text(json.dumps(nuevo, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     subir_archivo(ruta_catalogo, f"{prefijo}/catalogo.json", token)
     print(f"↑ catalogo.json → {base}/catalogo.json")
+    robots = banco / "_entrada" / "robots.txt"
+    robots.parent.mkdir(exist_ok=True)
+    robots.write_text(ROBOTS, encoding="utf-8")
+    subir_archivo(robots, "robots.txt", token)
+    if rotar and prefijo_viejo and prefijo_viejo != prefijo:
+        borrados = borrar_blobs(listar_blobs(prefijo_viejo + "/", token), token)
+        print(f"✂ prefijo anterior «{prefijo_viejo}» borrado ({borrados} archivos)")
+    if mi_marca and base:
+        print("✎ banco_url actualizado en la ficha" if actualizar_mi_marca(mi_marca, base) else "· la ficha no tiene línea **banco_url:** con URL entre acentos graves; anótala a mano")
     return nuevo
 
 

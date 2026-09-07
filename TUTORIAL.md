@@ -152,7 +152,10 @@ trabaja con tres bancos, y el primero es el que importa:
 agente en un servidor, di «sube mi banco de fotos a la nube»: la skill lo manda a un almacén con
 URL pública (Vercel Blob, gratis en el plan básico; el setup te dice cómo crear el store y guardar
 el token en `~/.vercel-blob-cli/.env`) y anota la URL base en `MI-MARCA.md`. En otra máquina,
-«baja mi banco de fotos» lo trae entero.
+«baja mi banco de fotos» lo trae entero. Es público por URL pero invisible: el almacén lleva un
+`robots.txt` que prohíbe indexarlo, y si dices «rota mi banco» la skill lo vuelve a subir bajo una
+dirección nueva y borra la anterior, así un link que se filtre caduca. Puedes programar esa rotación
+cada mes (`banco-fotos.py subir --rotar --mi-marca MI-MARCA.md` en launchd o cron).
 
 ## Paso 8. Recibe tu primer carrusel
 
