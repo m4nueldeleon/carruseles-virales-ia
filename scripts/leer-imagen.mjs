@@ -107,7 +107,9 @@ if (dryRun) {
 
 const llave = leerLlave();
 if (!llave) fallo('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=…).');
-const cliente = crearCliente({ llave, modelo, log });
+// Describir una captura no necesita que el modelo razone al máximo: sin acotarlo, el razonamiento se come
+// el techo y la ficha sale sin los apartados finales, que son justo los que dicen qué aplicar a la marca.
+const cliente = crearCliente({ llave, modelo, log, pensamiento: 'adaptive', esfuerzo: 'low' });
 const r = await cliente.llamar(mensajes, { maxTokens: TECHO_FICHA, temperature: 0.2 });
 if (r.stop === 'max_tokens') log(`⚠ la ficha se cortó por el techo de ${TECHO_FICHA} tokens: los últimos apartados pueden faltar`);
 const lectura = String(r.texto || '').trim();
