@@ -78,49 +78,89 @@ export function leerPreciosDeTexto(texto) {
 
 // ---------- leer el consumo del log del escritor ----------
 
-// La línea que imprime el cliente de la API por cada llamada (scripts/lib/anthropic.mjs):
-//   · claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)
+// La línea que imprime el cliente de la API por cada llamada (scripts/lib/costes.mjs, lineaDeUso):
+//   · claude-opus-5: 207 tokens de entrada, 2183 de salida (14827 de escritura en caché, 20581 de lectura de caché) · $0.1234
 // El paréntesis es opcional y puede traer lectura de caché, escritura, o las dos. Se lee lo que haya:
 // lo que el cliente todavía no imprima cuenta como cero, nunca rompe la lectura.
 const LINEA_USO = /^[·•]\s*([^:]+?)\s*:\s*([\d.,]+)\s*tokens?\s+de\s+entrada\s*,\s*([\d.,]+)\s*de\s+salida\b(.*)$/i;
 const LECTURA_CACHE = /([\d.,]+)\s*(?:tokens?\s*)?(?:desde|de\s+lectura\s+de|leídos?\s+de)\s+cach/i;
 const ESCRITURA_CACHE = /([\d.,]+)\s*(?:tokens?\s*)?(?:de\s+)?escrit\w*\s+(?:en\s+|de\s+)?cach/i;
+// Guardar un bloque en caché cuesta 1.25x la entrada con vida de 5 minutos y 2x con vida de 1 hora:
+// la misma llamada, con el mismo consumo, cuesta distinto según el ttl. Si el escritor lo dice en su
+// línea («ttl 1h», «ttl=1h», «… de escritura en caché 1h»), manda lo que diga la línea; si no lo dice,
+// manda el ttl con el que el worker lanzó al escritor (config.ttlCacheEfectivo).
+const TTL_EN_LINEA = /\bttl\s*[=:]?\s*(5\s*m|1\s*h)\b/i;
+const TTL_PEGADO_A_LA_ESCRITURA = /escrit\w*\s+(?:en\s+|de\s+)?cach\w*\s+(?:de\s+|con\s+ttl\s+)?(5\s*m|1\s*h)\b/i;
+// El propio escritor imprime al final lo que le costó esa llamada («· $0.3756»), calculado con el ttl
+// de verdad. Se lee para cotejarlo con la cuenta del worker y, si el escritor cobró más, cobrar eso:
+// para un freno de gasto, quedarse corto es el único error que sale caro.
+const USD_ESCRITOR = /\$\s*(\d+(?:[.]\d+)?)\b/;
 
 const aEntero = (texto) => {
   const n = Number(String(texto ?? '').replace(/[.,\s]/g, ''));
   return Number.isFinite(n) && n >= 0 ? Math.round(n) : 0;
 };
 
+// «1 h» → «1h», « 5M » → «5m». Cualquier otra cosa, null.
+export function normalizarTtl(valor) {
+  const t = String(valor || '').trim().toLowerCase().replace(/\s+/g, '');
+  return t === '1h' || t === '5m' ? t : null;
+}
+
 /**
  * Lee una línea de stderr del escritor y devuelve el consumo de esa llamada, o null si la línea no
  * hablaba de consumo (que es la mayoría: avisos de render, progreso, errores).
- * @returns {{modelo:string, entrada:number, salida:number, lectura:number, escritura5m:number}|null}
+ * @param {string} linea
+ * @param {{ttl?: string}} [opciones] ttl con el que se lanzó al escritor («5m» o «1h»); por omisión «5m».
+ * @returns {{modelo:string, entrada:number, salida:number, lectura:number, escritura5m:number,
+ *            escritura1h:number, ttl:string, usdEscritor:number|null}|null}
  */
-export function leerUso(linea) {
-  const m = LINEA_USO.exec(String(linea || '').trim());
+export function leerUso(linea, { ttl } = {}) {
+  const texto = String(linea || '').trim();
+  const m = LINEA_USO.exec(texto);
   if (!m) return null;
   const cola = m[4] || '';
+  const escritura = aEntero((ESCRITURA_CACHE.exec(cola) || [])[1]);
+  const ttlUsado = normalizarTtl((TTL_EN_LINEA.exec(texto) || [])[1])
+    || normalizarTtl((TTL_PEGADO_A_LA_ESCRITURA.exec(texto) || [])[1])
+    || normalizarTtl(ttl) || '5m';
+  const usd = Number((USD_ESCRITOR.exec(cola) || [])[1]);
   return {
     modelo: m[1].trim(),
     entrada: aEntero(m[2]),
     salida: aEntero(m[3]),
     lectura: aEntero((LECTURA_CACHE.exec(cola) || [])[1]),
-    escritura5m: aEntero((ESCRITURA_CACHE.exec(cola) || [])[1]),
-    escritura1h: 0,
+    escritura5m: ttlUsado === '1h' ? 0 : escritura,
+    escritura1h: ttlUsado === '1h' ? escritura : 0,
+    ttl: ttlUsado,
+    usdEscritor: Number.isFinite(usd) && usd >= 0 ? usd : null,
   };
 }
 
-// Lo que cuesta ese consumo, en dólares. Un modelo que no está en la tabla vale 0 y se declara aparte
-// (`conocido: false`): más vale no cobrarle de más al tope que inventarse un precio.
-export function costoDeUso(uso, tabla = PRECIOS) {
+/**
+ * Las dos cuentas de una misma llamada: la del worker con su tabla de precios y la que el escritor
+ * imprimió en su línea. Cualquiera de las dos puede ser null (modelo que no está en la tabla; línea
+ * de un escritor viejo que todavía no imprime el importe).
+ */
+export function partesDeCosto(uso, tabla = PRECIOS) {
   const p = uso ? preciosDe(uso.modelo, tabla) : null;
-  if (!p) return { usd: 0, conocido: false };
-  const usd = (uso.entrada * p.entrada
+  const tablaUsd = p ? (uso.entrada * p.entrada
     + (uso.escritura5m || 0) * p.escritura5m
     + (uso.escritura1h || 0) * p.escritura1h
     + (uso.lectura || 0) * p.lectura
-    + uso.salida * p.salida) / 1_000_000;
-  return { usd, conocido: true };
+    + uso.salida * p.salida) / 1_000_000 : null;
+  const escritorUsd = uso && Number.isFinite(uso.usdEscritor) ? uso.usdEscritor : null;
+  return { tablaUsd, escritorUsd };
+}
+
+// Lo que cuesta ese consumo, en dólares. Si el escritor dijo lo que le cobraron y es MÁS que la cuenta
+// de la tabla, manda la suya: el tope tiene que frenar con el dinero de verdad, no con el estimado.
+// Un modelo que no está en la tabla y sin importe del escritor vale 0 y se declara aparte
+// (`conocido: false`): más vale no cobrarle de más al tope que inventarse un precio.
+export function costoDeUso(uso, tabla = PRECIOS) {
+  const { tablaUsd, escritorUsd } = partesDeCosto(uso, tabla);
+  if (tablaUsd === null && escritorUsd === null) return { usd: 0, conocido: false };
+  return { usd: Math.max(tablaUsd ?? 0, escritorUsd ?? 0), conocido: true };
 }
 
 // ---------- el contador de una versión (o de una corrección) ----------
@@ -128,13 +168,18 @@ export function costoDeUso(uso, tabla = PRECIOS) {
 /**
  * Acumula el consumo de todas las llamadas de un trabajo. Se le van pasando las líneas de stderr tal
  * como llegan; devuelve el consumo de la línea cuando era una línea de consumo, y null cuando no.
+ * @param {{tabla?: object, ttl?: string}} [opciones] `ttl` es el que el worker le pasó al escritor.
  */
-export function crearContador({ tabla = PRECIOS } = {}) {
-  const estado = { usd: 0, entrada: 0, salida: 0, lectura: 0, escritura: 0, llamadas: 0, modelos: [], sinPrecio: [] };
+export function crearContador({ tabla = PRECIOS, ttl = '5m' } = {}) {
+  const estado = {
+    usd: 0, entrada: 0, salida: 0, lectura: 0, escritura: 0, llamadas: 0,
+    modelos: [], porModelo: {}, sinPrecio: [], desvioUsd: 0,
+  };
 
   function sumar(linea) {
-    const uso = leerUso(linea);
+    const uso = leerUso(linea, { ttl });
     if (!uso) return null;
+    const { tablaUsd, escritorUsd } = partesDeCosto(uso, tabla);
     const { usd, conocido } = costoDeUso(uso, tabla);
     estado.usd += usd;
     estado.entrada += uso.entrada;
@@ -142,9 +187,22 @@ export function crearContador({ tabla = PRECIOS } = {}) {
     estado.lectura += uso.lectura;
     estado.escritura += uso.escritura5m + uso.escritura1h;
     estado.llamadas += 1;
+    if (tablaUsd !== null && escritorUsd !== null) estado.desvioUsd += Math.abs(tablaUsd - escritorUsd);
     if (!estado.modelos.includes(uso.modelo)) estado.modelos = [...estado.modelos, uso.modelo];
+    // Cuánto escribió cada modelo: así se sabe cuál fue la llamada principal (ver el getter `modelo`).
+    estado.porModelo = { ...estado.porModelo, [uso.modelo]: (estado.porModelo[uso.modelo] || 0) + uso.salida };
     if (!conocido && !estado.sinPrecio.includes(uso.modelo)) estado.sinPrecio = [...estado.sinPrecio, uso.modelo];
     return { ...uso, usd, conocido };
+  }
+
+  // El modelo que se le apunta a la versión: el de la llamada PRINCIPAL, la que escribió el carrusel.
+  // No sirve el primero que aparece —con --formato-plan referencia la llamada auxiliar (Sonnet, que
+  // elige el formato o lee la captura) va ANTES que la principal— y tampoco el más caro. Sirve el que
+  // más escribió: el carrusel entero son miles de tokens de salida; elegir un formato son decenas.
+  // Empate: el primero que apareció.
+  function modeloPrincipal() {
+    return estado.modelos.reduce((mejor, m) =>
+      (mejor === null || (estado.porModelo[m] || 0) > (estado.porModelo[mejor] || 0) ? m : mejor), null);
   }
 
   return {
@@ -152,17 +210,19 @@ export function crearContador({ tabla = PRECIOS } = {}) {
     get usd() { return estado.usd; },
     get llamadas() { return estado.llamadas; },
     get sinPrecio() { return [...estado.sinPrecio]; },
-    // El modelo que se le apunta a la versión: el que más se usó es siempre el que escribe el carrusel,
-    // así que basta con el primero que apareció (las llamadas auxiliares vienen después).
-    get modelo() { return estado.modelos[0] || null; },
-    // Lo que se guarda en la fila de carrusel_version.
-    columnas() {
+    // Cuánto se separan la cuenta del worker y la del escritor. Con todo en su sitio es 0; si crece,
+    // es que la tabla de precios o el ttl de aquí ya no son los del escritor y hay que mirarlo.
+    get desvioUsd() { return estado.desvioUsd; },
+    get modelo() { return modeloPrincipal(); },
+    // Lo que se guarda en la fila de carrusel_version. `modelo` permite que mande el escritor cuando
+    // su resumen --json diga cuál fue la llamada principal.
+    columnas({ modelo = null } = {}) {
       return {
         tokens_entrada: estado.entrada,
         tokens_salida: estado.salida,
         tokens_cache_lectura: estado.lectura,
         tokens_cache_escritura: estado.escritura,
-        modelo: estado.modelos[0] || null,
+        modelo: modelo || modeloPrincipal(),
         costo_usd: redondear(estado.usd),
       };
     },

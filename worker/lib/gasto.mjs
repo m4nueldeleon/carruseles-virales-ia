@@ -98,8 +98,42 @@ export function crearLibroDiario({ dir, topeDiaUsd, avisoPct = 80, ahora = () =>
     return llegó;
   }
 
+  /**
+   * El aviso del arranque: lo que el día lleva gastado ANTES de tomar ningún trabajo. Arrancar con el
+   * presupuesto del día casi consumido tiene que verse en el acto —al reiniciar el contenedor es cuando
+   * alguien está mirando el log— y no cuando termine el siguiente trabajo, que puede tardar media hora.
+   * Deja dicho el aviso para que no se repita al cerrar ese primer trabajo. Devuelve el texto avisado
+   * (o null si no había nada que avisar), que es lo que comprueban las pruebas.
+   */
+  function avisarAlArrancar() {
+    alDia();
+    if (!(topeDiaUsd > 0)) {
+      log(`Gasto de hoy (${estado.fecha}): ${dolares(estado.usd)} · sin tope diario`);
+      return null;
+    }
+    const pct = Math.round((estado.usd / topeDiaUsd) * 100);
+    const cabeza = `Gasto de hoy (${estado.fecha}): ${dolares(estado.usd)} de un tope de ${dolares(topeDiaUsd)} (${pct} %).`;
+    if (estado.usd >= topeDiaUsd) {
+      estado.bloqueoDicho = true;
+      const texto = `${cabeza} El tope del día YA está alcanzado: no se toma ningún pedido nuevo hasta mañana `
+        + 'y los pendientes se quedan en la cola. Si hace falta seguir hoy, sube COSTO_TOPE_DIA_USD y reinicia.';
+      aviso(texto);
+      return texto;
+    }
+    if (estado.usd >= topeDiaUsd * (avisoPct / 100)) {
+      estado.avisado = true;
+      const texto = `${cabeza} Quedan ${dolares(restante())}: con lo que cuesta un pedido normal, el worker `
+        + 'se puede frenar hoy mismo.';
+      aviso(texto);
+      return texto;
+    }
+    log(cabeza);
+    return null;
+  }
+
   return Object.freeze({
     anotar,
+    avisarAlArrancar,
     total,
     restante,
     alcanzoElTope,

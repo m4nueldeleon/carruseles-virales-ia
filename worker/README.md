@@ -147,9 +147,20 @@ la hora, `ESCRIBIR_CACHE_TTL=1h` sale a cuenta.
 
 | Freno | Qué hace |
 |---|---|
-| `COSTO_TOPE_PEDIDO_USD` (3) | Si un pedido lo pasa, la versión en curso **se corta en el acto** y el pedido queda en `error` con un texto que dice cuánto llevaba, cuál es el tope y cuántas versiones alcanzó a generar. Las versiones que ya salieron se conservan |
+| `COSTO_TOPE_PEDIDO_USD` (3) | Se comprueba **antes de arrancar cada versión**. La versión en curso termina y se entrega —cuando aparece su línea de consumo la API ya cobró, y matarla ahí solo tira el carrusel pagado—; la siguiente no arranca. El pedido se cierra en `listo` con lo que sí se produjo y una nota que dice cuántas versiones salieron, cuánto lleva gastado y cuál es el tope. Solo queda en `error` si no se pudo entregar ninguna. Una corrección con el tope ya rebasado no se lanza |
 | `COSTO_TOPE_DIA_USD` (20) | Al alcanzarlo el worker **deja de tomar trabajo nuevo** y lo dice en el log. Los pedidos pendientes se quedan en la cola (no dan error) y se retoman al día siguiente |
-| `COSTO_AVISO_DIA_PCT` (80) | Aviso en el log al llegar a esa parte del tope diario, una vez al día |
+| `COSTO_AVISO_DIA_PCT` (80) | Aviso en el log al llegar a esa parte del tope diario. Se dice **en el arranque** (con el día ya medio gastado, quien reinicia el contenedor lo ve en el acto) y una vez al día al cerrar un trabajo |
+
+Dos detalles de la cuenta, por si algún día no cuadra con la factura:
+
+- **La escritura de caché se cobra según el `ttl`**: 1.25x la entrada a `5m` y **2x a `1h`**. El worker
+  cuenta con el mismo `ESCRIBIR_CACHE_TTL` con el que lanza al escritor (sale en la línea de arranque como
+  `ttl-caché=…`), y si el escritor imprime el importe de la llamada y es mayor, se apunta el suyo. Cuando
+  las dos cuentas se separan más de medio centavo, el log lo avisa: es la señal de que la tabla de precios
+  de `lib/costos.mjs` se quedó vieja.
+- **El modelo que se guarda en `carrusel_version` es el de la llamada principal**, la que escribió el
+  carrusel: la de mayor salida, no la primera (con `--formato-plan referencia` la llamada auxiliar a Sonnet
+  va antes que la de Opus).
 
 La cuenta del día se guarda en `TRABAJO_DIR/_costos/gasto-AAAA-MM-DD.json`, así que reiniciar el
 contenedor no borra lo gastado. El día es el día local del contenedor (`TZ`).

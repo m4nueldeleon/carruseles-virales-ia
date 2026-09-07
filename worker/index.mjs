@@ -102,7 +102,7 @@ function cargarPedidoEjemplo() {
   return datos;
 }
 
-async function iteracion(pipeline, repo, libro) {
+export async function iteracion(pipeline, repo, libro) {
   // Tope de gasto del día: no se toma trabajo nuevo. Lo pendiente se queda pendiente (no es un error
   // del pedido: es que hoy ya no hay presupuesto), y mañana el worker lo retoma solo.
   if (libro.alcanzoElTope()) return false;
@@ -125,7 +125,7 @@ async function principal() {
     ? crearRepositorioSimulado(cargarPedidoEjemplo())
     : crearRepositorio(crearCliente(config), config);
   const libro = crearLibroDiario({ dir: config.trabajoDir, topeDiaUsd: config.topeDiaUsd, avisoPct: config.avisoDiaPct });
-  if (config.topeDiaUsd > 0) log(`Gasto de hoy (${libro.fecha}): $${libro.total().toFixed(2)} de un tope de $${config.topeDiaUsd.toFixed(2)}`);
+  libro.avisarAlArrancar();
   const pipeline = crearPipeline({ config, repo, almacen: crearAlmacen(config), libro });
 
   // Estado compartido con las señales: el único mutable del programa, a propósito.
@@ -155,4 +155,7 @@ async function principal() {
   }
 }
 
-principal().catch((e) => { fallo(e.message); process.exit(1); });
+// Solo arranca el bucle cuando se ejecuta como programa; importarlo (las pruebas) no lanza nada.
+if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
+  principal().catch((e) => { fallo(e.message); process.exit(1); });
+}

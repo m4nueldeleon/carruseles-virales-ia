@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PRECIOS, leerPreciosDeTexto, mezclarPrecios } from './costos.mjs';
+import { PRECIOS, leerPreciosDeTexto, mezclarPrecios, normalizarTtl } from './costos.mjs';
 
 const DIR_WORKER = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -62,6 +62,10 @@ export function cargarConfig(argv = process.argv.slice(2), env = process.env) {
     esfuerzo: env.ESCRIBIR_ESFUERZO || '',
     // Vida del prefijo cacheado: «5m» (cada lectura lo renueva) o «1h» para pedidos lentos.
     ttlCache: env.ESCRIBIR_CACHE_TTL || '',
+    // El mismo dato, ya normalizado, para llevar la cuenta del dinero: guardar un bloque en caché cuesta
+    // 1.25x la entrada a 5m y 2x a 1h. Sin esto el worker contaba SIEMPRE a 1.25x y el tope dejaba pasar
+    // más gasto del configurado. Vacío o mal escrito = «5m», que es lo que hace el escritor por omisión.
+    ttlCacheEfectivo: normalizarTtl(env.ESCRIBIR_CACHE_TTL) || '5m',
     blobToken: env.BLOB_READ_WRITE_TOKEN || '',
     bancoUrl: env.BANCO_URL || '',
     workspaceId: env.WORKSPACE_ID || '',
@@ -107,7 +111,7 @@ export function resumenConfig(config, env = process.env) {
   const si = (v) => (v ? 'sí' : 'NO');
   return [
     `skill=${config.skillDir}`, `privado=${config.privadoDir}`, `trabajo=${config.trabajoDir}`, `banco=${config.bancoDir}`,
-    `modelo=${config.modelo}`, `intervalo=${config.intervaloS}s`, `pull=${config.pullMin}min`,
+    `modelo=${config.modelo}`, `ttl-caché=${config.ttlCacheEfectivo}`, `intervalo=${config.intervaloS}s`, `pull=${config.pullMin}min`,
     `tope/pedido=${config.topePedidoUsd ? `$${config.topePedidoUsd}` : 'sin tope'}`,
     `tope/día=${config.topeDiaUsd ? `$${config.topeDiaUsd}` : 'sin tope'}`,
     `workspace=${config.workspaceId || 'todas las marcas'}`,

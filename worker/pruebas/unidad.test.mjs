@@ -11,12 +11,13 @@ import { extraerCaption, humanizarMotivo, limpiarTitulo, leerResumenEscribir, li
 import { cargarConfig, diagnosticar, APPS_POR_OMISION } from '../lib/config.mjs';
 import { motivoDeSalida, ultimaLinea } from '../lib/procesos.mjs';
 import { ipInterna, nombreProhibido, revisarEnlace, traerSeguro, MENSAJE_BLOQUEO, MENSAJE_MUCHOS_SALTOS } from '../lib/red.mjs';
-import { PRECIOS, costoDeUso, crearContador, leerPreciosDeTexto, leerUso, mezclarPrecios, preciosDe } from '../lib/costos.mjs';
+import { PRECIOS, costoDeUso, crearContador, leerPreciosDeTexto, leerUso, mezclarPrecios, normalizarTtl, preciosDe } from '../lib/costos.mjs';
 import { crearLibroDiario, fechaLocal } from '../lib/gasto.mjs';
 import { TOPE_DIA_USD, TOPE_PEDIDO_USD } from '../lib/config.mjs';
 import { crearRepositorioSimulado } from '../lib/bd-simulada.mjs';
 import { crearAlmacen } from '../lib/blob.mjs';
 import { crearPipeline } from '../pipeline.mjs';
+import { iteracion } from '../index.mjs';
 
 const APPS = APPS_POR_OMISION.split(',');
 
@@ -316,10 +317,10 @@ test('referencia.py tampoco alcanza el servicio interno por ninguna de sus forma
 
 test('leerUso entiende la línea del escritor y descarta el resto del log', () => {
   const uso = leerUso('· claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)');
-  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 18279, salida: 7663, lectura: 14827, escritura5m: 0, escritura1h: 0 });
+  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 18279, salida: 7663, lectura: 14827, escritura5m: 0, escritura1h: 0, ttl: '5m', usdEscritor: null });
   // Sin paréntesis (el caso normal cuando el caché no se lee).
   assert.deepEqual(leerUso('· claude-opus-5: 18520 tokens de entrada, 4965 de salida'),
-    { modelo: 'claude-opus-5', entrada: 18520, salida: 4965, lectura: 0, escritura5m: 0, escritura1h: 0 });
+    { modelo: 'claude-opus-5', entrada: 18520, salida: 4965, lectura: 0, escritura5m: 0, escritura1h: 0, ttl: '5m', usdEscritor: null });
   // Si algún día el cliente también imprime la escritura de caché, se lee sin tocar nada.
   assert.equal(leerUso('· claude-opus-5: 100 tokens de entrada, 50 de salida (10 desde caché, 12106 de escritura de caché)').escritura5m, 12106);
   // Lo que no es una línea de consumo, no lo es.
@@ -335,7 +336,7 @@ test('el worker lee la línea que de verdad imprime el cliente de la API', async
   const { lineaDeUso } = await import('../../scripts/lib/costes.mjs');
   const usage = { input_tokens: 207, output_tokens: 2183, cache_creation_input_tokens: 14827, cache_read_input_tokens: 20581 };
   const uso = leerUso(lineaDeUso('claude-opus-5', usage, 0.1234, 'end_turn').trim());
-  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 207, salida: 2183, lectura: 20581, escritura5m: 14827, escritura1h: 0 });
+  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 207, salida: 2183, lectura: 20581, escritura5m: 14827, escritura1h: 0, ttl: '5m', usdEscritor: 0.1234 });
   // La línea del total de la versión NO es una línea de consumo: si se leyera, cada llamada contaría doble.
   const { lineaDeTotal } = await import('../../scripts/lib/costes.mjs');
   assert.equal(leerUso(lineaDeTotal({ llamadas: 2, entrada: 207, escritura_cache: 0, lectura_cache: 20581, salida: 2183, pensamiento: 0, coste_usd: 0.12 }).trim()), null);
@@ -389,6 +390,54 @@ test('crearContador suma las llamadas y arma las columnas de la versión', () =>
   assert.deepEqual(c.sinPrecio, []);
 });
 
+// DEFECTO CERRADO: se guardaba `modelos[0]` dando por hecho que «las llamadas auxiliares vienen después».
+// Con --formato-plan referencia es al revés: la auxiliar (Sonnet, que elige el formato o lee la captura)
+// llama ANTES que la principal, y la versión quedaba etiquetada como escrita por Sonnet.
+test('la versión se apunta al modelo de la llamada principal, aunque la auxiliar vaya primero', async () => {
+  const { lineaDeUso, costeDeUso } = await import('../../scripts/lib/costes.mjs');
+  const aux = { input_tokens: 1840, output_tokens: 96, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
+  const ppal = { input_tokens: 207, output_tokens: 7663, cache_creation_input_tokens: 14827, cache_read_input_tokens: 20581 };
+  const c = crearContador();
+  c.sumar(lineaDeUso('claude-sonnet-5', aux, costeDeUso(aux, 'claude-sonnet-5'), 'end_turn').trim());
+  c.sumar(lineaDeUso('claude-opus-5', ppal, costeDeUso(ppal, 'claude-opus-5'), 'end_turn').trim());
+  assert.equal(c.llamadas, 2);
+  assert.equal(c.modelo, 'claude-opus-5', 'el carrusel lo escribió Opus; Sonnet solo eligió el formato');
+  assert.equal(c.columnas().modelo, 'claude-opus-5');
+  // Y si el escritor llega a decir en su resumen --json cuál fue la principal, manda él.
+  assert.equal(c.columnas({ modelo: 'claude-opus-5-20260101' }).modelo, 'claude-opus-5-20260101');
+});
+
+// DEFECTO CERRADO: la escritura de caché se metía SIEMPRE en la tarifa de 5 minutos (1.25x la entrada).
+// Con ESCRIBIR_CACHE_TTL=1h la escritura real cuesta 2x, así que el worker contaba de menos y los topes
+// dejaban pasar más gasto del configurado.
+test('la escritura de caché se cuenta a la tarifa del ttl con el que se lanzó al escritor', async () => {
+  const { lineaDeUso, costeDeUso } = await import('../../scripts/lib/costes.mjs');
+  const usage = { input_tokens: 18279, output_tokens: 7663, cache_creation_input_tokens: 30853, cache_read_input_tokens: 0 };
+  const linea = lineaDeUso('claude-opus-5', usage, null, 'end_turn').trim();   // la línea de hoy NO dice el ttl
+  for (const ttl of ['5m', '1h']) {
+    const contador = crearContador({ ttl });
+    contador.sumar(linea);
+    assert.equal(contador.usd.toFixed(4), costeDeUso(usage, 'claude-opus-5', ttl).toFixed(4),
+      `con ttl ${ttl} la cuenta del worker tiene que ser la del escritor, al centavo`);
+    assert.equal(contador.desvioUsd, 0);
+  }
+  const a5m = crearContador({ ttl: '5m' }); a5m.sumar(linea);
+  const a1h = crearContador({ ttl: '1h' }); a1h.sumar(linea);
+  assert.equal((a1h.usd - a5m.usd).toFixed(4), '0.1157', 'lo que el tope dejaba pasar de más por llamada');
+  // Si el escritor llega a escribir el ttl en su línea, manda la línea aunque el worker vaya mal puesto.
+  const dicho = crearContador({ ttl: '5m' });
+  dicho.sumar(`${linea} · ttl=1h`);
+  assert.equal(dicho.usd.toFixed(4), costeDeUso(usage, 'claude-opus-5', '1h').toFixed(4));
+  // Y si el escritor dice lo que le cobraron y es más que la cuenta de la tabla, se cobra lo suyo y el
+  // desvío queda anotado (es la señal de que la tabla de precios o el ttl de aquí ya no son los suyos).
+  const conImporte = crearContador({ ttl: '5m' });
+  conImporte.sumar(lineaDeUso('claude-opus-5', usage, costeDeUso(usage, 'claude-opus-5', '1h'), 'end_turn').trim());
+  assert.equal(conImporte.usd.toFixed(4), costeDeUso(usage, 'claude-opus-5', '1h').toFixed(4));
+  assert.equal(conImporte.desvioUsd.toFixed(4), '0.1157');
+  assert.equal(normalizarTtl('1 H'), '1h');
+  assert.equal(normalizarTtl('2h'), null);
+});
+
 test('el libro del día suma, avisa al 80 %, frena en el tope y sobrevive a un reinicio', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gasto-'));
   const reloj = { fecha: new Date('2026-09-07T10:00:00') };
@@ -434,44 +483,150 @@ test('cargarConfig trae los topes de gasto y los deja cambiar por variable', () 
   assert.equal(porOmision.topePedidoUsd, TOPE_PEDIDO_USD);
   assert.equal(porOmision.topeDiaUsd, TOPE_DIA_USD);
   assert.equal(porOmision.avisoDiaPct, 80);
-  const propio = cargarConfig([], { COSTO_TOPE_PEDIDO_USD: '0.5', COSTO_TOPE_DIA_USD: '0', COSTO_AVISO_DIA_PCT: '90' });
+  assert.equal(porOmision.ttlCacheEfectivo, '5m', 'sin variable se cuenta a la tarifa de 5 minutos');
+  const propio = cargarConfig([], { COSTO_TOPE_PEDIDO_USD: '0.5', COSTO_TOPE_DIA_USD: '0', COSTO_AVISO_DIA_PCT: '90', ESCRIBIR_CACHE_TTL: '1h' });
   assert.equal(propio.topePedidoUsd, 0.5);
   assert.equal(propio.topeDiaUsd, 0, 'el cero se respeta: significa sin tope');
   assert.equal(propio.avisoDiaPct, 90);
+  assert.equal(propio.ttlCacheEfectivo, '1h', 'y con ESCRIBIR_CACHE_TTL=1h, a la de una hora');
+  assert.equal(cargarConfig([], { ESCRIBIR_CACHE_TTL: 'lo que sea' }).ttlCacheEfectivo, '5m');
 });
 
-// El freno de verdad: un escritor de mentira que gasta y se queda colgado, y un tope ridículo.
-// Comprueba las tres cosas: que el proceso hijo se corta, que el pedido queda en error y que el
-// texto que ve el equipo dice cuánto llevaba y cuál era el tope.
-test('el tope por pedido corta la versión en curso y lo explica en español', async () => {
+// ============================================================
+// EL FRENO DE GASTO, DE PUNTA A PUNTA
+// ============================================================
+
+// Un escritor de mentira que gasta de verdad (imprime las dos líneas de consumo que lee el worker: la
+// auxiliar y la principal), tarda un poco en «renderizar» y ENTREGA la versión. Es el caso que importa:
+// cuando la línea de consumo aparece, la API ya cobró; lo que viene después no cuesta un centavo.
+const ESCRITOR_QUE_ENTREGA = `
+import fs from 'node:fs';
+import path from 'node:path';
+const salida = process.argv[process.argv.indexOf('--salida') + 1];
+process.stderr.write('  · claude-sonnet-5: 1840 tokens de entrada, 96 de salida (0 de escritura en caché, 0 de lectura de caché)\\n');
+process.stderr.write('  · claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 de escritura en caché, 0 de lectura de caché)\\n');
+setTimeout(() => {
+  fs.mkdirSync(path.join(salida, 'slides'), { recursive: true });
+  fs.writeFileSync(path.join(salida, 'slides', '01.png'), 'png');
+  fs.writeFileSync(path.join(salida, 'caption.txt'), 'Cotiza sin perder dinero.');
+  fs.writeFileSync(path.join(salida, 'carrusel.json'), JSON.stringify({ slug: 'x', look: 'uno', slides: [{ titulo: 'Cotiza sin perder dinero' }] }));
+  console.log(JSON.stringify({ carpeta: salida, laminas: 1, look: 'uno', indice_qa: 92, veredicto_qa: 'publicable' }));
+}, 300);
+`;
+const COSTO_POR_VERSION = 0.3803;   // 0.3756 de la llamada de Opus + 0.0046 de la auxiliar
+
+// Monta un worker completo sobre carpetas temporales: skill de mentira con ese escritor, marca de
+// mentira y repositorio en memoria. No sube nada ni toca la red.
+function bancoDePruebas({ pedido: cambios = {}, correccion = null, entorno = {}, libro } = {}) {
   const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'tope-'));
   const skill = path.join(raiz, 'skill');
   fs.mkdirSync(path.join(skill, 'scripts'), { recursive: true });
   fs.mkdirSync(path.join(raiz, 'privado'), { recursive: true });
   fs.writeFileSync(path.join(raiz, 'privado', 'MI-MARCA.md'), '# Marca de prueba\n');
-  // Escribe una línea de progreso, una de consumo real y se queda colgado: si nadie lo corta, no termina.
-  fs.writeFileSync(path.join(skill, 'scripts', 'escribir.mjs'),
-    'process.stderr.write("· render 1/8\\n");\n'
-    + 'process.stderr.write("· claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)\\n");\n'
-    + 'setTimeout(() => {}, 120000);\n');
-
+  fs.writeFileSync(path.join(skill, 'scripts', 'escribir.mjs'), ESCRITOR_QUE_ENTREGA);
   const config = cargarConfig(['--sin-subir'], {
     SKILL_DIR: skill, PRIVADO_DIR: path.join(raiz, 'privado'), TRABAJO_DIR: path.join(raiz, 'trabajo'),
-    ANTHROPIC_API_KEY: 'clave-de-mentira-para-la-prueba', COSTO_TOPE_PEDIDO_USD: '0.01',
+    ANTHROPIC_API_KEY: 'clave-de-mentira-para-la-prueba', ...entorno,
   });
   const datos = JSON.parse(fs.readFileSync(new URL('./pedido.ejemplo.json', import.meta.url), 'utf8'));
-  const pedido = { ...datos.pedido, versiones: 1 };
-  const repo = crearRepositorioSimulado({ pedido });
-  const pipeline = crearPipeline({ config, repo, almacen: crearAlmacen(config) });
+  const pedido = { ...datos.pedido, ...cambios };
+  const repo = crearRepositorioSimulado({ pedido, correccion: correccion ? { ...datos.correccion, ...correccion } : null });
+  return { raiz, config, pedido, repo, pipeline: crearPipeline({ config, repo, almacen: crearAlmacen(config), libro }) };
+}
 
-  const inicio = Date.now();
-  await pipeline.procesarPedido(await repo.reclamarPedido());
-  const final = await repo.pedidoPorId(pedido.id);
+// DEFECTO CERRADO: la señal de corte llegaba con la línea de consumo, o sea DESPUÉS de que la API cobró:
+// mataba al escritor antes de que escribiera carrusel.json y el pedido quedaba con 0 versiones y el
+// dinero gastado. Ahora el tope se mira ANTES de arrancar cada versión.
+test('el tope por pedido entrega lo que ya se pagó y frena la versión siguiente', async () => {
+  const banco = bancoDePruebas({ pedido: { versiones: 4 }, entorno: { COSTO_TOPE_PEDIDO_USD: '0.5' } });
+  await banco.pipeline.procesarPedido(await banco.repo.reclamarPedido());
+  const final = await banco.repo.pedidoPorId(banco.pedido.id);
+  const versiones = await banco.repo.versionesDe(banco.pedido.id);
 
-  assert.ok(Date.now() - inicio < 60_000, 'el hijo debe morir en el acto, no esperar sus 2 minutos');
-  assert.equal(final.estado, 'error');
-  assert.match(final.error, /se detuvo para no seguir gastando/);
-  assert.match(final.error, /llevaba \$0\.29/, `el mensaje debe decir cuánto llevaba: ${final.error}`);
-  assert.match(final.error, /el tope por pedido es \$0\.01/, `y cuál es el tope: ${final.error}`);
-  assert.equal(final.costo_usd, 0.2904, 'el coste de la versión cortada también se guarda');
+  assert.equal(versiones.length, 2, 'la v1 y la v2 se pagaron y se entregan; la v3 ya no arranca');
+  assert.equal(final.estado, 'listo', 'con versiones entregadas el pedido NO es un error');
+  assert.equal(final.costo_usd, Number((COSTO_POR_VERSION * 2).toFixed(4)));
+  assert.match(final.error, /Se generaron 2 de 4 versiones/, `el mensaje dice cuántas salieron: ${final.error}`);
+  assert.match(final.error, /lleva \$0\.76/, `y cuánto se gastó: ${final.error}`);
+  assert.match(final.error, /el tope por pedido es \$0\.50/, `y cuál es el tope: ${final.error}`);
+  // Las dos versiones están enteras en disco y apuntadas al modelo que de verdad escribió el carrusel.
+  for (const v of versiones) {
+    assert.ok(fs.existsSync(path.join(banco.raiz, 'trabajo', banco.pedido.id, `v${v.n}`, 'carrusel.json')));
+    assert.equal(v.modelo, 'claude-opus-5');
+  }
+});
+
+test('con el tope ya rebasado no se gasta ni un centavo más', async () => {
+  const banco = bancoDePruebas({ pedido: { versiones: 2, costo_usd: 5 }, entorno: { COSTO_TOPE_PEDIDO_USD: '3' } });
+  await banco.pipeline.procesarPedido(await banco.repo.reclamarPedido());
+  const final = await banco.repo.pedidoPorId(banco.pedido.id);
+  assert.equal((await banco.repo.versionesDe(banco.pedido.id)).length, 0);
+  assert.equal(fs.existsSync(path.join(banco.raiz, 'trabajo', banco.pedido.id, 'v1', 'carrusel.json')), false);
+  assert.equal(final.estado, 'error', 'sin nada que entregar sí es un error');
+  assert.equal(final.costo_usd, 5, 'y no se gastó nada: el escritor ni se lanzó');
+  assert.match(final.error, /Se generaron 0 de 2 versiones/);
+});
+
+test('una corrección no se lanza si el pedido ya pasó el tope, y el pedido se queda como estaba', async () => {
+  const banco = bancoDePruebas({
+    pedido: { estado: 'listo', costo_usd: 5 }, correccion: {}, entorno: { COSTO_TOPE_PEDIDO_USD: '3' },
+  });
+  await banco.repo.reclamarPedido();                       // el pedido ya se procesó antes
+  await banco.repo.actualizarPedido(banco.pedido.id, { estado: 'listo' });
+  const correccion = { ...JSON.parse(fs.readFileSync(new URL('./pedido.ejemplo.json', import.meta.url), 'utf8')).correccion };
+  await banco.pipeline.procesarCorreccion(correccion);
+  const final = await banco.repo.pedidoPorId(banco.pedido.id);
+  assert.equal(final.estado, 'listo', 'el pedido conserva sus versiones y su estado');
+  assert.equal(final.costo_usd, 5, 'la corrección no llamó a la API');
+  assert.equal((await banco.repo.versionesDe(banco.pedido.id)).length, 0);
+});
+
+// El tope del DÍA no marca nada como error: simplemente no se toma trabajo nuevo, y lo pendiente sigue
+// pendiente para mañana.
+test('el tope del día no reclama trabajo: los pedidos se quedan pendientes', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dia-'));
+  const libro = crearLibroDiario({ dir, topeDiaUsd: 20 });
+  libro.anotar(21);
+  const espia = { reclamos: 0 };
+  const repo = {
+    async reclamarPedido() { espia.reclamos += 1; return null; },
+    async reclamarCorreccion() { espia.reclamos += 1; return null; },
+  };
+  assert.equal(await iteracion({}, repo, libro), false);
+  assert.equal(espia.reclamos, 0, 'con el día gastado no se le pide trabajo a la base de datos');
+  // Con presupuesto sí se reclama.
+  const conSaldo = crearLibroDiario({ dir: path.join(dir, 'otro'), topeDiaUsd: 20 });
+  assert.equal(await iteracion({}, repo, conSaldo), false);
+  assert.equal(espia.reclamos, 2);
+});
+
+// DEFECTO CERRADO: arrancar con el día casi gastado solo se veía cuando terminaba el siguiente trabajo,
+// que puede tardar media hora. Ahora se avisa en el arranque, antes de tomar nada.
+test('el aviso del tope del día sale en el arranque, no al terminar el siguiente trabajo', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arranque-'));
+  const dichos = [];
+  const consolaReal = console.log;
+  const espiar = (fn) => { console.log = (...p) => dichos.push(p.join(' ')); try { return fn(); } finally { console.log = consolaReal; } };
+
+  const casi = crearLibroDiario({ dir, topeDiaUsd: 20, avisoPct: 80 });
+  casi.anotar(19.4);                                    // 97 % del tope
+  dichos.length = 0;
+  const texto = espiar(() => crearLibroDiario({ dir, topeDiaUsd: 20, avisoPct: 80 }).avisarAlArrancar());
+  assert.match(texto, /\$19\.40 de un tope de \$20\.00 \(97 %\)/);
+  assert.equal(dichos.filter((l) => /AVISO/.test(l)).length, 1, `tiene que ser un AVISO visible: ${JSON.stringify(dichos)}`);
+
+  // Y con el tope ya alcanzado, el arranque dice que hoy no se toma nada.
+  const pasado = crearLibroDiario({ dir: path.join(dir, 'pasado'), topeDiaUsd: 20 });
+  pasado.anotar(20.5);
+  dichos.length = 0;
+  const texto2 = espiar(() => crearLibroDiario({ dir: path.join(dir, 'pasado'), topeDiaUsd: 20 }).avisarAlArrancar());
+  assert.match(texto2, /El tope del día YA está alcanzado/);
+  assert.match(dichos[0], /AVISO/);
+
+  // Un día tranquilo no grita: informa y ya.
+  const tranquilo = crearLibroDiario({ dir: path.join(dir, 'tranquilo'), topeDiaUsd: 20 });
+  dichos.length = 0;
+  assert.equal(espiar(() => tranquilo.avisarAlArrancar()), null);
+  assert.equal(dichos.filter((l) => /AVISO/.test(l)).length, 0);
+  assert.match(dichos[0], /Gasto de hoy .*\$0\.00 de un tope de \$20\.00 \(0 %\)/);
 });
