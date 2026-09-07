@@ -173,6 +173,11 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
 .con-recorte.con-panel .recorte { bottom: 120px; height: 72%; }
 /* sin panel la figura sangra hasta abajo: el contador y el «Desliza» del pie se esconden para no pintarse encima de la ropa (arriba sigue el 02/08) */
 .con-recorte:not(.con-panel) .bottom .pager, .con-recorte:not(.con-panel) .bottom .desliza { visibility: hidden; }
+/* Con la foto a la derecha (pos "derecha") pasa lo mismo y no estaba cubierto: la imagen ocupa el 42% derecho
+   de arriba abajo, así que el contador y el «Desliza» del pie SIEMPRE caen sobre ella y solo se leen si la
+   foto es clara justo ahí. Un traje azul o negro se los tragaba y nadie lo veía. Misma salida que arriba:
+   se esconden; el @ vive del lado libre y el contador de arriba sigue. */
+.con-img-derecha .bottom .pager, .con-img-derecha .bottom .desliza { visibility: hidden; }
 .con-recorte.recorte-grande .recorte { width: 50%; height: 84%; right: 0; }
 .con-recorte.recorte-grande .contenido { right: 50%; padding-right: 40px; }
 /* el panel arranca a un cuarto de la altura: la tarjeta es el pedestal de la figura y el aire de arriba

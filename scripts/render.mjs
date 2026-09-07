@@ -46,8 +46,23 @@ const [w, h] = [Number(html.match(/data-w="(\d+)"/)[1]), Number(html.match(/data
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: escala });
-  await page.goto('file://' + htmlPath, { waitUntil: 'networkidle' });
+  // El banco de rostro vive en la nube y una descarga lenta tumbaba el render entero a los 30 s. Se le da
+  // más margen y, si aun así la red no se queda quieta, se sigue con «load» y se espera foto por foto: un
+  // PNG publicado sin la cara de la marca es peor que un render que tarda diez segundos más.
+  try { await page.goto('file://' + htmlPath, { waitUntil: 'networkidle', timeout: 60_000 }); }
+  catch { await page.goto('file://' + htmlPath, { waitUntil: 'load', timeout: 60_000 }); }
   try { await page.evaluate(() => document.fonts.ready); } catch {}
+  const sinCargar = await page.evaluate(() => {
+    const urls = [...document.querySelectorAll('.bg,.recorte,.img-derecha,.img-centro,.img-abajo,.foto,.avatar')]
+      .map(el => (getComputedStyle(el).backgroundImage.match(/url\(["']?(.*?)["']?\)/) || [])[1]).filter(Boolean);
+    return Promise.all([...new Set(urls)].map(u => new Promise(res => {
+      const i = new Image();
+      i.onload = () => res(null); i.onerror = () => res(u);
+      i.src = u;
+      if (i.complete) res(i.naturalWidth ? null : u);
+    }))).then(r => r.filter(Boolean));
+  });
+  if (sinCargar.length) console.error(`⚠ ${sinCargar.length} imagen(es) no cargaron y saldrán en blanco: ${sinCargar.slice(0, 3).join(' · ')}`);
   await page.waitForTimeout(600);
   try { await page.evaluate(() => window.__fit && window.__fit()); } catch {}
   await page.addStyleTag({ content: '#descargar{display:none!important}' });
