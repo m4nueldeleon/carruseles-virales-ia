@@ -22,10 +22,15 @@ export const MODELO_POR_OMISION = process.env.ANTHROPIC_MODEL || 'claude-opus-5'
 // salía truncada. Haiku es aún más barato pero falló al clasificar una noticia: no se pone por omisión.
 export const MODELO_AUXILIAR_POR_OMISION = process.env.ANTHROPIC_MODELO_AUXILIAR || 'claude-sonnet-5';
 export const TIMEOUT_MS = 180_000;
-// Red de seguridad, no ahorro: se cobra lo generado, no lo reservado. El techo solo sirve para cortar una
-// respuesta desbocada. Con el razonamiento acotado la salida real ronda los 2,500 tokens y nunca pasó de
-// 5,302 en las corridas medidas, así que 8,000 deja de sobra y corta mucho antes que los 12,000 de antes.
-export const MAX_TOKENS_POR_OMISION = Number(process.env.ANTHROPIC_MAX_TOKENS) || 8000;
+// Red de seguridad, no ahorro: se cobra lo generado, no lo reservado, así que bajar el techo no ahorra un
+// centavo. Solo sirve para cortar una respuesta desbocada… y para eso tiene que ir acorde a lo que la
+// configuración puede producir. Medido: con esfuerzo «low» la salida ronda 2,500 tokens y nunca pasó de
+// 2,700; con «high» una llamada se comió los 8,000 ENTEROS razonando y devolvió cero texto. Un techo fijo
+// sirve para un esfuerzo y estrangula al siguiente, así que el techo sale del esfuerzo.
+export const TECHO_POR_ESFUERZO = Object.freeze({ low: 8000, medium: 12000, high: 20000, xhigh: 24000, max: 32000 });
+export const MAX_TOKENS_POR_OMISION = Number(process.env.ANTHROPIC_MAX_TOKENS) || TECHO_POR_ESFUERZO.low;
+export const techoPara = esfuerzo => Number(process.env.ANTHROPIC_MAX_TOKENS)
+  || TECHO_POR_ESFUERZO[esfuerzo] || MAX_TOKENS_POR_OMISION;
 
 const REINTENTABLE = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
 const esperar = ms => new Promise(r => setTimeout(r, ms));
@@ -40,9 +45,11 @@ export const PENSAMIENTOS = Object.freeze(['adaptive', 'disabled']);
 export const ESFUERZOS = Object.freeze(['low', 'medium', 'high', 'xhigh', 'max']);
 // Los que un gateway antiguo puede no conocer; se quitan y se repite la llamada, igual que el muestreo.
 export const PARAMETROS_OPCIONALES = Object.freeze([...PARAMETROS_MUESTREO, 'thinking', 'output_config']);
-// Familias que ya no admiten muestreo (Opus 5, Fable 5 y sus variantes con fecha o sufijo). El número va
-// anclado: «opus-5», «opus-5-20260101» y «opus-5.1» sí; un futuro «opus-50» es otra familia y NO entra.
-const SIN_MUESTREO = /(opus|fable)-5(?!\d)/i;
+// Familias que ya no admiten muestreo (la generación 5 entera: Opus 5, Sonnet 5 y Fable 5, con fecha o
+// sufijo). El número va anclado: «opus-5», «opus-5-20260101» y «opus-5.1» sí; un futuro «opus-50» es otra
+// familia y NO entra. Sonnet 5 entró en la lista al medirlo: rechazaba «temperature» con un 400 en cada
+// llamada auxiliar y se perdía un viaje de ida y vuelta a la API para descubrirlo.
+const SIN_MUESTREO = /(opus|sonnet|fable)-5(?!\d)/i;
 const TEXTO_DE_RECHAZO = /deprecat|not supported|unsupported|no longer|not allowed|cannot be used|unexpected|must not|remove|extra input|not permitted|unrecogni[sz]ed|unknown (?:field|parameter)/i;
 
 export const admiteMuestreo = modelo => !SIN_MUESTREO.test(String(modelo || ''));
@@ -102,6 +109,7 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
   if (!llave) throw new Error('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=...).');
   const mandarMuestreo = muestreo === null ? admiteMuestreo(modelo) : Boolean(muestreo);
   const yaRechazados = new Set(); // lo que este modelo rechazó en esta corrida no se vuelve a mandar
+  const techo = pensamiento === 'disabled' ? MAX_TOKENS_POR_OMISION : techoPara(esfuerzo);
   // Lo que lleva gastado esta corrida. Es lo único mutable del cliente y solo lo escribe `llamar`.
   let uso = USO_VACIO;
 
@@ -138,7 +146,7 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
   // Devuelve { texto, usage, stop }. `system` puede ser texto o un arreglo de bloques (para cache_control).
   // Tres respaldos: quitar el parámetro que la API declare obsoleto, un reintento ante sobrecarga o red
   // caída, y el timeout que corta cada intento por separado.
-  async function llamar(mensajes, { system, maxTokens = MAX_TOKENS_POR_OMISION, temperature = 0.4, topP = null, topK = null, pensamiento: p, esfuerzo: e } = {}) {
+  async function llamar(mensajes, { system, maxTokens = techo, temperature = 0.4, topP = null, topK = null, pensamiento: p, esfuerzo: e } = {}) {
     let cuerpo = armarCuerpo(mensajes, { system, maxTokens, temperature, topP, topK, pensamiento: p, esfuerzo: e });
     let reintentosRed = 0;
     let parametrosQuitados = 0;
@@ -188,9 +196,9 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
     // Respuesta vacía por techo agotado: repetir el mismo encargo pidiendo «solo el objeto» se volvería a
     // cortar en el mismo sitio y se pagaría el prompt entero para nada. Lo que falta es sitio para escribir.
     if (!primera.texto && primera.stop === 'max_tokens') {
-      const techo = Math.min(2 * (opciones.maxTokens || MAX_TOKENS_POR_OMISION), 32000);
-      log(`  · la respuesta se cortó sin escribir texto; repito con max_tokens ${techo}`);
-      const holgada = await llamar(mensajes, { ...opciones, maxTokens: techo });
+      const holgado = Math.min(2 * (opciones.maxTokens || techo), 32000);
+      log(`  · la respuesta se cortó sin escribir texto; repito con max_tokens ${holgado}`);
+      const holgada = await llamar(mensajes, { ...opciones, maxTokens: holgado });
       return { json: extraerJson(holgada.texto), texto: holgada.texto, usage: holgada.usage };
     }
     log('  · la respuesta no fue JSON; pido solo el objeto');
