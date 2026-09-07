@@ -115,6 +115,36 @@ export function normalizarSlide(slide) {
   // Campos de lista que a veces llegan sueltos.
   for (const campo of ['items', 'chips']) if (s[campo] != null && !Array.isArray(s[campo])) s[campo] = [s[campo]];
 
+  // `pasos` es una lista de OBJETOS {n, titulo, detalle}. Cuando el modelo manda cadenas, el motor
+  // pintaba el número y nada más: la lámina guardable salía vacía y QA la daba por buena porque no
+  // encontraba texto que contar. Una cadena es el título del paso.
+  if (s.pasos != null) {
+    const lista = Array.isArray(s.pasos) ? s.pasos : [s.pasos];
+    s.pasos = lista.filter(p => p != null).map(p => {
+      if (typeof p !== 'object') return { titulo: String(p) };
+      const o = { ...p };
+      if (o.titulo == null) o.titulo = o.texto ?? o.paso ?? o.nombre ?? o.detalle ?? '';
+      if (o.titulo === o.detalle) delete o.detalle;
+      for (const k of ['texto', 'paso', 'nombre']) delete o[k];
+      if (o.n != null) o.n = String(o.n);
+      return o;
+    });
+  }
+
+  // Las dos columnas de una comparativa: {titulo, items}. Una lista suelta son sus ítems; una cadena, su título.
+  for (const lado of ['a', 'b']) {
+    const v = s[lado];
+    if (v == null) continue;
+    if (Array.isArray(v)) s[lado] = { items: v.map(String) };
+    else if (typeof v !== 'object') s[lado] = { titulo: String(v) };
+    else {
+      const o = { ...v };
+      if (o.items != null && !Array.isArray(o.items)) o.items = [o.items];
+      if (Array.isArray(o.items)) o.items = o.items.map(x => (typeof x === 'string' ? x : String(x?.texto ?? x?.titulo ?? '')));
+      s[lado] = o;
+    }
+  }
+
   // `nota` a nivel de lámina no existe en el contrato (la nota vive dentro del ítem). Si hay ítems,
   // se cuelga del último en vez de perderse; si no, se queda como campo muerto e inofensivo.
   if (typeof s.nota === 'string' && s.nota.trim() && Array.isArray(s.items) && s.items.length) {

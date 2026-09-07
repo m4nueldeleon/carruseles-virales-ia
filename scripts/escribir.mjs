@@ -223,15 +223,16 @@ Responde UN SOLO objeto JSON, sin markdown y sin texto alrededor. Escribe el car
 OBLIGATORIOS del carrusel: "slug" texto, "look" texto, "formato" texto, "caption" TEXTO, "slides" lista de objetos.
 OBLIGATORIO de cada lámina: "layout" texto.
 OPCIONALES del carrusel: "fecha", "tema", "tipo", "serie", "palabra_clave", "entregable" (textos); "objetivo" (texto, o lista de 2 como mucho); "marca" objeto {"handle","sello"}; "hashtags" LISTA de textos (3 a 5); "notas" TEXTO.
-OPCIONALES de cada lámina: "rol", "kicker", "titulo", "subtitulo", "cuerpo", "loop", "numero", "numero_fantasma", "dato", "cita", "autor", "prompt", "etiqueta", "boton", "pie", "etiqueta_top", "sticker", "alt" (todos TEXTO); "items", "chips", "pasos" (listas); "a", "b" objetos {"titulo","items"}; "imagen" objeto {"src","pos","panel","tamano","duotono","prompt"}.
+OPCIONALES de cada lámina: "rol", "kicker", "titulo", "subtitulo", "cuerpo", "loop", "numero", "numero_fantasma", "dato", "cita", "autor", "prompt", "etiqueta", "boton", "pie", "etiqueta_top", "sticker", "alt" (todos TEXTO); "items" y "chips" (listas de textos); "pasos" LISTA DE OBJETOS {"titulo","detalle"}; "a", "b" objetos {"titulo","items"}; "imagen" objeto {"src","pos","panel","tamano","duotono","prompt"}.
 
-Los seis errores de forma que hay que evitar:
+Los siete errores de forma que hay que evitar:
 1. "caption" es TEXTO plano con saltos \\n. NUNCA un objeto {"primera_linea","texto","hashtags"} ni una lista.
 2. "hashtags" es una lista propia del carrusel, al mismo nivel que "caption". NUNCA dentro del caption ni dentro de un objeto.
 3. "notas" es UN texto (usa \\n si son varios apuntes), no una lista.
 4. "numero_fantasma" es el número como TEXTO ("01"), nunca true: lo que escribas ahí se pinta gigante en la lámina.
 5. "alt" va dentro de cada lámina, como texto, siempre.
-6. No inventes campos: nada de "qa", "palabras" ni "n" por lámina. La calidad la mide scripts/qa.mjs, no tú.
+6. "pasos" son OBJETOS: [{"titulo":"Manda el monto","detalle":"con fecha límite"}]. Una lista de cadenas sueltas se renderiza como números sin texto y la lámina guardable sale vacía.
+7. No inventes campos: nada de "qa", "palabras" ni "n" por lámina. La calidad la mide scripts/qa.mjs, no tú.
 
 Ejemplo de la FORMA (contenido de relleno y solo 2 láminas; el número de láminas lo manda el FORMATO-PLAN):
 {"formato_elegido":"carrusel-lista","slug":"ejemplo-de-forma","fecha":"2026-01-31","tema":"Tema de ejemplo","tipo":"lista","formato":"3:4","look":"guia-rapida","serie":"Guía rápida","objetivo":"saves","palabra_clave":"FICHA","entregable":"la hoja de una página por DM","marca":{"handle":"@tucuenta","sello":"IA aplicada al negocio real"},"slides":[{"rol":"portada","layout":"portada-titulo","titulo":"Tu negocio no *camina* sin ti","subtitulo":"3 señales y qué delegar","chips":["3 señales"],"pie":"Desliza","imagen":{"src":"https://ejemplo/foto.png","pos":"recorte","panel":true},"alt":"Portada del carrusel sobre delegar en tu negocio."},{"rol":"cta","layout":"cta-cara","titulo":"¿Quieres la *ficha*?","cuerpo":"Comenta FICHA y te la mando por DM.","boton":"Comenta FICHA","alt":"Lámina final que invita a comentar la palabra FICHA."}],"caption":"Si te vas tres días y el negocio se para, tienes un empleo con tu nombre.\\n\\nMándaselo a tu socio que aprueba cada precio.\\n\\nComenta FICHA y te mando la hoja.","hashtags":["#dueñosdenegocio","#delegar","#pymes"],"notas":"Avisos esperados de QA: la lámina 2 es el CTA por ser un ejemplo corto."}`;

@@ -103,6 +103,17 @@ data.slides.forEach((s, i) => {
   const tope = (s.rol === 'cheatsheet' || ['lista', 'pasos', 'prompt', 'comparativa'].includes(s.layout)) ? 7 : 4;
   if (elems > tope) aviso(i + 1, `${elems} elementos en una lámina: la memoria de trabajo aguanta ~4 (7 en la guardable). Agrupa o parte.`);
 });
+// Una lámina de lista, pasos o comparativa cuyos elementos no traen texto se renderiza vacía (solo los
+// números) y hasta ahora pasaba como buena: el contador de palabras no encontraba nada que contar.
+data.slides.forEach((s, i) => {
+  const vacios = [
+    ...(s.items || []).map(it => (typeof it === 'string' ? it : it?.texto)),
+    ...(s.pasos || []).map(p => (typeof p === 'string' ? p : p?.titulo)),
+    ...(s.a?.items || []), ...(s.b?.items || []),
+  ].filter(x => !String(x ?? '').trim()).length;
+  if (vacios) err(i + 1, `${vacios} elemento(s) sin texto en la lámina: se renderiza el número y nada más. Revisa items/pasos (cada paso es {titulo, detalle}, no una cadena suelta).`);
+});
+
 const cta = data.slides.filter(s => s.rol === 'cta');
 if (!imagenUnica && cta.length === 0) err(N, 'No hay lámina de CTA (rol "cta").');
 if (imagenUnica && cta.length) aviso(1, 'Imagen única con lámina de CTA: en este formato el CTA vive en el caption.');

@@ -98,6 +98,24 @@ test('la nota suelta de una lámina se cuelga del último ítem en vez de perder
   assert.equal(s.nota, undefined);
 });
 
+test('pasos como cadenas sueltas se vuelven {titulo}: la lámina guardable dejaba de tener texto', () => {
+  const s = normalizarSlide({ layout: 'pasos', pasos: ['Confirma qué incluye.', 'Manda monto y fecha.'] });
+  assert.deepEqual(s.pasos, [{ titulo: 'Confirma qué incluye.' }, { titulo: 'Manda monto y fecha.' }]);
+  // con objetos bien formados no se toca nada
+  const ok = normalizarSlide({ layout: 'pasos', pasos: [{ n: 1, titulo: 'Uno', detalle: 'detalle' }] });
+  assert.deepEqual(ok.pasos, [{ n: '1', titulo: 'Uno', detalle: 'detalle' }]);
+  // «texto» en vez de «titulo» también se entiende
+  assert.equal(normalizarSlide({ layout: 'pasos', pasos: [{ texto: 'Dos' }] }).pasos[0].titulo, 'Dos');
+});
+
+test('las columnas de una comparativa aceptan lista suelta o cadena', () => {
+  const s = normalizarSlide({ layout: 'comparativa', a: ['uno', 'dos'], b: 'Solo título' });
+  assert.deepEqual(s.a, { items: ['uno', 'dos'] });
+  assert.deepEqual(s.b, { titulo: 'Solo título' });
+  const objetos = normalizarSlide({ layout: 'comparativa', a: { titulo: 'Te dicen', items: [{ texto: 'Publica diario' }] } });
+  assert.deepEqual(objetos.a.items, ['Publica diario']);
+});
+
 // ---------- carrusel entero ----------
 test('el caso de oro atraviesa la aduana entero y con los tipos del contrato', () => {
   const c = pasar(oro());
@@ -183,5 +201,17 @@ test('el caso de oro llega hasta qa.mjs sin excepción (escribir --simular + ren
   const html = fs.readFileSync(path.join(dir, 'slides-src', 'index.html'), 'utf8');
   assert.ok(!/numero-fantasma">true</.test(html), 'nunca se pinta la palabra «true» en la lámina');
   assert.ok(fs.readFileSync(path.join(dir, 'caption.txt'), 'utf8').includes('#delegar'), 'los hashtags llegan al caption.txt');
+  fs.rmSync(carpeta, { recursive: true, force: true });
+});
+
+test('qa.mjs bloquea una lámina de pasos cuyos elementos no traen texto', { timeout: 180_000 }, () => {
+  const carpeta = fs.mkdtempSync(path.join(os.tmpdir(), 'contrato-vacio-'));
+  const c = pasar(oro());
+  // se salta la aduana a propósito: así llegaba el carrusel.json antes del arreglo
+  c.slides[3] = { rol: 'cheatsheet', layout: 'pasos', titulo: 'Los 3 mensajes', pasos: [{ n: '1' }, { n: '2' }], alt: 'x' };
+  fs.writeFileSync(path.join(carpeta, 'carrusel.json'), JSON.stringify(c));
+  const r = spawnSync('node', [path.join(DIR, 'scripts', 'qa.mjs'), carpeta, '--json'], { encoding: 'utf8' });
+  const informe = JSON.parse(r.stdout);
+  assert.ok(informe.errores.some(e => /sin texto/.test(e.msg)), 'QA tiene que ver la lámina vacía');
   fs.rmSync(carpeta, { recursive: true, force: true });
 });
