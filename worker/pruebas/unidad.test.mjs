@@ -11,6 +11,12 @@ import { extraerCaption, humanizarMotivo, limpiarTitulo, leerResumenEscribir, li
 import { cargarConfig, diagnosticar, APPS_POR_OMISION } from '../lib/config.mjs';
 import { motivoDeSalida, ultimaLinea } from '../lib/procesos.mjs';
 import { ipInterna, nombreProhibido, revisarEnlace, traerSeguro, MENSAJE_BLOQUEO, MENSAJE_MUCHOS_SALTOS } from '../lib/red.mjs';
+import { PRECIOS, costoDeUso, crearContador, leerPreciosDeTexto, leerUso, mezclarPrecios, preciosDe } from '../lib/costos.mjs';
+import { crearLibroDiario, fechaLocal } from '../lib/gasto.mjs';
+import { TOPE_DIA_USD, TOPE_PEDIDO_USD } from '../lib/config.mjs';
+import { crearRepositorioSimulado } from '../lib/bd-simulada.mjs';
+import { crearAlmacen } from '../lib/blob.mjs';
+import { crearPipeline } from '../pipeline.mjs';
 
 const APPS = APPS_POR_OMISION.split(',');
 
@@ -302,4 +308,147 @@ test('referencia.py tampoco alcanza el servicio interno por ninguna de sus forma
     assert.match(r.stderr, /AVISO: Ese enlace no se puede abrir desde el servidor/, `${nombre}: ${r.stderr.slice(0, 120)}`);
   }
   assert.equal(interno.golpes, 0, 'el servicio interno no debió recibir ni una sola petición');
+});
+
+// ============================================================
+// GASTO: leer el consumo del log, convertirlo a dólares, frenar cuando toca.
+// ============================================================
+
+test('leerUso entiende la línea del escritor y descarta el resto del log', () => {
+  const uso = leerUso('· claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)');
+  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 18279, salida: 7663, lectura: 14827, escritura5m: 0, escritura1h: 0 });
+  // Sin paréntesis (el caso normal cuando el caché no se lee).
+  assert.deepEqual(leerUso('· claude-opus-5: 18520 tokens de entrada, 4965 de salida'),
+    { modelo: 'claude-opus-5', entrada: 18520, salida: 4965, lectura: 0, escritura5m: 0, escritura1h: 0 });
+  // Si algún día el cliente también imprime la escritura de caché, se lee sin tocar nada.
+  assert.equal(leerUso('· claude-opus-5: 100 tokens de entrada, 50 de salida (10 desde caché, 12106 de escritura de caché)').escritura5m, 12106);
+  // Lo que no es una línea de consumo, no lo es.
+  for (const linea of ['· render 3/8', 'Error: la API no contestó', '', 'claude-opus-5: hola']) {
+    assert.equal(leerUso(linea), null, `no debería leer consumo en «${linea}»`);
+  }
+});
+
+test('preciosDe normaliza el nombre del modelo y no confunde familias', () => {
+  assert.equal(preciosDe('claude-opus-5').salida, 25);
+  assert.equal(preciosDe('anthropic/claude-opus-5').salida, 25);        // gateway tipo OpenRouter
+  assert.equal(preciosDe('claude-haiku-4-5-20251001').entrada, 1);      // con fecha
+  assert.equal(preciosDe('claude-haiku-4.5').entrada, 1);               // con punto
+  assert.equal(preciosDe('claude-sonnet-5').salida, 10);
+  assert.equal(preciosDe('claude-opus-50'), null, 'un futuro opus-50 es otra familia, no debe heredar precio');
+  assert.equal(preciosDe(''), null);
+});
+
+test('costoDeUso reproduce el coste medido de una versión real', () => {
+  // Medición real del 7-sep-2026, v1 carrusel-8: 18279 entrada + 14827 de escritura de caché + 7663 de salida.
+  //   18279 x $5 + 14827 x $6.25 + 7663 x $25, por millón = $0.375639
+  const uso = { modelo: 'claude-opus-5', entrada: 18279, salida: 7663, lectura: 0, escritura5m: 14827 };
+  const { usd, conocido } = costoDeUso(uso);
+  assert.equal(conocido, true);
+  assert.equal(usd.toFixed(4), '0.3756');
+  // La misma versión si el caché SE LEYERA en vez de escribirse (0.1x en vez de 1.25x): $0.2904.
+  assert.equal(costoDeUso({ ...uso, escritura5m: 0, lectura: 14827 }).usd.toFixed(4), '0.2904');
+  // Un modelo que no está en la tabla no se inventa precio.
+  assert.deepEqual(costoDeUso({ modelo: 'modelo-inventado', entrada: 100, salida: 100 }), { usd: 0, conocido: false });
+});
+
+test('mezclarPrecios añade modelos por variable de entorno y descarta lo mal escrito', () => {
+  const tabla = mezclarPrecios(leerPreciosDeTexto('{"claude-opus-6":{"entrada":5,"escritura5m":6.25,"escritura1h":10,"lectura":0.5,"salida":25}}'));
+  assert.equal(preciosDe('claude-opus-6', tabla).salida, 25);
+  assert.equal(preciosDe('claude-opus-5', tabla).salida, 25, 'lo de la tabla original se conserva');
+  assert.equal(mezclarPrecios(leerPreciosDeTexto('{"malo":{"entrada":1}}')), PRECIOS, 'un modelo incompleto se ignora');
+  assert.equal(mezclarPrecios(leerPreciosDeTexto('no es json')), PRECIOS);
+  assert.equal(leerPreciosDeTexto(''), null);
+});
+
+test('crearContador suma las llamadas y arma las columnas de la versión', () => {
+  const c = crearContador();
+  assert.equal(c.sumar('· render 1/8'), null);
+  c.sumar('· claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)');
+  c.sumar('· claude-opus-5: 6527 tokens de entrada, 330 de salida');
+  const columnas = c.columnas();
+  assert.equal(c.llamadas, 2);
+  assert.equal(columnas.tokens_entrada, 18279 + 6527);
+  assert.equal(columnas.tokens_salida, 7663 + 330);
+  assert.equal(columnas.tokens_cache_lectura, 14827);
+  assert.equal(columnas.modelo, 'claude-opus-5');
+  assert.ok(columnas.costo_usd > 0.3 && columnas.costo_usd < 0.4, `costo raro: ${columnas.costo_usd}`);
+  assert.equal(String(columnas.costo_usd).split('.')[1]?.length <= 4, true, 'se guarda con 4 decimales');
+  assert.deepEqual(c.sinPrecio, []);
+});
+
+test('el libro del día suma, avisa al 80 %, frena en el tope y sobrevive a un reinicio', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gasto-'));
+  const reloj = { fecha: new Date('2026-09-07T10:00:00') };
+  const libro = crearLibroDiario({ dir, topeDiaUsd: 20, avisoPct: 80, ahora: () => reloj.fecha });
+  assert.equal(libro.alcanzoElTope(), false);
+  libro.anotar(15);
+  assert.equal(libro.total(), 15);
+  assert.equal(libro.alcanzoElTope(), false, '15 de 20 todavía no frena');
+  libro.anotar(5);
+  assert.equal(libro.alcanzoElTope(), true, '20 de 20 frena');
+  assert.equal(libro.restante(), 0);
+
+  // Reinicio del contenedor: un libro nuevo sobre la misma carpeta recupera el gasto del día.
+  const trasReinicio = crearLibroDiario({ dir, topeDiaUsd: 20, avisoPct: 80, ahora: () => reloj.fecha });
+  assert.equal(trasReinicio.total(), 20);
+  assert.equal(trasReinicio.alcanzoElTope(), true);
+
+  // Al día siguiente arranca de cero.
+  reloj.fecha = new Date('2026-09-08T09:00:00');
+  assert.equal(trasReinicio.total(), 0);
+  assert.equal(trasReinicio.alcanzoElTope(), false);
+  assert.equal(fechaLocal(new Date('2026-01-02T03:04:05')), '2026-01-02');
+
+  // Sin tope (0) nunca frena.
+  const libre = crearLibroDiario({ dir: path.join(dir, 'otro'), topeDiaUsd: 0 });
+  libre.anotar(1000);
+  assert.equal(libre.alcanzoElTope(), false);
+  assert.equal(libre.restante(), Infinity);
+});
+
+test('cargarConfig trae los topes de gasto y los deja cambiar por variable', () => {
+  const porOmision = cargarConfig([], { SKILL_DIR: '/s', PRIVADO_DIR: '/p', TRABAJO_DIR: '/t' });
+  assert.equal(porOmision.topePedidoUsd, TOPE_PEDIDO_USD);
+  assert.equal(porOmision.topeDiaUsd, TOPE_DIA_USD);
+  assert.equal(porOmision.avisoDiaPct, 80);
+  const propio = cargarConfig([], { COSTO_TOPE_PEDIDO_USD: '0.5', COSTO_TOPE_DIA_USD: '0', COSTO_AVISO_DIA_PCT: '90' });
+  assert.equal(propio.topePedidoUsd, 0.5);
+  assert.equal(propio.topeDiaUsd, 0, 'el cero se respeta: significa sin tope');
+  assert.equal(propio.avisoDiaPct, 90);
+});
+
+// El freno de verdad: un escritor de mentira que gasta y se queda colgado, y un tope ridículo.
+// Comprueba las tres cosas: que el proceso hijo se corta, que el pedido queda en error y que el
+// texto que ve el equipo dice cuánto llevaba y cuál era el tope.
+test('el tope por pedido corta la versión en curso y lo explica en español', async () => {
+  const raiz = fs.mkdtempSync(path.join(os.tmpdir(), 'tope-'));
+  const skill = path.join(raiz, 'skill');
+  fs.mkdirSync(path.join(skill, 'scripts'), { recursive: true });
+  fs.mkdirSync(path.join(raiz, 'privado'), { recursive: true });
+  fs.writeFileSync(path.join(raiz, 'privado', 'MI-MARCA.md'), '# Marca de prueba\n');
+  // Escribe una línea de progreso, una de consumo real y se queda colgado: si nadie lo corta, no termina.
+  fs.writeFileSync(path.join(skill, 'scripts', 'escribir.mjs'),
+    'process.stderr.write("· render 1/8\\n");\n'
+    + 'process.stderr.write("· claude-opus-5: 18279 tokens de entrada, 7663 de salida (14827 desde caché)\\n");\n'
+    + 'setTimeout(() => {}, 120000);\n');
+
+  const config = cargarConfig(['--sin-subir'], {
+    SKILL_DIR: skill, PRIVADO_DIR: path.join(raiz, 'privado'), TRABAJO_DIR: path.join(raiz, 'trabajo'),
+    ANTHROPIC_API_KEY: 'clave-de-mentira-para-la-prueba', COSTO_TOPE_PEDIDO_USD: '0.01',
+  });
+  const datos = JSON.parse(fs.readFileSync(new URL('./pedido.ejemplo.json', import.meta.url), 'utf8'));
+  const pedido = { ...datos.pedido, versiones: 1 };
+  const repo = crearRepositorioSimulado({ pedido });
+  const pipeline = crearPipeline({ config, repo, almacen: crearAlmacen(config) });
+
+  const inicio = Date.now();
+  await pipeline.procesarPedido(await repo.reclamarPedido());
+  const final = await repo.pedidoPorId(pedido.id);
+
+  assert.ok(Date.now() - inicio < 60_000, 'el hijo debe morir en el acto, no esperar sus 2 minutos');
+  assert.equal(final.estado, 'error');
+  assert.match(final.error, /se detuvo para no seguir gastando/);
+  assert.match(final.error, /llevaba \$0\.29/, `el mensaje debe decir cuánto llevaba: ${final.error}`);
+  assert.match(final.error, /el tope por pedido es \$0\.01/, `y cuál es el tope: ${final.error}`);
+  assert.equal(final.costo_usd, 0.2904, 'el coste de la versión cortada también se guarda');
 });

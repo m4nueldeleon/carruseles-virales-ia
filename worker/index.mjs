@@ -17,12 +17,14 @@ import { crearCliente } from './lib/supabase.mjs';
 import { crearRepositorio } from './lib/bd.mjs';
 import { crearRepositorioSimulado } from './lib/bd-simulada.mjs';
 import { crearAlmacen } from './lib/blob.mjs';
+import { crearLibroDiario } from './lib/gasto.mjs';
 import { crearPipeline } from './pipeline.mjs';
 
 const AYUDA = `Worker del Generador de carruseles.
   --una-vez     atiende lo pendiente y termina
   --simular     sin base de datos, sin API y sin subir: procesa worker/pruebas/pedido.ejemplo.json
   --sin-subir   no sube nada a Vercel Blob
+Topes de gasto: COSTO_TOPE_PEDIDO_USD, COSTO_TOPE_DIA_USD, COSTO_AVISO_DIA_PCT.
 Variables de entorno: ver worker/.env.ejemplo.`;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CADA_HUERFANOS_MS = 10 * 60_000;
@@ -100,7 +102,10 @@ function cargarPedidoEjemplo() {
   return datos;
 }
 
-async function iteracion(pipeline, repo) {
+async function iteracion(pipeline, repo, libro) {
+  // Tope de gasto del día: no se toma trabajo nuevo. Lo pendiente se queda pendiente (no es un error
+  // del pedido: es que hoy ya no hay presupuesto), y mañana el worker lo retoma solo.
+  if (libro.alcanzoElTope()) return false;
   const pedido = await repo.reclamarPedido();
   if (pedido) { await pipeline.procesarPedido(pedido); return true; }
   const correccion = await repo.reclamarCorreccion();
@@ -119,7 +124,9 @@ async function principal() {
   const repo = config.simular
     ? crearRepositorioSimulado(cargarPedidoEjemplo())
     : crearRepositorio(crearCliente(config), config);
-  const pipeline = crearPipeline({ config, repo, almacen: crearAlmacen(config) });
+  const libro = crearLibroDiario({ dir: config.trabajoDir, topeDiaUsd: config.topeDiaUsd, avisoPct: config.avisoDiaPct });
+  if (config.topeDiaUsd > 0) log(`Gasto de hoy (${libro.fecha}): $${libro.total().toFixed(2)} de un tope de $${config.topeDiaUsd.toFixed(2)}`);
+  const pipeline = crearPipeline({ config, repo, almacen: crearAlmacen(config), libro });
 
   // Estado compartido con las señales: el único mutable del programa, a propósito.
   const control = { detener: false, ocupado: false, relojes: {} };
@@ -136,7 +143,7 @@ async function principal() {
     control.ocupado = true;
     try {
       if (!config.simular) control.relojes = await mantenimiento(config, repo, control.relojes);
-      hubo = await iteracion(pipeline, repo);
+      hubo = await iteracion(pipeline, repo, libro);
     } catch (e) {
       fallo(`Vuelta fallida: ${e.message}`);
     } finally {

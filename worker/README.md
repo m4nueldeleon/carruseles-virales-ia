@@ -123,6 +123,28 @@ El progreso de `escribir.mjs` (rondas de QA, render) aparece con el prefijo `esc
 | Enlaces del pedido | Solo `http` y `https` hacia internet. Un enlace que apunte a la red interna del servidor se rechaza con «Ese enlace no se puede abrir desde el servidor», y también si llega ahí por una redirección. Ver «El portero de enlaces» abajo |
 | Logos de apps | Si la entrada menciona CapCut, Claude, ChatGPT, WhatsApp, Canva, Excel, Notion, Instagram, TikTok, YouTube o Gemini (con mayúscula), se pide su logo real con `--logos` |
 
+## Cuánto cuesta y cómo se frena
+
+La API de Anthropic se cobra por token. Cada llamada que hace `escribir.mjs` deja su consumo en el log;
+el worker lo lee al vuelo, lo convierte a dólares con la tabla de precios de `worker/lib/costos.mjs`
+(dólares por millón de tokens, confirmados el 7-sep-2026 en la página de precios de Anthropic) y lo guarda
+en la base: `carrusel_version.costo_usd` por versión y `carrusel_pedido.costo_usd` por pedido.
+
+Medido el 7-sep-2026 con llamadas reales: un pedido normal de 4 versiones cuesta alrededor de **$1.41**.
+
+| Freno | Qué hace |
+|---|---|
+| `COSTO_TOPE_PEDIDO_USD` (3) | Si un pedido lo pasa, la versión en curso **se corta en el acto** y el pedido queda en `error` con un texto que dice cuánto llevaba, cuál es el tope y cuántas versiones alcanzó a generar. Las versiones que ya salieron se conservan |
+| `COSTO_TOPE_DIA_USD` (20) | Al alcanzarlo el worker **deja de tomar trabajo nuevo** y lo dice en el log. Los pedidos pendientes se quedan en la cola (no dan error) y se retoman al día siguiente |
+| `COSTO_AVISO_DIA_PCT` (80) | Aviso en el log al llegar a esa parte del tope diario, una vez al día |
+
+La cuenta del día se guarda en `TRABAJO_DIR/_costos/gasto-AAAA-MM-DD.json`, así que reiniciar el
+contenedor no borra lo gastado. El día es el día local del contenedor (`TZ`).
+
+Si la base todavía no tiene las columnas de gasto (falta aplicar la migración `0007` de la app), el worker
+lo detecta a la primera escritura, avisa una vez y sigue guardando las versiones sin esas columnas: nunca
+se pierde un carrusel por no poder apuntar su coste.
+
 ## El portero de enlaces
 
 Un link pegado en la app lo abre el servidor, no el navegador de quien lo pegó. Sin portero, ese link sirve
@@ -225,6 +247,10 @@ Todas se documentan sin valores en `.env.ejemplo`.
 | `WORKER_TIMEOUT_VERSION_MIN` | No | Tope por versión (25) |
 | `ESCRIBIR_RONDAS` | No | Rondas de corrección con QA que hace `escribir.mjs` (2) |
 | `WORKER_APPS_CONOCIDAS` | No | Lista de apps cuyos logos se piden (separadas por coma) |
+| `COSTO_TOPE_PEDIDO_USD` | No | Dólares como máximo por pedido (3). 0 = sin tope |
+| `COSTO_TOPE_DIA_USD` | No | Dólares como máximo al día (20). 0 = sin tope |
+| `COSTO_AVISO_DIA_PCT` | No | Porcentaje del tope diario en el que se avisa en el log (80) |
+| `COSTO_PRECIOS_JSON` | No | Precios por millón de tokens para modelos que la tabla del código no conoce |
 | `WORKSPACE_ID` | No | Si se define, solo atiende los pedidos de esa marca |
 | `TZ` | No | Zona horaria de los logs |
 | `SKILL_RAMA` | No | Rama de la skill que clona la imagen (`main`) |

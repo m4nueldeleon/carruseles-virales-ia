@@ -1,21 +1,36 @@
 // procesos.mjs: corre un comando hijo con tiempo límite, guarda su salida y reenvía el progreso (stderr) al log.
-// Nunca rechaza la promesa: devuelve { codigo, stdout, stderr, expiro } y quien llama decide.
+// Nunca rechaza la promesa: devuelve { codigo, stdout, stderr, expiro, abortado } y quien llama decide.
+//
+// `senal` (un AbortSignal) permite cortar el hijo antes de tiempo desde fuera. La usa el tope de gasto:
+// en cuanto una versión se pasa del presupuesto, se aborta ahí mismo en vez de esperar a que termine.
 import { spawn } from 'node:child_process';
 
 const TOPE_TEXTO = 40_000; // se guarda solo la cola de cada flujo; lo demás ya salió por el log
 const recortar = (texto) => (texto.length > TOPE_TEXTO ? texto.slice(-TOPE_TEXTO) : texto);
 const GRACIA_MS = 10_000;
 
-export function ejecutar(comando, args, { cwd, env = process.env, timeoutMs = 600_000, alStderr } = {}) {
+export function ejecutar(comando, args, { cwd, env = process.env, timeoutMs = 600_000, alStderr, senal } = {}) {
   return new Promise((resolver) => {
-    const acumulado = { stdout: '', stderr: '', resto: '', expiro: false, cerrado: false };
+    const acumulado = { stdout: '', stderr: '', resto: '', expiro: false, abortado: false, cerrado: false };
     const terminar = (codigo, extra = '') => {
       if (acumulado.cerrado) return;
       acumulado.cerrado = true;
       clearTimeout(temporizador);
+      if (senal) senal.removeEventListener('abort', alAbortar);
       if (acumulado.resto.trim() && alStderr) alStderr(acumulado.resto.trim());
-      resolver({ codigo, stdout: acumulado.stdout, stderr: (acumulado.stderr + extra).trim(), expiro: acumulado.expiro });
+      resolver({
+        codigo, stdout: acumulado.stdout, stderr: (acumulado.stderr + extra).trim(),
+        expiro: acumulado.expiro, abortado: acumulado.abortado,
+      });
     };
+    // Se corta igual que con el tiempo límite: SIGTERM y, si no se muere, SIGKILL tras la gracia.
+    const alAbortar = () => {
+      if (acumulado.cerrado || !hijo) return;
+      acumulado.abortado = true;
+      hijo.kill('SIGTERM');
+      setTimeout(() => hijo.kill('SIGKILL'), GRACIA_MS).unref();
+    };
+    if (senal?.aborted) return resolver({ codigo: null, stdout: '', stderr: '', expiro: false, abortado: true });
     let hijo;
     try {
       hijo = spawn(comando, args, { cwd, env, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -27,6 +42,7 @@ export function ejecutar(comando, args, { cwd, env = process.env, timeoutMs = 60
       hijo.kill('SIGTERM');
       setTimeout(() => hijo.kill('SIGKILL'), GRACIA_MS).unref();
     }, timeoutMs);
+    if (senal) senal.addEventListener('abort', alAbortar, { once: true });
     hijo.stdout.on('data', (d) => { acumulado.stdout = recortar(acumulado.stdout + d); });
     hijo.stderr.on('data', (d) => {
       acumulado.stderr = recortar(acumulado.stderr + d);

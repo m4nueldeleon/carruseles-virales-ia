@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PRECIOS, leerPreciosDeTexto, mezclarPrecios } from './costos.mjs';
 
 const DIR_WORKER = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -16,6 +17,32 @@ const numero = (valor, porOmision) => {
   const n = Number(valor);
   return Number.isFinite(n) && n > 0 ? n : porOmision;
 };
+
+// Igual que `numero`, pero el cero es un valor válido: en los topes de gasto significa «sin tope».
+const numeroConCero = (valor, porOmision) => {
+  const n = Number(valor);
+  return Number.isFinite(n) && n >= 0 ? n : porOmision;
+};
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// TOPES DE GASTO · por qué estos números
+//
+// Medido el 7-sep-2026 con llamadas reales (claude-opus-5): un pedido normal de 4 versiones cuesta
+// alrededor de $1.41, y cada ronda de corrección de la puerta de calidad suma ~$0.22 por versión.
+// El peor caso realista de un pedido —4 versiones y las 2 rondas de corrección en todas— ronda $2.2.
+//
+//   TOPE POR PEDIDO $3.00   deja pasar cualquier pedido normal con holgura y corta en seco un pedido
+//                           desbocado (un reintento en bucle) a algo más del doble de lo normal.
+//   TOPE POR DÍA   $20.00   son unos 14 pedidos normales en un día. El uso real ronda 1 pedido al día,
+//                           así que nunca estorba; lo que hace es que un día malo cueste $20 y no una
+//                           tarjeta vaciada.
+//   AVISO AL 80 %           $16 de $20: queda medio día de margen para reaccionar antes del corte.
+//
+// Los tres se cambian por variable de entorno sin tocar código (ver worker/.env.ejemplo).
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+export const TOPE_PEDIDO_USD = 3;
+export const TOPE_DIA_USD = 20;
+export const AVISO_DIA_PCT = 80;
 
 export function cargarConfig(argv = process.argv.slice(2), env = process.env) {
   const banderas = new Set(argv.filter((a) => a.startsWith('--')));
@@ -42,6 +69,10 @@ export function cargarConfig(argv = process.argv.slice(2), env = process.env) {
     retencionDias: numero(env.TRABAJO_RETENCION_DIAS, 7),
     timeoutVersionMin: numero(env.WORKER_TIMEOUT_VERSION_MIN, 25),
     rondas: numero(env.ESCRIBIR_RONDAS, 2),
+    topePedidoUsd: numeroConCero(env.COSTO_TOPE_PEDIDO_USD, TOPE_PEDIDO_USD),
+    topeDiaUsd: numeroConCero(env.COSTO_TOPE_DIA_USD, TOPE_DIA_USD),
+    avisoDiaPct: numeroConCero(env.COSTO_AVISO_DIA_PCT, AVISO_DIA_PCT),
+    precios: mezclarPrecios(leerPreciosDeTexto(env.COSTO_PRECIOS_JSON), PRECIOS),
     appsConocidas: (env.WORKER_APPS_CONOCIDAS || APPS_POR_OMISION).split(',').map((s) => s.trim()).filter(Boolean),
     unaVez: banderas.has('--una-vez'),
     simular,
@@ -70,6 +101,8 @@ export function resumenConfig(config, env = process.env) {
   return [
     `skill=${config.skillDir}`, `privado=${config.privadoDir}`, `trabajo=${config.trabajoDir}`, `banco=${config.bancoDir}`,
     `modelo=${config.modelo}`, `intervalo=${config.intervaloS}s`, `pull=${config.pullMin}min`,
+    `tope/pedido=${config.topePedidoUsd ? `$${config.topePedidoUsd}` : 'sin tope'}`,
+    `tope/día=${config.topeDiaUsd ? `$${config.topeDiaUsd}` : 'sin tope'}`,
     `workspace=${config.workspaceId || 'todas las marcas'}`,
     `anthropic=${si(config.anthropicKey)}`, `supabase=${si(config.supabaseUrl && config.supabaseKey)}`,
     `blob=${si(config.blobToken)}`, `apify=${si(env.APIFY_TOKEN)}`,
