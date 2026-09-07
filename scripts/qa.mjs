@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { construirHTML, palabras } from './lib/construir-html.mjs';
 import { normalizarCarrusel } from './lib/contrato.mjs';
 import { cargarPlaywright } from './lib/playwright.mjs';
+import { medirFondoBajoTexto } from './lib/contraste-foto.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -163,8 +164,14 @@ if (data.caption) {
 } else aviso(0, 'No hay caption.');
 const conImagen = data.slides.filter(s => s.imagen && s.imagen.src);
 if (!portada.imagen || !portada.imagen.src) aviso(1, 'La portada no lleva imagen: la cara de la marca en una situación del tema sube la atención y la identidad.');
-const cuerpoConImg = data.slides.filter(s => (s.rol || 'cuerpo') === 'cuerpo' && s.imagen && s.imagen.src).length;
-if (!imagenUnica && cuerpoConImg < 2) aviso(0, `Solo ${cuerpoConImg} lámina(s) de cuerpo con imagen: el plan visual pide al menos 2 (ícono/ilustración, foto en situación o captura).`);
+// «Cuerpo» aquí es todo lo que va entre la portada y el cierre (rehook y guardable incluidas): son las
+// láminas donde el ritmo visual se sostiene o se cae. Contar solo rol «cuerpo» hacía imposible el mínimo
+// en un carrusel-5 (portada · rehook · UNA de cuerpo · guardable · cta): el aviso saltaba siempre, hiciera
+// lo que hiciera el modelo, y un aviso que no se puede apagar deja de significar nada.
+const intermedias = data.slides.filter((s, i) => i > 0 && s.rol !== 'portada' && s.rol !== 'cta');
+const cuerpoConImg = intermedias.filter(s => s.imagen && s.imagen.src).length;
+const minCuerpoConImg = Math.min(2, intermedias.length);
+if (!imagenUnica && cuerpoConImg < minCuerpoConImg) aviso(0, `Solo ${cuerpoConImg} lámina(s) de cuerpo con imagen: el plan visual pide al menos ${minCuerpoConImg} entre la portada y el cierre (ícono/ilustración, foto en situación o captura).`);
 { const seq = data.slides.map(s => s.layout); let rep = 1; for (let i = 1; i < seq.length; i++) { rep = seq[i] === seq[i - 1] ? rep + 1 : 1; if (rep === 4) { aviso(i + 1, `Cuatro láminas seguidas con el layout ${seq[i]}: rompe el ritmo con una imagen, un dato-hero o una foto-texto.`); break; } } }
 const conAlt = data.slides.filter(s => s.alt).length;
 if (conAlt === 0) aviso(0, 'Ninguna lámina trae `alt` (texto alternativo con la palabra clave del tema): Instagram y Google indexan ese texto.');
@@ -174,8 +181,18 @@ if (hashtags.length === 0) aviso(0, 'Sin hashtags: 3-5 de nicho ayudan a la bús
 
 // ---------- medición en el navegador ----------
 const { chromium } = cargarPlaywright(DIR_SKILL);
+const media = cols => [0, 1, 2].map(i => cols.reduce((a, c) => a + c[i], 0) / cols.length);
 const rel = (l1, l2) => { const [a, b] = l1 > l2 ? [l1, l2] : [l2, l1]; return (a + 0.05) / (b + 0.05); };
 function lum(rgb) { const f = c => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2]); }
+// Igual que parseColor pero sin mezclar: devuelve [r,g,b,alfa]. Sobre una foto, un texto translúcido se
+// mezcla con los PÍXELES de la foto, no con el color del lienzo, y eso solo se sabe columna por columna.
+function colorCrudo(s) {
+  if (!s) return null;
+  const hex = s.match(/^#([0-9a-f]{6})$/i); if (hex) return [...[0, 2, 4].map(i => parseInt(hex[1].slice(i, i + 2), 16)), 1];
+  const m = s.match(/rgba?\(([^)]+)\)/); if (!m) return null;
+  const p = m[1].split(',').map(Number); const a = p.length > 3 ? p[3] : 1;
+  return a === 0 ? null : [p[0], p[1], p[2], a];
+}
 function parseColor(s, fondo) {
   if (!s) return null;
   const hex = s.match(/^#([0-9a-f]{6})$/i); if (hex) return [0, 2, 4].map(i => parseInt(hex[1].slice(i, i + 2), 16));
@@ -186,14 +203,36 @@ function parseColor(s, fondo) {
   return p.slice(0, 3);
 }
 
+// Abrir la lámina y esperar a que las FOTOS estén de verdad pintadas. El banco vive en la nube: con
+// «networkidle» a secas, una descarga lenta tumbaba la corrida entera (30 s y fuera) y se perdía la ronda de
+// corrección. Y peor para lo que mide este script: si una foto no llegó a pintarse, el fondo que se lee del
+// PNG es el del lienzo y el contraste sale bueno cuando en pantalla no lo será.
+async function abrirLamina(page, htmlPath) {
+  try { await page.goto('file://' + htmlPath, { waitUntil: 'networkidle', timeout: 60_000 }); }
+  catch { await page.goto('file://' + htmlPath, { waitUntil: 'load', timeout: 60_000 }); }
+  try { await page.evaluate(() => document.fonts.ready); } catch {}
+  // Las fotos van como background-image: no disparan onload de <img>, así que se cargan a mano y se
+  // espera a cada una. Devuelve las que no llegaron.
+  return page.evaluate(() => {
+    const urls = [...document.querySelectorAll('.bg,.recorte,.img-derecha,.img-centro,.img-abajo,.foto,.avatar')]
+      .map(el => (getComputedStyle(el).backgroundImage.match(/url\(["']?(.*?)["']?\)/) || [])[1]).filter(Boolean);
+    return Promise.all([...new Set(urls)].map(u => new Promise(res => {
+      const i = new Image();
+      i.onload = () => res(null); i.onerror = () => res(u);
+      i.src = u;
+      if (i.complete) res(i.naturalWidth ? null : u);
+    }))).then(r => r.filter(Boolean));
+  });
+}
+
 (async () => {
   const browser = await chromium.launch();
   const w = Number(fs.readFileSync(htmlPath, 'utf8').match(/data-w="(\d+)"/)[1]);
   const h = Number(fs.readFileSync(htmlPath, 'utf8').match(/data-h="(\d+)"/)[1]);
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
-  await page.goto('file://' + htmlPath, { waitUntil: 'networkidle' });
-  try { await page.evaluate(() => document.fonts.ready); } catch {}
+  const fotosFallidas = await abrirLamina(page, htmlPath);
   await page.waitForTimeout(400);
+  if (fotosFallidas.length) aviso(0, `${fotosFallidas.length} imagen(es) no cargaron (${fotosFallidas[0].slice(0, 70)}…): el render y la medida de contraste sobre la foto salen incompletos.`);
   try { await page.evaluate(() => window.__fit && window.__fit()); } catch {}
   const medidas = await page.evaluate(() => {
     const out = [];
@@ -210,6 +249,9 @@ function parseColor(s, fondo) {
         if (!node.textContent.trim()) continue;
         const el = node.parentElement; if (!el || el.closest('#descargar')) continue;
         const cs = getComputedStyle(el);
+        // Un texto que el look esconde (el contador y el «Desliza» bajo una foto que sangra) no se pinta:
+        // medirle tamaño, márgenes o contraste es inventar un problema que nadie ve.
+        if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) === 0) continue;
         const range = document.createRange(); range.selectNodeContents(node);
         const rr = range.getBoundingClientRect();
         if (rr.width === 0) continue;
@@ -219,19 +261,29 @@ function parseColor(s, fondo) {
         if (!bgPropio && panelBox) { const cx = (rr.left + rr.right) / 2, cy = (rr.top + rr.bottom) / 2; if (cx > panelBox.left && cx < panelBox.right && cy > panelBox.top && cy < panelBox.bottom) bgPropio = panelBg; }  // texto sobre el panel (hermano absoluto, no ancestro)
         const esAcento = !!el.closest('.acento,.idx,.numero,.dato,.n,.autor,.cta-boton,.col h3,.kicker,.chip');  // superficies de acento: exigen ≥4.5, no el ideal 7 del texto corrido
         const clase = (el.closest('.titulo,.sub,.cuerpo,.item,.cita,.dato,.paso,.cta-boton,.prompt,.loop,.col,.top,.bottom,.sello,.chip,.kicker,.autor,.numero') || el).className || el.tagName;
-        textos.push({ txt: node.textContent.trim().slice(0, 40), fs: parseFloat(cs.fontSize), color: cs.color, bgPropio, esAcento, clase: String(clase).split(' ')[0],
+        const sombra = cs.textShadow && cs.textShadow !== 'none';  // una sombra propia sostiene el texto sobre una foto: el umbral se afloja, no desaparece
+        // El número fantasma es una marca de agua del look (opacidad 7%): está puesto para NO leerse.
+        // Medirle el contraste contra la foto es medir la decoración, no el texto.
+        const decorativo = !!el.closest('.numero-fantasma') || parseFloat(cs.opacity) < 0.25;
+        textos.push({ txt: node.textContent.trim().slice(0, 40), fs: parseFloat(cs.fontSize), color: cs.color, bgPropio, esAcento, sombra, decorativo, clase: String(clase).split(' ')[0],
           top: rr.top - r.top, bottom: rr.bottom - r.top, left: rr.left - r.left, right: rr.right - r.left, critico });
       }
       const cont = slide.querySelector('.contenido');
       const desborde = cont ? cont.scrollHeight - cont.clientHeight : 0;
       const cajas = {};
-      for (const sel of ['.recorte', '.img-derecha', '.img-abajo', '.img-centro', '.panel', '.foto']) { const el = slide.querySelector(sel); if (el) { const b = el.getBoundingClientRect(); cajas[sel] = { left: b.left - r.left, right: b.right - r.left, top: b.top - r.top, bottom: b.bottom - r.top }; } }
+      for (const sel of ['.bg', '.recorte', '.img-derecha', '.img-abajo', '.img-centro', '.panel', '.foto']) { const el = slide.querySelector(sel); if (el) { const b = el.getBoundingClientRect(); cajas[sel] = { left: b.left - r.left, right: b.right - r.left, top: b.top - r.top, bottom: b.bottom - r.top }; } }
       const acentos = [...slide.querySelectorAll('.contenido .acento')].map(a => { const b = a.getBoundingClientRect(); return { txt: a.textContent.trim().slice(0, 30), left: b.left - r.left, right: b.right - r.left, top: b.top - r.top, bottom: b.bottom - r.top }; });
       out.push({ n: Number(slide.dataset.n), layout: slide.dataset.layout, bg, w: r.width, h: r.height, desborde, ajuste: Number(slide.dataset.ajuste || 0), textos, cajas, acentos });
     });
     return out;
   });
+  // Segunda pasada: el fondo REAL de las letras que caen sobre una foto, leído del PNG. Va después de
+  // medir el DOM porque apaga la tinta de todo el texto (la maqueta no se mueve, solo deja de pintarse).
+  let avisoMedicion = '';
+  try { await medirFondoBajoTexto(page, medidas); }
+  catch (e) { avisoMedicion = e.message; }
   await browser.close();
+  if (avisoMedicion) aviso(0, `No se pudo medir el contraste real sobre las fotos (${avisoMedicion}): revisa a ojo el texto que cae encima de una imagen.`);
 
   const SAFE = 80, UI = 150;
   const cruza = (a, b) => a.left < b.right - 12 && a.right > b.left + 12 && a.top < b.bottom - 12 && a.bottom > b.top + 12;
@@ -259,6 +311,27 @@ function parseColor(s, fondo) {
       if (c && t.critico) { const k = rel(lum(c), lum(f)); if (k < minContraste) { minContraste = k; peor = `${t.clase}: «${t.txt}»`; } if (!t.esAcento) minTinta = Math.min(minTinta, k); }
       else if (c && esMicro) { const k = rel(lum(c), lum(f)); if (k < 3) aviso(m.n, `Texto pequeño «${t.txt}» con contraste ${k.toFixed(1)}:1.`); }
     }
+    // Contraste REAL contra la foto (medido sobre el PNG, no contra el color del look). Se mira columna
+    // por columna: una palabra que cruza del hueso al zapato negro promedia bien y se lee fatal.
+    for (const t of m.textos) {
+      if (!t.columnas || !t.columnas.length || t.decorativo) continue;
+      const crudo = colorCrudo(t.color); if (!crudo) continue;
+      const [tr, tg, tb, alfa] = crudo;
+      const ks = t.columnas.map(col => {
+        const tinta = alfa < 1 ? [tr, tg, tb].map((c, i) => alfa * c + (1 - alfa) * col[i]) : [tr, tg, tb];
+        return rel(lum(tinta), lum(col));
+      });
+      const peorK = Math.min(...ks);
+      const medioK = rel(lum(alfa < 1 ? [tr, tg, tb].map((c, i) => alfa * c + (1 - alfa) * media(t.columnas)[i]) : [tr, tg, tb]), lum(media(t.columnas)));
+      const umbral = t.sombra ? 2.5 : 3;  // con sombra propia la letra se sostiene sobre la foto; el listón baja, no desaparece
+      const malas = ks.filter(k => k < umbral).length;
+      const pct = malas / ks.length;
+      if (malas >= 2 && pct >= 0.1) {
+        err(m.n, `«${t.txt}» sobre la foto: contraste real ${peorK.toFixed(1)}:1 en el ${Math.round(pct * 100)}% de su ancho — debajo de ${umbral}:1, las letras se pierden dentro de la imagen. Salidas: "panel": true detrás de la foto, otro imagen.pos, "sin_top": true para el contador o "pie": "" para el «Desliza».`);
+      } else if (medioK < 4.5) {
+        aviso(m.n, `«${t.txt}» sobre la foto: contraste real ${medioK.toFixed(1)}:1 contra los píxeles que tiene debajo — sube a ≥4.5:1 o sepáralo de la imagen.`);
+      }
+    }
     if (minContraste < 3) err(m.n, `Contraste ${minContraste.toFixed(1)}:1 en ${peor} — debajo de 3:1 (ilegible en el celular).`);
     else if (minContraste < 4.5) aviso(m.n, `Contraste ${minContraste.toFixed(1)}:1 en ${peor} — sube a ≥4.5:1 si es una palabra clave.`);
     if (minTinta < 7 && minTinta >= 3) aviso(m.n, `El texto principal tiene contraste ${minTinta.toFixed(1)}:1 — el ideal para 35-60 años es ≥7:1.`);
@@ -280,7 +353,7 @@ function parseColor(s, fondo) {
       : (N >= 7 && N <= 12 ? 6 : N >= 5 ? 3 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) && s2.loop ? 4 : s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 2 : 0)
       + (conNumero >= 2 ? 5 : conNumero === 1 ? 2 : 0) + (cuerpoN && conLoop / cuerpoN >= 0.5 ? 5 : conLoop ? 2 : 0) + (guardable ? 7 : 0)
       + (cta.length === 1 && data.palabra_clave ? 8 : cta.length === 1 ? 5 : 0),
-    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 5) + (tiene(/palabras: máximo/) ? 0 : 3) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 4) + (imagenUnica ? (portada.imagen && portada.imagen.src ? 4 : 2) : cuerpoConImg >= 2 && portada.imagen && portada.imagen.src ? 4 : cuerpoConImg >= 1 ? 2 : 0),
+    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 5) + (tiene(/palabras: máximo/) ? 0 : 3) + (tiene(/debajo de [\d.]+:1/) ? 0 : tiene(/Contraste \d|contraste \d|contraste real/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 4) + (imagenUnica ? (portada.imagen && portada.imagen.src ? 4 : 2) : cuerpoConImg >= 2 && portada.imagen && portada.imagen.src ? 4 : cuerpoConImg >= 1 ? 2 : 0),
     copy: (tiene(/Frase de IA/) ? 0 : 5) + (data.caption && data.caption.split('\n')[0].length <= 125 ? 2 : 0) + (hashtags.length >= 3 && hashtags.length <= 5 ? 2 : 0)
       + (tiene(/Cebo de interacción/) ? 0 : 3) + (tiene(/frase de envío/) ? 0 : 3),
   };

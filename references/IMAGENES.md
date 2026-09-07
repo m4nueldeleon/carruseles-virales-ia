@@ -255,6 +255,7 @@ Pasa cada imagen por esta lista. Una respuesta "no" bloquea el render de esa lá
 - [ ] Los personajes e íconos en `abajo` o `centro` son PNG con transparencia, sin halo blanco en el borde.
 - [ ] Nada importante cae en los 80 px de margen ni en los 140 px del pie.
 - [ ] Con `pos: "fondo"`, la mitad inferior es oscura o vacía y el título se lee sobre el scrim. `scripts/qa.mjs` reporta el contraste; el texto principal debe quedar en 4.5:1 o más, ideal 7:1.
+- [ ] **El texto que cae ENCIMA de la foto se lee.** No es lo mismo que el contraste contra el fondo del look: lo que hay detrás de esas letras son los píxeles de la foto. `scripts/qa.mjs` lo mide sobre el PNG renderizado, columna por columna del ancho de cada palabra, y **bloquea** (error, no aviso) si un tramo del texto queda por debajo de 3:1 contra lo que tiene debajo. Salidas cuando salta: `"panel": true` detrás de la foto, otro `imagen.pos`, `"sin_top": true` para el contador o `"pie": ""` para el «Desliza». Caso real que pasaba por bueno: el `@handle` en gris oscuro sobre un zapato negro, 100/100 en el QA viejo y unas letras que en el celular no existen.
 - [ ] La imagen es del look: paleta y estilo de la tabla de la sección 3. Un ícono 3D negro en `guia-rapida` no pasa.
 - [ ] Un mismo personaje en todas las láminas donde aparece (mismo prompt base, misma referencia).
 - [ ] Fuente y derechos claros: propia, generada, Pexels, o logo pequeño de identificación. Sin capturas de terceros con datos visibles.
