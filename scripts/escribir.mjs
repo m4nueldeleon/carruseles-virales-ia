@@ -240,17 +240,37 @@ const system = componerSystem();
 const mensajes = [{ role: 'user', content: encargo }];
 if (volcarPrompt) { fs.writeFileSync(volcarPrompt, JSON.stringify({ system, mensajes }, null, 2)); log(`Prompt → ${volcarPrompt}`); }
 
+// El prompt pide el carrusel DIRECTO (con formato_elegido al lado), no envuelto en {carrusel:…}.
+// Aceptamos las dos formas: la envuelta que usan las rutinas de Hermes y la plana que devuelve
+// el modelo. Sin esto, una respuesta perfectamente buena se descartaba con «no trae carrusel.slides».
+const CLAVES_ENVOLTURA = ['rutina', 'formato_elegido', 'faltantes', 'confianza', 'escalar_a_claude', 'motivo'];
+function comoContrato(json) {
+  if (!json || typeof json !== 'object') return json;
+  if (json.carrusel || json.escalar_a_claude) return json;
+  if (!Array.isArray(json.slides)) return json;
+  const carrusel = Object.fromEntries(Object.entries(json).filter(([k]) => !CLAVES_ENVOLTURA.includes(k)));
+  return {
+    rutina: 'carrusel',
+    carrusel,
+    faltantes: Array.isArray(json.faltantes) ? json.faltantes : [],
+    confianza: typeof json.confianza === 'number' ? json.confianza : 1,
+    escalar_a_claude: false,
+    motivo: json.motivo ?? null,
+    formato_elegido: json.formato_elegido ?? null,
+  };
+}
+
 // ---------- llamada (o simulación) ----------
 let salida;
 if (simularPath) {
   let simulado;
   try { simulado = JSON.parse(fs.readFileSync(simularPath, 'utf8')); } catch (e) { fallo(`--simular no es JSON válido: ${e.message}`); }
-  salida = simulado.carrusel ? simulado : { rutina: 'carrusel', carrusel: simulado, faltantes: [], confianza: 1, escalar_a_claude: false, motivo: null, formato_elegido: null };
+  salida = simulado.carrusel ? simulado : comoContrato({ ...simulado, slides: simulado.slides || [] });
   log(`Simulación: uso ${simularPath} como respuesta del modelo (sin llamar a la API)`);
 } else {
   log(`Escribiendo con ${modelo}${plan ? ` · plan ${plan}` : ''}${formatoElegido ? ` · ${formatoElegido}` : ''}…`);
   const r = await cliente.pedirJson(mensajes, { system });
-  salida = r.json;
+  salida = comoContrato(r.json);
 }
 if (!salida || typeof salida !== 'object') fallo('El modelo no devolvió JSON válido dos veces.', 4, { error: 'json_invalido' });
 if (salida.escalar_a_claude) fallo(`El modelo escaló: ${salida.motivo}`, 3, { error: 'escalado', motivo: salida.motivo || null, faltantes: salida.faltantes || [] });
@@ -322,10 +342,11 @@ if (!sinRender) {
       ...mensajes, { role: 'assistant', content: JSON.stringify(salida) },
       { role: 'user', content: `RUTINA: carrusel (ronda ${ronda + 1})\n\nqa_previo:\n${JSON.stringify({ errores: informe.errores, avisos: informe.avisos.slice(0, 12) }, null, 2)}\n\nCorrige cada error, conserva todo lo demás (incluidas las imagen.src) y devuelve el contrato completo.` },
     ], { system });
-    if (!r.json || !r.json.carrusel || !Array.isArray(r.json.carrusel.slides) || !r.json.carrusel.slides.length) { log('· la corrección no devolvió un carrusel válido; me quedo con la versión anterior'); break; }
-    validacion = validarImagenes(normalizar(r.json.carrusel), carpeta);
+    const corregido = comoContrato(r.json);
+    if (!corregido || !corregido.carrusel || !Array.isArray(corregido.carrusel.slides) || !corregido.carrusel.slides.length) { log('· la corrección no devolvió un carrusel válido; me quedo con la versión anterior'); break; }
+    validacion = validarImagenes(normalizar(corregido.carrusel), carpeta);
     carrusel = validacion.carrusel;
-    salida = { ...r.json, faltantes: faltantesDe(r.json, validacion.quitadas) };
+    salida = { ...corregido, faltantes: faltantesDe(corregido, validacion.quitadas) };
     escribirJson();
   }
   render([]);
