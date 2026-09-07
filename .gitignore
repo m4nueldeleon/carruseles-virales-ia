@@ -28,3 +28,6 @@ _versiones/
 worker/.env
 worker/privado/
 worker/trabajo/
+
+# Grafo local de graphify (rutas de la máquina): nunca al repo
+graphify-out/

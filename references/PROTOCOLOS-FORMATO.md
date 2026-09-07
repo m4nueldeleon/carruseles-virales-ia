@@ -576,7 +576,7 @@ Pulir la captura (corregir typos, quitar emojis, blur profesional, retipear, edi
 - [ ] Guardable después de las pruebas: ranking + porqué, «Guarda esto», pregunta del trono.
 - [ ] `cta-cara` con palabra ≤8 letras, misma en lámina y caption; entregable no incluido; `entregable_existe` y `palabra_clave_conectada` honestos.
 - [ ] Caption: primera línea seria ≤125, 3 consejos, pregunta sobre el ranking, frase de envío, palabra al cierre, 1-2 emojis, 3-5 hashtags en español, sin link en bio ni cebo.
-- [ ] Un solo rostro; cero cifras no publicables, precios ni Luis; palabras prohibidas ausentes.
+- [ ] Un solo rostro; cero cifras no publicables ni precios; ninguno de los nombres vetados en `MI-MARCA.md`; palabras prohibidas ausentes.
 - [ ] Todo texto por código salvo la captura declarada `origen: "captura-propia"` y los logos.
 - [ ] 3:4 1080x1440 en todas (alinear FORMATOS.md y README con SKILL.md); QA ≥80 con la excepción `meme-serie` completa.
 - [ ] `caption.txt` con notas de música, orden, palabra por conectar, consentimiento, y medición primero por `share_rate` contra la línea base 0.0012.
