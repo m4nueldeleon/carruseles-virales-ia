@@ -79,6 +79,9 @@ export function crearPipeline({ config, repo, almacen, libro = LIBRO_NULO }) {
       ...(fs.existsSync(banco) ? ['--banco', banco] : []),
       ...(logos ? ['--logos', logos] : []),
       '--modelo', config.modelo, '--rondas', String(config.rondas), '--json',
+      ...(config.modeloAuxiliar ? ['--modelo-auxiliar', config.modeloAuxiliar] : []),
+      ...(config.esfuerzo ? ['--esfuerzo', config.esfuerzo] : []),
+      ...(config.ttlCache ? ['--ttl-cache', config.ttlCache] : []),
     ];
   }
 

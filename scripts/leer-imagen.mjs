@@ -7,6 +7,7 @@
 // cliente que escribir.mjs (misma llave, timeout y reintento).
 //
 //   node scripts/leer-imagen.mjs <imagen|carpeta> [--out referencia.md] [--append] [--modelo <id>] [--max 10]
+//   --modelo    por omisión el auxiliar (claude-sonnet-5, o la variable ANTHROPIC_MODELO_AUXILIAR)
 //                                [--contexto "texto"] [--dry-run] [--json]
 //   --out       archivo .md destino (por omisión referencia.md junto a la imagen o dentro de la carpeta)
 //   --append    conserva el archivo y sustituye o añade solo la sección «## Lectura visual»
@@ -19,7 +20,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { crearCliente, leerLlave, MODELO_POR_OMISION } from './lib/anthropic.mjs';
+import { crearCliente, leerLlave, MODELO_AUXILIAR_POR_OMISION } from './lib/anthropic.mjs';
 import { insertarSeccion } from './lib/referencia-md.mjs';
 
 const args = process.argv.slice(2);
@@ -33,7 +34,11 @@ const objetivo = args.find((a, i) => !a.startsWith('--') && !CON_VALOR.has(args[
 const salidaJson = flag('--json');
 const dryRun = flag('--dry-run');
 const append = flag('--append');
-const modelo = opt('--modelo', MODELO_POR_OMISION);
+// Leer una captura es describir lo que se ve, no escribir el carrusel: va con el modelo auxiliar. Con Opus 5
+// y el techo de 4,000 la ficha salía SIEMPRE truncada (se perdían los apartados 8, 9 y 10, justo los que
+// dicen qué aplicar a la marca); con el auxiliar y 6,000 de techo cabe entera y cuesta la tercera parte.
+const modelo = opt('--modelo', MODELO_AUXILIAR_POR_OMISION);
+const TECHO_FICHA = 6000;
 const maximo = Math.max(1, Math.min(20, Number(opt('--max', 10)) || 10));
 const contexto = opt('--contexto');
 
@@ -91,7 +96,7 @@ Haz la ficha de ingeniería inversa de references/REFERENCIAS-ENTRADA.md, en esp
 Reglas: no inventes números ni textos que no se ven; si algo no se lee, dilo. No copies párrafos enteros: solo el gancho literal y frases clave. Frases cortas. Sin rayas largas.`;
 
 const mensajes = [{ role: 'user', content: [...bloques, { type: 'text', text: prompt }] }];
-const bytesPayload = Buffer.byteLength(JSON.stringify({ model: modelo, max_tokens: 4000, messages: mensajes }));
+const bytesPayload = Buffer.byteLength(JSON.stringify({ model: modelo, max_tokens: TECHO_FICHA, messages: mensajes }));
 log(`${N} imagen${N > 1 ? 'es' : ''} (${usadas.map(u => path.basename(u)).join(', ')}) · payload ${(bytesPayload / 1024).toFixed(0)} KB · modelo ${modelo}`);
 
 if (dryRun) {
@@ -103,7 +108,8 @@ if (dryRun) {
 const llave = leerLlave();
 if (!llave) fallo('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=…).');
 const cliente = crearCliente({ llave, modelo, log });
-const r = await cliente.llamar(mensajes, { maxTokens: 4000, temperature: 0.2 });
+const r = await cliente.llamar(mensajes, { maxTokens: TECHO_FICHA, temperature: 0.2 });
+if (r.stop === 'max_tokens') log(`⚠ la ficha se cortó por el techo de ${TECHO_FICHA} tokens: los últimos apartados pueden faltar`);
 const lectura = String(r.texto || '').trim();
 if (!lectura) fallo('El modelo devolvió una respuesta vacía.', 4);
 

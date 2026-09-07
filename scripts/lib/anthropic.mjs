@@ -16,17 +16,34 @@ export const API = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/
 export const VERSION_API = '2023-06-01';
 // La última versión de Opus disponible en la API; ANTHROPIC_MODEL la sobreescribe sin tocar código.
 export const MODELO_POR_OMISION = process.env.ANTHROPIC_MODEL || 'claude-opus-5';
+// El modelo de las tareas auxiliares: elegir un formato de una lista de ocho y leer una captura de
+// referencia. Ninguna de las dos escribe el carrusel, así que no hace falta el modelo caro. Sonnet 5 cuesta
+// 2.5 veces menos y en las pruebas acertó el formato y devolvió la ficha de visión COMPLETA, que con Opus 5
+// salía truncada. Haiku es aún más barato pero falló al clasificar una noticia: no se pone por omisión.
+export const MODELO_AUXILIAR_POR_OMISION = process.env.ANTHROPIC_MODELO_AUXILIAR || 'claude-sonnet-5';
 export const TIMEOUT_MS = 180_000;
+// Red de seguridad, no ahorro: se cobra lo generado, no lo reservado. El techo solo sirve para cortar una
+// respuesta desbocada. Con el razonamiento acotado la salida real ronda los 2,500 tokens y nunca pasó de
+// 5,302 en las corridas medidas, así que 8,000 deja de sobra y corta mucho antes que los 12,000 de antes.
+export const MAX_TOKENS_POR_OMISION = Number(process.env.ANTHROPIC_MAX_TOKENS) || 8000;
 
 const REINTENTABLE = new Set([408, 409, 429, 500, 502, 503, 504, 529]);
 const esperar = ms => new Promise(r => setTimeout(r, ms));
 
 // Parámetros de muestreo: los modelos anteriores los aceptan, los nuevos los rechazan con un 400.
 export const PARAMETROS_MUESTREO = Object.freeze(['temperature', 'top_p', 'top_k']);
+// Cuánto razona el modelo antes de escribir. Opus 5 ya no acepta el viejo thinking.type «enabled» con
+// budget_tokens: los valores son «adaptive» o «disabled», y la profundidad se gradúa con output_config.effort
+// (low, medium, high, xhigh, max). Sin mandar nada, el modelo razona con effort «high» sin que nadie lo pida:
+// dos tercios de la salida —lo caro, $25 el millón— se van en pensamiento que nunca se ve.
+export const PENSAMIENTOS = Object.freeze(['adaptive', 'disabled']);
+export const ESFUERZOS = Object.freeze(['low', 'medium', 'high', 'xhigh', 'max']);
+// Los que un gateway antiguo puede no conocer; se quitan y se repite la llamada, igual que el muestreo.
+export const PARAMETROS_OPCIONALES = Object.freeze([...PARAMETROS_MUESTREO, 'thinking', 'output_config']);
 // Familias que ya no admiten muestreo (Opus 5, Fable 5 y sus variantes con fecha o sufijo). El número va
 // anclado: «opus-5», «opus-5-20260101» y «opus-5.1» sí; un futuro «opus-50» es otra familia y NO entra.
 const SIN_MUESTREO = /(opus|fable)-5(?!\d)/i;
-const TEXTO_DE_RECHAZO = /deprecat|not supported|unsupported|no longer|not allowed|cannot be used|unexpected|must not|remove/i;
+const TEXTO_DE_RECHAZO = /deprecat|not supported|unsupported|no longer|not allowed|cannot be used|unexpected|must not|remove|extra input|not permitted|unrecogni[sz]ed|unknown (?:field|parameter)/i;
 
 export const admiteMuestreo = modelo => !SIN_MUESTREO.test(String(modelo || ''));
 
@@ -35,8 +52,8 @@ export function parametroRechazado(mensaje) {
   const texto = String(mensaje || '');
   if (!TEXTO_DE_RECHAZO.test(texto)) return null;
   const citado = (texto.match(/[`'\"]([a-z_]{2,24})[`'\"]/i) || [])[1];
-  if (citado && PARAMETROS_MUESTREO.includes(citado)) return citado;
-  return PARAMETROS_MUESTREO.find(p => new RegExp(`\\b${p}\\b`).test(texto)) || null;
+  if (citado && PARAMETROS_OPCIONALES.includes(citado)) return citado;
+  return PARAMETROS_OPCIONALES.find(p => new RegExp(`\\b${p}\\b`).test(texto)) || null;
 }
 
 // Copia sin esa clave: nunca se muta el cuerpo que ya se mandó.
@@ -81,7 +98,7 @@ export function extraerJson(texto) {
 
 // `muestreo` decide si se mandan temperature/top_p/top_k. Por omisión se deduce del modelo; se puede
 // forzar (true/false) para probar el respaldo o para un modelo nuevo que la lista todavía no conoce.
-export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = TIMEOUT_MS, log = () => {}, muestreo = null, ttlCache = '5m' } = {}) {
+export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = TIMEOUT_MS, log = () => {}, muestreo = null, ttlCache = '5m', pensamiento = null, esfuerzo = null } = {}) {
   if (!llave) throw new Error('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=...).');
   const mandarMuestreo = muestreo === null ? admiteMuestreo(modelo) : Boolean(muestreo);
   const yaRechazados = new Set(); // lo que este modelo rechazó en esta corrida no se vuelve a mandar
@@ -104,9 +121,14 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
   }
 
   // El cuerpo de la petición: los parámetros de muestreo solo si este modelo los admite y no los ha rechazado.
-  function armarCuerpo(mensajes, { system, maxTokens, temperature, topP, topK }) {
+  function armarCuerpo(mensajes, { system, maxTokens, temperature, topP, topK, pensamiento: p, esfuerzo: e }) {
     const base = { model: modelo, max_tokens: maxTokens, messages: mensajes };
     if (system) base.system = system;
+    // El razonamiento se fija UNA vez y no se toca entre llamadas: cambiarlo invalida el caché de prompts.
+    const comoPiensa = p === undefined ? pensamiento : p;
+    const cuantoPiensa = e === undefined ? esfuerzo : e;
+    if (comoPiensa && !yaRechazados.has('thinking')) base.thinking = { type: comoPiensa };
+    if (cuantoPiensa && comoPiensa !== 'disabled' && !yaRechazados.has('output_config')) base.output_config = { effort: cuantoPiensa };
     if (!mandarMuestreo) return base;
     const opcionales = Object.entries({ temperature, top_p: topP, top_k: topK })
       .filter(([clave, valor]) => valor !== null && valor !== undefined && !yaRechazados.has(clave));
@@ -116,8 +138,8 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
   // Devuelve { texto, usage, stop }. `system` puede ser texto o un arreglo de bloques (para cache_control).
   // Tres respaldos: quitar el parámetro que la API declare obsoleto, un reintento ante sobrecarga o red
   // caída, y el timeout que corta cada intento por separado.
-  async function llamar(mensajes, { system, maxTokens = 12000, temperature = 0.4, topP = null, topK = null } = {}) {
-    let cuerpo = armarCuerpo(mensajes, { system, maxTokens, temperature, topP, topK });
+  async function llamar(mensajes, { system, maxTokens = MAX_TOKENS_POR_OMISION, temperature = 0.4, topP = null, topK = null, pensamiento: p, esfuerzo: e } = {}) {
+    let cuerpo = armarCuerpo(mensajes, { system, maxTokens, temperature, topP, topK, pensamiento: p, esfuerzo: e });
     let reintentosRed = 0;
     let parametrosQuitados = 0;
     while (true) {
@@ -139,7 +161,7 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
         return { texto, usage: j.usage || null, stop: j.stop_reason || null, coste };
       } catch (e) {
         const sobra = e.status === 400 ? parametroRechazado(e.message) : null;
-        if (sobra && sobra in cuerpo && parametrosQuitados < PARAMETROS_MUESTREO.length) {
+        if (sobra && sobra in cuerpo && parametrosQuitados < PARAMETROS_OPCIONALES.length) {
           parametrosQuitados += 1;
           yaRechazados.add(sobra);
           cuerpo = sinClave(cuerpo, sobra);
@@ -163,6 +185,14 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
     const primera = await llamar(mensajes, opciones);
     const json1 = extraerJson(primera.texto);
     if (json1) return { json: json1, texto: primera.texto, usage: primera.usage };
+    // Respuesta vacía por techo agotado: repetir el mismo encargo pidiendo «solo el objeto» se volvería a
+    // cortar en el mismo sitio y se pagaría el prompt entero para nada. Lo que falta es sitio para escribir.
+    if (!primera.texto && primera.stop === 'max_tokens') {
+      const techo = Math.min(2 * (opciones.maxTokens || MAX_TOKENS_POR_OMISION), 32000);
+      log(`  · la respuesta se cortó sin escribir texto; repito con max_tokens ${techo}`);
+      const holgada = await llamar(mensajes, { ...opciones, maxTokens: techo });
+      return { json: extraerJson(holgada.texto), texto: holgada.texto, usage: holgada.usage };
+    }
     log('  · la respuesta no fue JSON; pido solo el objeto');
     const segunda = await llamar([
       ...mensajes,

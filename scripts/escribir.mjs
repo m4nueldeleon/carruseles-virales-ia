@@ -45,6 +45,16 @@
 //                                   se sigue sin ese logo y queda en faltantes
 // MODELO Y SALIDA
 //   --modelo <id>                   por omisión claude-opus-5 (o la variable ANTHROPIC_MODEL)
+//   --modelo-auxiliar <id>          modelo de la llamada que elige el formato (por omisión claude-sonnet-5, o la
+//                                   variable ANTHROPIC_MODELO_AUXILIAR). No escribe el carrusel: solo clasifica
+//   --esfuerzo <low|medium|high|xhigh|max>
+//                                   cuánto razona el modelo antes de escribir (por omisión low, o ESCRIBIR_ESFUERZO).
+//                                   Sin esto Opus 5 razona con «high» y se come dos tercios de la salida
+//   --pensamiento <adaptive|disabled>
+//                                   por omisión adaptive (o ESCRIBIR_PENSAMIENTO); disabled lo apaga del todo
+//   --ttl-cache <5m|1h>             vida del prefijo cacheado (por omisión 5m, o ESCRIBIR_CACHE_TTL). El bloque
+//                                   estable del system (ficha, banco, histórico, referencia) no cambia entre las
+//                                   versiones de un pedido: la 2ª, 3ª y 4ª lo leen del caché a 0.1x
 //   --rondas N                      rondas de corrección cuando QA bloquea (2 por omisión)
 //   --salida <carpeta>              carpeta exacta del carrusel (si no, <carpeta-de-trabajo>/<fecha>-<slug>)
 //   --sin-render                    solo escribe carrusel.json, caption.txt y metadata.json (sin render ni QA)
@@ -62,14 +72,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { crearCliente, leerLlave, MODELO_POR_OMISION } from './lib/anthropic.mjs';
+import { crearCliente, leerLlave, ESFUERZOS, MODELO_AUXILIAR_POR_OMISION, MODELO_POR_OMISION, PENSAMIENTOS } from './lib/anthropic.mjs';
 import { PLANES, cargarProtocolos, capitulosPara, indiceParaElegir, bloqueProtocolo } from './lib/protocolos.mjs';
 import { cargarBanco, resumenBanco, reglasBanco } from './lib/banco.mjs';
 import { ACENTO_POR_LOOK, prepararLogos, componerParesLogos, describirLogos } from './lib/logos.mjs';
 import { escribirCaption, escribirMetadata } from './lib/entrega.mjs';
 import { FORMATOS, LOOKS } from './lib/construir-html.mjs';
 import { comoContrato, normalizarCarrusel, verificarSalida } from './lib/contrato.mjs';
-import { lineaDeTotal, USO_VACIO } from './lib/costes.mjs';
+import { lineaDeTotal, sumarUsos, USO_VACIO } from './lib/costes.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -98,6 +108,21 @@ const sinRender = flag('--sin-render');
 const salidaJson = flag('--json');
 const simularPath = opt('--simular');
 const volcarPrompt = opt('--volcar-prompt');
+// Cuánto vive el prefijo cacheado. Con «5m» cada lectura renueva los 5 minutos, y como las versiones de un
+// pedido van una detrás de otra (1.5-2 min cada una) la cadena se sostiene sola; la escritura cuesta 1.25x.
+// Con «1h» la escritura cuesta 2x pero aguanta un pedido lento o varios pedidos de la misma marca seguidos.
+const TTL_CACHE = opt('--ttl-cache', process.env.ESCRIBIR_CACHE_TTL || '5m');
+if (!['5m', '1h'].includes(TTL_CACHE)) { console.error('✗ --ttl-cache debe ser 5m o 1h'); process.exit(2); }
+// Cuánto razona el modelo antes de escribir. Sin esto Opus 5 razona con esfuerzo «high» sin que nadie se lo
+// pida y se come dos tercios de la salida, que es la partida cara. Se queda fijo durante toda la corrida:
+// cambiarlo entre llamadas invalidaría el prefijo cacheado.
+const esfuerzo = opt('--esfuerzo', process.env.ESCRIBIR_ESFUERZO || 'low');
+const pensamiento = opt('--pensamiento', process.env.ESCRIBIR_PENSAMIENTO || 'adaptive');
+// El modelo de las llamadas auxiliares (elegir formato): es clasificar, no escribir, y no toca la calidad
+// del carrusel. La escritura se queda en el modelo principal.
+const modeloAuxiliar = opt('--modelo-auxiliar', MODELO_AUXILIAR_POR_OMISION);
+if (!ESFUERZOS.includes(esfuerzo)) { console.error(`✗ --esfuerzo debe ser uno de: ${ESFUERZOS.join(', ')}`); process.exit(2); }
+if (!PENSAMIENTOS.includes(pensamiento)) { console.error(`✗ --pensamiento debe ser uno de: ${PENSAMIENTOS.join(', ')}`); process.exit(2); }
 
 function fallo(msg, codigo = 2, extra = null) {
   log('✗ ' + msg);
@@ -138,7 +163,10 @@ if (basePath) {
 }
 const llave = simularPath ? null : leerLlave();
 if (!simularPath && !llave) fallo('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=…).');
-const cliente = simularPath ? null : crearCliente({ llave, modelo, log });
+const cliente = simularPath ? null : crearCliente({ llave, modelo, log, ttlCache: TTL_CACHE, pensamiento, esfuerzo });
+// Cliente aparte para lo auxiliar: otro modelo, sin razonamiento y con su propio contador de gasto.
+const clienteAuxiliar = simularPath ? null
+  : (modeloAuxiliar === modelo ? cliente : crearCliente({ llave, modelo: modeloAuxiliar, log, ttlCache: TTL_CACHE, pensamiento: 'disabled' }));
 
 // ---------- contexto de la marca ----------
 let historico = [];
@@ -186,8 +214,14 @@ if (plan === 'referencia' && protocolos && cliente) {
   const validos = [...protocolos.capitulos.keys()];
   const sistemaElegir = `Eres el director creativo de la skill Carruseles Virales IA. Con el árbol «Cómo elegir el formato» y el índice de protocolos eliges UN formato para la referencia o el tema dado. Respondes SOLO un objeto JSON: {"formato_elegido": "<slug>", "laminas": <entero>, "motivo": "<una frase>"}. Slugs válidos: ${validos.join(', ')}. Los imagen-unica-* son 1 lámina; reel se produce como su versión carrusel 3:4 (7-9 láminas).\n\n${protocolos.elegir}\n\nÍNDICE DE PROTOCOLOS:\n${indiceParaElegir(protocolos)}`;
   const encargoElegir = `TEMA: ${tema || '(sale de la referencia)'}\n\nINSTRUCCIONES DEL USUARIO: ${instrucciones || '(ninguna)'}\n\nREFERENCIA:\n${(referencia || '(sin referencia: decide por el tema)').slice(0, 24000)}`;
-  log('Eligiendo formato con el protocolo…');
-  const r = await cliente.pedirJson([{ role: 'user', content: encargoElegir }], { system: sistemaElegir, maxTokens: 400, temperature: 0.2 });
+  log(`Eligiendo formato con el protocolo (${clienteAuxiliar.modelo})…`);
+  // El system de esta llamada es literalmente el mismo texto en todos los pedidos de todas las marcas: con
+  // punto de corte se lee del caché a partir de la segunda vez. Y el techo sube de 400 —a 70 tokens de
+  // truncarse y disparar un reintento de la llamada entera— a 1,500, que no cuesta nada por estar ahí.
+  const r = await clienteAuxiliar.pedirJson(
+    [{ role: 'user', content: encargoElegir }],
+    { system: [{ type: 'text', text: sistemaElegir, cache_control: { type: 'ephemeral', ttl: TTL_CACHE } }], maxTokens: 1500, temperature: 0.2 },
+  );
   if (r.json && protocolos.capitulos.has(r.json.formato_elegido)) {
     formatoElegido = r.json.formato_elegido;
     laminasSugeridas = Number.isInteger(r.json.laminas) ? r.json.laminas : null;
@@ -251,31 +285,53 @@ Los siete errores de forma que hay que evitar:
 Ejemplo de la FORMA (contenido de relleno y solo 2 láminas; el número de láminas lo manda el FORMATO-PLAN):
 {"formato_elegido":"carrusel-lista","slug":"ejemplo-de-forma","fecha":"2026-01-31","tema":"Tema de ejemplo","tipo":"lista","formato":"3:4","look":"guia-rapida","serie":"Guía rápida","objetivo":"saves","palabra_clave":"FICHA","entregable":"la hoja de una página por DM","marca":{"handle":"@tucuenta","sello":"IA aplicada al negocio real"},"slides":[{"rol":"portada","layout":"portada-titulo","titulo":"Tu negocio no *camina* sin ti","subtitulo":"3 señales y qué delegar","chips":["3 señales"],"pie":"Desliza","imagen":{"src":"https://ejemplo/foto.png","pos":"recorte","panel":true},"alt":"Portada del carrusel sobre delegar en tu negocio."},{"rol":"cta","layout":"cta-cara","titulo":"¿Quieres la *ficha*?","cuerpo":"Comenta FICHA y te la mando por DM.","boton":"Comenta FICHA","alt":"Lámina final que invita a comentar la palabra FICHA."}],"caption":"Si te vas tres días y el negocio se para, tienes un empleo con tu nombre.\\n\\nMándaselo a tu socio que aprueba cada precio.\\n\\nComenta FICHA y te mando la hoja.","hashtags":["#dueñosdenegocio","#delegar","#pymes"],"notas":"Avisos esperados de QA: la lámina 2 es el CTA por ser un ejemplo corto."}`;
 
+  // Todo lo que NO cambia entre las versiones de un mismo pedido, junto y al principio: la rutina, las
+  // reglas de copy, la ficha de la marca, el banco, el histórico y la referencia. Es el prefijo que la API
+  // puede leer del caché en la versión 2, 3 y 4 y en cada ronda de corrección. El orden es lo único que
+  // importa: la API solo lee el caché si el prefijo COMPLETO hasta el punto de corte coincide byte a byte,
+  // y hasta hoy el capítulo del protocolo —que cambia con el formato— estaba metido dentro de ese prefijo.
+  const estable = [
+    estatico,
+    `FICHA DE LA MARCA (MI-MARCA.md; manda sobre cualquier suposición sobre la voz, el público o la oferta):\n${marca}`,
+    banco ? reglasBanco(banco) : '',
+    banco ? `BANCO DISPONIBLE (copia las "src" EXACTAS de esta lista):\n${JSON.stringify(banco.entradas, null, 2)}` : '',
+    historico.length ? `CARRUSELES RECIENTES DE LA MARCA (para no repetir ángulo, gancho ni look):\n${JSON.stringify(historico.slice(-6), null, 2)}` : '',
+    referencia ? `REFERENCIA DE ENTRADA (se replica el ángulo y la estructura, nunca el texto ni las imágenes):\n${referencia}` : '',
+  ].filter(Boolean).join('\n\n');
+
   const dinamico = [
     CONTRATO_SALIDA,
     `FORMATO DE LAS LÁMINAS: escribe "formato": "${formato}" en el carrusel (manda sobre el 4:5 de la rutina).`,
     `FORMATO_ELEGIDO: escribe en "formato_elegido" el slug del protocolo de formato que aplicaste (${protocolos ? [...protocolos.capitulos.keys()].join(', ') : 'según PROTOCOLOS-FORMATO.md'}) o null si no aplicaste ninguno.`,
     textoEstructura(),
     textoPlanVisual(),
-    banco ? reglasBanco(banco) : '',
     logos.listos.length ? `IMÁGENES DISPONIBLES EN LA CARPETA DEL CARRUSEL (escribe la ruta EXACTA en imagen.src; son logos reales de terceros: pequeños, como acompañante en pos "abajo" o "centro", nunca protagonistas de la portada ni sugiriendo patrocinio):\n${describirLogos(logos.listos).join('\n')}` : '',
     'IMÁGENES: cualquier imagen.src que no sea una URL https de la lista del banco o una ruta de la lista de imágenes disponibles se descarta al validar.',
   ].filter(Boolean).join('\n\n');
-  // El protocolo va antes del bloque dinámico y con cache_control: se repite igual en las rondas de QA y en las
-  // versiones del mismo plan, así que la caché de prompts abarata las llamadas siguientes.
-  if (protocolo) return [{ type: 'text', text: estatico }, { type: 'text', text: protocolo, cache_control: { type: 'ephemeral' } }, { type: 'text', text: dinamico }];
-  return [{ type: 'text', text: estatico, cache_control: { type: 'ephemeral' } }, { type: 'text', text: dinamico }];
+  // Dos puntos de corte, no uno:
+  //   1) al final de lo estable  → lo leen TODAS las versiones del pedido y todas las rondas de corrección;
+  //   2) al final del protocolo  → lo leen las versiones que comparten capítulo (carrusel-5 y carrusel-8
+  //      usan el mismo, así que en un pedido de 4 versiones se escribe una vez y se lee dos).
+  // El resto (contrato, formato, estructura, plan visual) cambia con el formato y va suelto al final: son
+  // ~400 tokens, y cachearlos costaría más (la escritura vale 1.25x) de lo que ahorrarían.
+  const corte = { type: 'ephemeral', ttl: TTL_CACHE };
+  const bloques = [{ type: 'text', text: estable, cache_control: corte }];
+  if (protocolo) bloques.push({ type: 'text', text: protocolo, cache_control: corte });
+  bloques.push({ type: 'text', text: dinamico });
+  return bloques;
 }
 
 // ---------- encargo ----------
+// El encargo lleva SOLO lo que cambia de una versión a otra. La ficha de la marca, el banco, el histórico
+// y la referencia viajan en el bloque estable del system (con punto de corte de caché), no aquí: repetirlos
+// en el mensaje del usuario era pagar ~14,000 tokens a precio lleno en cada versión del mismo pedido.
 const entrada = {
-  tema, referencia_texto: referencia, marca_ficha_md: marca,
+  tema,
   look_anterior: lookAnterior ? lookAnterior.ultimo?.look ?? null : null, look_recomendado: lookRecomendado, tipo_sugerido: tipo,
   formato_plan: plan, formato_elegido: formatoElegido, laminas_exactas: laminasForzadas || (esImagenUnica() ? 1 : null), formato,
   instrucciones_usuario: instrucciones,
-  banco: banco ? banco.entradas : null,
   imagenes_disponibles: logos.listos.length ? describirLogos(logos.listos).map(l => l.replace(/^- /, '').split(':')[0]) : null,
-  historico_reciente: historico.slice(-6), qa_previo: null,
+  qa_previo: null,
 };
 const encargo = correccion
   ? `RUTINA: carrusel (corrección)\n\nENTRADA:\n${JSON.stringify({ ...entrada, carrusel_actual: base, correccion }, null, 2)}\n\nAplica la corrección del usuario al carrusel_actual y devuelve el contrato completo (rutina, carrusel, faltantes, confianza, escalar_a_claude, motivo, formato_elegido) con el carrusel corregido entero: conserva la misma palabra_clave salvo que la corrección diga otra cosa, conserva todas las imagen.src que sigan siendo válidas y no toques lo que la corrección no menciona.`
@@ -396,7 +452,8 @@ escribirCaption({ carpeta, carrusel, salida, modelo: simularPath ? `${modelo} (s
 escribirMetadata({ carpeta, carrusel, salida, informe, rondas: rondasHechas, modelo: simularPath ? 'simulado' : modelo, formatoPlan: plan, referencia: refPath || null, fecha, instrucciones });
 // Lo que costó esta versión, sumando la llamada principal, la de elegir formato y las rondas de corrección.
 // Va al log y al resumen JSON: el worker lo guarda y así el gasto por pedido deja de ser una adivinanza.
-const uso = cliente ? cliente.uso() : USO_VACIO;
+const uso = [cliente, clienteAuxiliar !== cliente ? clienteAuxiliar : null]
+  .filter(Boolean).reduce((total, c) => sumarUsos(total, c.uso()), USO_VACIO);
 if (uso.llamadas) log(lineaDeTotal(uso));
 const resumen = {
   carpeta, slug: carrusel.slug, formato_plan: plan, formato_elegido: salida.formato_elegido || formatoElegido || null, look: carrusel.look,

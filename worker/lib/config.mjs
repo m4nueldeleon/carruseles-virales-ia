@@ -55,6 +55,13 @@ export function cargarConfig(argv = process.argv.slice(2), env = process.env) {
     supabaseKey: env.SUPABASE_SERVICE_ROLE_KEY || '',
     anthropicKey: env.ANTHROPIC_API_KEY || '',
     modelo: env.ANTHROPIC_MODEL || 'claude-opus-5',
+    // El modelo de las llamadas auxiliares (elegir formato, leer una captura de referencia): clasifican y
+    // describen, no escriben el carrusel. Vacío = el que traiga la skill por omisión (claude-sonnet-5).
+    modeloAuxiliar: env.ANTHROPIC_MODELO_AUXILIAR || '',
+    // Cuánto razona el modelo antes de escribir; sin esto Opus 5 razona al máximo y se come la salida.
+    esfuerzo: env.ESCRIBIR_ESFUERZO || '',
+    // Vida del prefijo cacheado: «5m» (cada lectura lo renueva) o «1h» para pedidos lentos.
+    ttlCache: env.ESCRIBIR_CACHE_TTL || '',
     blobToken: env.BLOB_READ_WRITE_TOKEN || '',
     bancoUrl: env.BANCO_URL || '',
     workspaceId: env.WORKSPACE_ID || '',

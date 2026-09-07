@@ -76,3 +76,14 @@ export function lineaDeUso(modelo, usage, coste, stop) {
 export const lineaDeTotal = uso =>
   `  · total de la versión: ${uso.llamadas} llamada(s) · entrada ${uso.entrada} · escritura de caché ${uso.escritura_cache}`
   + ` · lectura de caché ${uso.lectura_cache} · salida ${uso.salida} · ${dinero(uso.coste_usd)}`;
+
+// Junta dos acumuladores (el del modelo principal y el del auxiliar) en uno nuevo.
+export const sumarUsos = (a, b) => ({
+  llamadas: a.llamadas + b.llamadas,
+  entrada: a.entrada + b.entrada,
+  escritura_cache: a.escritura_cache + b.escritura_cache,
+  lectura_cache: a.lectura_cache + b.lectura_cache,
+  salida: a.salida + b.salida,
+  pensamiento: a.pensamiento + b.pensamiento,
+  coste_usd: a.coste_usd + b.coste_usd,
+});
