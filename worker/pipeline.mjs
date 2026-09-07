@@ -19,16 +19,28 @@ export function crearPipeline({ config, repo, almacen }) {
 
   // ---------- utilidades ----------
 
-  // Las rutas del servidor no le dicen nada al equipo y no deben salir en los mensajes.
+  // Cualquier ruta absoluta que quede en un mensaje: las carpetas conocidas del servidor y, por si el error
+  // viene de otro lado (un ENOENT de Node trae «open '/usr/lib/…'»), cualquier otra ruta suelta. Las URL no
+  // se tocan: su parte de ruta siempre va pegada al dominio, y ahí el patrón no entra.
+  const RUTA_SUELTA = /(?<![\w:/])\/(?:[\w.@%+-]+\/)+[\w.@%+-]*/g;
   const sinRutas = (texto) => [config.trabajoDir, config.privadoDir, config.skillDir]
-    .reduce((t, dir) => t.split(dir).join('…'), String(texto || ''));
+    .reduce((t, dir) => (dir ? t.split(dir).join('…') : t), String(texto || ''))
+    .replace(RUTA_SUELTA, '…')
+    .replace(/…(?:\s*…)+/g, '…');   // dos tapados seguidos se leen como uno
+
+  // El último filtro antes de que un texto llegue a la pantalla de quien pidió el carrusel. Todo lo que
+  // cierra un pedido o una corrección con error pasa por aquí, venga el mensaje de donde venga: se le
+  // quitan las rutas del servidor y se le pone el tope de caracteres una sola vez y en un solo sitio.
+  const paraElUsuario = (texto) => sinRutas(texto).replace(/\s+/g, ' ').trim().slice(0, TOPE_MOTIVO);
 
   // El motivo que acaba en la pantalla de quien pidió el carrusel: el mensaje útil del escritor
   // (nunca el rastro de pila ni el «Node.js v22»), traducido al español cuando viene de la API.
+  // El detalle técnico en inglés que la API devuelve se queda en el log del servidor, no en la pantalla.
   function motivoLegible(resultado) {
     if (resultado.expiro) return `La versión tardó más de ${config.timeoutVersionMin} minutos y se canceló`;
     const crudo = motivoDeSalida(resultado.stderr) || motivoDeSalida(resultado.stdout);
-    return sinRutas(humanizarMotivo(crudo)).slice(0, TOPE_MOTIVO) || 'El escritor terminó sin explicar el motivo';
+    const alLog = (detalle) => aviso(`  detalle de la API (no se le enseña a quien pidió el carrusel): ${sinRutas(detalle)}`);
+    return humanizarMotivo(crudo, { alLog }) || 'El escritor terminó sin explicar el motivo';
   }
 
   // TRABAJO_DIR/<pedido>/ con copia de la ficha y el histórico: qa.mjs los busca en la carpeta madre de la versión.
@@ -128,7 +140,7 @@ export function crearPipeline({ config, repo, almacen }) {
       const fila = await publicarVersion({ pedido, n, formato, salida, resumen: leerResumenEscribir(resultado.stdout) });
       return { ok: true, n, formato, fila };
     } catch (e) {
-      return { ok: false, n, formato, motivo: sinRutas(e.message).slice(0, TOPE_MOTIVO) };
+      return { ok: false, n, formato, motivo: e.message };
     }
   }
 
@@ -138,8 +150,9 @@ export function crearPipeline({ config, repo, almacen }) {
     : null);
 
   async function cerrarConError(pedido, mensaje) {
-    fallo(`Pedido ${pedido.id}: ${mensaje}`);
-    await repo.actualizarPedido(pedido.id, { estado: 'error', error: mensaje, worker_fin: ahoraIso() });
+    const texto = paraElUsuario(mensaje) || 'El pedido falló sin explicar el motivo';
+    fallo(`Pedido ${pedido.id}: ${texto}`);
+    await repo.actualizarPedido(pedido.id, { estado: 'error', error: texto, worker_fin: ahoraIso() });
   }
 
   async function cerrarPedido(pedido, resultados, inicio) {
@@ -150,7 +163,7 @@ export function crearPipeline({ config, repo, almacen }) {
       return cerrarConError(pedido, `No se pudo generar ninguna versión. Último motivo: ${malas.at(-1)?.motivo || 'desconocido'}`);
     }
     const nota = malas.length
-      ? `Se generaron ${buenas.length} de ${resultados.length} versiones. ${malas.map((m) => `La v${m.n} (${m.formato}) falló: ${m.motivo}`).join(' ')}`
+      ? paraElUsuario(`Se generaron ${buenas.length} de ${resultados.length} versiones. ${malas.map((m) => `La v${m.n} (${m.formato}) falló: ${m.motivo}`).join(' ')}`)
       : null;
     await repo.actualizarPedido(pedido.id, { estado: 'listo', titulo: tituloPortada(buenas[0].fila.carrusel_json), error: nota, worker_fin: ahoraIso() });
     log(`Pedido ${pedido.id} listo: ${buenas.length}/${resultados.length} versiones en ${minutos} min`);
@@ -202,8 +215,9 @@ export function crearPipeline({ config, repo, almacen }) {
   }
 
   async function cerrarCorreccionConError(correccion, pedido, mensaje) {
-    fallo(`Corrección ${correccion.id}: ${mensaje}`);
-    await repo.actualizarCorreccion(correccion.id, { estado: 'error', error: mensaje });
+    const texto = paraElUsuario(mensaje) || 'La corrección falló sin explicar el motivo';
+    fallo(`Corrección ${correccion.id}: ${texto}`);
+    await repo.actualizarCorreccion(correccion.id, { estado: 'error', error: texto });
     // El pedido vuelve al estado que tenía antes de la corrección (normalmente listo).
     if (pedido) await repo.actualizarPedido(pedido.id, { estado: pedido.estado === 'procesando' ? 'listo' : pedido.estado, worker_fin: ahoraIso() });
   }
@@ -237,7 +251,7 @@ export function crearPipeline({ config, repo, almacen }) {
       await repo.actualizarPedido(pedido.id, { estado: 'listo', worker_fin: ahoraIso() });
       log(`Corrección ${correccion.id} aplicada: nueva versión v${n}`);
     } catch (e) {
-      await cerrarCorreccionConError(correccion, pedido, sinRutas(e.message).slice(0, TOPE_MOTIVO));
+      await cerrarCorreccionConError(correccion, pedido, e.message);
     }
   }
 

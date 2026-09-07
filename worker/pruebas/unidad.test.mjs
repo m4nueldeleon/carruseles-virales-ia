@@ -113,10 +113,19 @@ test('motivoDeSalida toma la línea del escritor y aguanta la salida vacía', ()
   assert.equal(motivoDeSalida(null), '');
 });
 
-test('humanizarMotivo explica los errores de la API en español', () => {
+test('motivoDeSalida descarta los avisos de progreso que empiezan con ·', () => {
+  assert.equal(motivoDeSalida('· plan listo\n· render 3/8\n'), '');
+  assert.equal(motivoDeSalida('· render 3/8\nNo existe la referencia\n'), 'No existe la referencia');
+});
+
+test('humanizarMotivo explica los errores de la API en español y deja el inglés en el log', () => {
   const crudo = motivoDeSalida(RASTRO_NODE);
-  assert.equal(humanizarMotivo(crudo),
-    'La API de Anthropic rechazó la petición (400): `temperature` is deprecated for this model.');
+  const log = [];
+  const texto = humanizarMotivo(crudo, { alLog: (d) => log.push(d) });
+  assert.match(texto, /^La API de Anthropic rechazó la petición \(error 400\)/);
+  assert.ok(!/temperature|deprecated/i.test(texto), `no debe llevar inglés técnico a la pantalla: ${texto}`);
+  assert.match(texto, /log del servidor/);
+  assert.deepEqual(log, ['Anthropic 400: `temperature` is deprecated for this model.']);
   assert.match(humanizarMotivo('Anthropic 400: {"error":{"message":"Your credit balance is too low to access the API."}}'), /crédito/);
   assert.match(humanizarMotivo('Anthropic 401: {"error":{"message":"API key is invalid."}}'), /clave del servidor/);
   assert.match(humanizarMotivo('Anthropic 429: {"error":{"message":"rate limit"}}'), /unos minutos/);

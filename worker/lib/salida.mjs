@@ -42,7 +42,9 @@ function mensajeDeApi(bruto) {
 
 // Traduce el error técnico del escritor a algo que entienda quien pidió el carrusel.
 // Lo que no reconoce lo devuelve tal cual: más vale un texto raro que ninguno.
-export function humanizarMotivo(motivo) {
+// `alLog` recibe el detalle técnico en inglés que NO se le enseña a quien pidió el carrusel: se anota en el
+// log del servidor, que es donde lo va a buscar quien pueda hacer algo con él.
+export function humanizarMotivo(motivo, { alLog } = {}) {
   const texto = String(motivo || '').trim();
   const m = texto.match(/Anthropic\s+(\d{3})\s*:?\s*([\s\S]*)/);
   if (!m) return texto;
@@ -54,7 +56,9 @@ export function humanizarMotivo(motivo) {
   if (codigo === 401 || codigo === 403) return 'La API de Anthropic no aceptó la clave del servidor: hay que revisarla.';
   if (codigo === 429) return 'La API de Anthropic pidió esperar por exceso de peticiones. Vuelve a intentarlo en unos minutos.';
   if (codigo >= 500) return `La API de Anthropic no está respondiendo (error ${codigo}). Es temporal: vuelve a intentarlo en unos minutos.`;
-  return `La API de Anthropic rechazó la petición (${codigo})${mensaje ? `: ${mensaje}` : ''}`;
+  if (mensaje && typeof alLog === 'function') alLog(`Anthropic ${codigo}: ${mensaje}`);
+  return `La API de Anthropic rechazó la petición (error ${codigo}). El detalle técnico quedó en el log del `
+    + 'servidor: pásaselo a quien lleva la plataforma y vuelve a lanzar el pedido.';
 }
 
 // escribir.mjs --json imprime UNA línea JSON en stdout; se toma la última que parsee, por si el render habló antes.
