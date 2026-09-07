@@ -104,6 +104,16 @@ oficiales, `--correccion "texto" --base carrusel.json` aplica una corrección de
 `--simular carrusel.json` prueba render, QA y entrega sin gastar API. Banderas completas en la
 cabecera del script; una imagen única se revisa con `qa.mjs --imagen-unica`.
 
+Las versiones de un mismo pedido se lanzan **una detrás de otra y sin cambiar las banderas comunes**
+(`--carpeta`, `--banco`, `--logos`, `--referencia`): todo lo que no cambia entre ellas —la ficha de la
+marca, el banco, el histórico y la referencia— viaja en un bloque cacheado del prompt y a partir de la
+segunda versión se lee a la décima parte de su precio. Si entre versión y versión pasan más de cinco
+minutos ese bloque caduca y se vuelve a pagar entero; para pedidos lentos está `--ttl-cache 1h`.
+`--esfuerzo` (por omisión `low`) decide cuánto razona el modelo antes de escribir: medido en tres
+formatos, bajarlo de `high` a `low` recorta la salida a la mitad **sin mover el índice de QA**. Y el
+paso que elige el formato con `--formato-plan referencia` no escribe el carrusel, así que va con
+`--modelo-auxiliar` (`claude-sonnet-5` por omisión).
+
 ### 3c. La portada se decide a concurso, no de una
 
 La portada es el 80% del resultado. Genera **3 o 4 portadas** que crucen dos títulos con dos

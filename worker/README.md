@@ -130,7 +130,20 @@ el worker lo lee al vuelo, lo convierte a dólares con la tabla de precios de `w
 (dólares por millón de tokens, confirmados el 7-sep-2026 en la página de precios de Anthropic) y lo guarda
 en la base: `carrusel_version.costo_usd` por versión y `carrusel_pedido.costo_usd` por pedido.
 
-Medido el 7-sep-2026 con llamadas reales: un pedido normal de 4 versiones cuesta alrededor de **$1.41**.
+Medido el 7-sep-2026 con llamadas reales, un pedido normal de 4 versiones pasó de **$1.41 a $0.66**.
+De dónde sale la diferencia:
+
+| Palanca | Qué se hizo | Qué se midió |
+|---|---|---|
+| El caché ahora se lee | Lo que no cambia entre versiones (rutina, reglas de copy, ficha de la marca, banco, histórico y referencia) va junto y primero en el system, con el punto de corte al final. Antes el corte estaba detrás del capítulo del protocolo, que cambia con el formato: el prefijo cambiaba en cada versión y `cache_read_input_tokens` era **0 siempre** | La entrada sin cachear baja de ~18,400 tokens por versión a ~2,400. La v2 de un pedido lee 20,576 tokens de caché a 0.1x en vez de pagarlos a precio lleno |
+| El razonamiento va acotado | El cliente nunca mandaba `thinking` ni `output_config`, así que Opus 5 razonaba con esfuerzo `high` sin que nadie lo pidiera. Ahora va `adaptive` + `effort` (por omisión `low`, `ESCRIBIR_ESFUERZO`) | La salida baja de ~5,200 tokens por versión a ~2,200, y el índice de QA **no bajó** en ninguno de los tres formatos probados (95→95, 82→82, 98→98) |
+| Cada tarea con su modelo | Elegir el formato y leer una captura de referencia no escriben el carrusel: van con `ANTHROPIC_MODELO_AUXILIAR` (`claude-sonnet-5`) y sin razonamiento. La escritura se queda en Opus | Leer una captura de 3 láminas: $0.177 con Opus (y la ficha salía **truncada**, sin los apartados 8, 9 y 10) contra $0.058 con Sonnet 5 y la ficha entera |
+
+El ttl del caché es de 5 minutos (`ESCRIBIR_CACHE_TTL`) y no de una hora, porque **cada lectura renueva los
+cinco minutos**: medido en un pedido de 4 versiones seguidas, la última llamada ocurrió a los 188 segundos
+de la primera y los huecos entre versiones fueron de 40 a 58 segundos. La escritura de 5 minutos cuesta
+1.25x la entrada; la de una hora, 2x. Si tus pedidos son lentos o lanzas varios de la misma marca dentro de
+la hora, `ESCRIBIR_CACHE_TTL=1h` sale a cuenta.
 
 | Freno | Qué hace |
 |---|---|
@@ -235,6 +248,10 @@ Todas se documentan sin valores en `.env.ejemplo`.
 | `BLOB_READ_WRITE_TOKEN` | Sí | Vercel Blob, donde viven las láminas |
 | `ANTHROPIC_API_KEY` | Para producir | Sin ella el worker arranca en modo espera y cada pedido sale como error «Falta la clave de Anthropic en el servidor» |
 | `ANTHROPIC_MODEL` | No | Modelo que escribe (por omisión `claude-opus-5`) |
+| `ANTHROPIC_MODELO_AUXILIAR` | No | Modelo de lo que NO escribe el carrusel: elegir formato y leer capturas (por omisión `claude-sonnet-5`) |
+| `ESCRIBIR_ESFUERZO` | No | Cuánto razona el modelo antes de escribir: `low` (por omisión), `medium`, `high`, `xhigh`, `max` |
+| `ESCRIBIR_CACHE_TTL` | No | Vida del prefijo cacheado: `5m` (por omisión) o `1h` |
+| `ANTHROPIC_MAX_TOKENS` | No | Techo de una respuesta. Vacío = el del esfuerzo (low 8000 · medium 12000 · high 20000). Es una red, no un ahorro: se cobra lo generado |
 | `APIFY_TOKEN` | No | Transcribir reels de Instagram, TikTok y Facebook; sin él siguen YouTube, artículos y PDF |
 | `BANCO_URL` | No | URL base del banco de fotos en la nube para bajarlo si `privado/` no lo trae |
 | `SKILL_DIR`, `PRIVADO_DIR`, `TRABAJO_DIR` | No | `/skill`, `/privado`, `/trabajo` dentro del contenedor |
