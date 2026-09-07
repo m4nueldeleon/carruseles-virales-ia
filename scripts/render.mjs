@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { construirHTML } from './lib/construir-html.mjs';
+import { normalizarCarrusel } from './lib/contrato.mjs';
 import { cargarPlaywright } from './lib/playwright.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,7 +24,7 @@ const sinPreview = args.includes('--sin-preview');
 const jsonPath = path.join(carpeta, 'carrusel.json');
 if (!fs.existsSync(jsonPath)) { console.error(`No existe ${jsonPath}`); process.exit(2); }
 let data;
-try { data = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); } catch (e) { console.error('carrusel.json no es JSON válido:', e.message); process.exit(2); }
+try { data = normalizarCarrusel(JSON.parse(fs.readFileSync(jsonPath, 'utf8'))); } catch (e) { console.error('carrusel.json no es JSON válido:', e.message); process.exit(2); }
 if (!Array.isArray(data.slides) || data.slides.length === 0) { console.error('carrusel.json no tiene slides'); process.exit(2); }
 
 const dirSrc = path.join(carpeta, 'slides-src');

@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { construirHTML, palabras } from './lib/construir-html.mjs';
+import { normalizarCarrusel } from './lib/contrato.mjs';
 import { cargarPlaywright } from './lib/playwright.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,7 +22,9 @@ const salidaJson = args.includes('--json');
 const estricto = args.includes('--estricto');
 const imagenUnica = args.includes('--imagen-unica');
 
-const data = JSON.parse(fs.readFileSync(path.join(carpeta, 'carrusel.json'), 'utf8'));
+// carrusel.json puede venir del modelo, de Hermes o de una persona: pasa por la misma aduana que
+// escribir.mjs antes de medir nada (caption objeto, hashtags dentro del caption, numero_fantasma booleano).
+const data = normalizarCarrusel(JSON.parse(fs.readFileSync(path.join(carpeta, 'carrusel.json'), 'utf8')));
 const dirSrc = path.join(carpeta, 'slides-src');
 fs.mkdirSync(dirSrc, { recursive: true });
 const htmlPath = path.join(dirSrc, 'index.html');

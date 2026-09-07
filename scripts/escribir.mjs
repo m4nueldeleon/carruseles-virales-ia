@@ -68,6 +68,7 @@ import { cargarBanco, resumenBanco, reglasBanco } from './lib/banco.mjs';
 import { ACENTO_POR_LOOK, prepararLogos, componerParesLogos, describirLogos } from './lib/logos.mjs';
 import { escribirCaption, escribirMetadata } from './lib/entrega.mjs';
 import { FORMATOS, LOOKS } from './lib/construir-html.mjs';
+import { comoContrato, normalizarCarrusel, verificarSalida } from './lib/contrato.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -202,15 +203,43 @@ function textoPlanVisual() {
 
 function componerSystem() {
   const rutina = fs.readFileSync(path.join(DIR_SKILL, 'hermes', 'RUTINA-CARRUSEL.md'), 'utf8');
-  const bloque = rutina.match(/```text\n([\s\S]*?)```/);
+  // El cierre del bloque tiene que ir a principio de línea: dentro del prompt hay un ```json en
+  // medio de una frase («sin markdown, sin ```json») y con el patrón perezoso sin anclar el bloque
+  // se cortaba ahí. Se mandaban 293 de 5,946 caracteres: el modelo nunca veía las leyes, la forma
+  // de la salida ni la tabla de layouts, y devolvía lo que le parecía razonable.
+  const bloque = rutina.match(/^```text\n([\s\S]*?)^```/m);
   const skill = fs.readFileSync(path.join(DIR_SKILL, 'SKILL.md'), 'utf8');
   const reglasCopy = (skill.match(/## 4\. Escribir[\s\S]*?(?=\n## 5\.)/) || [''])[0];
   const estatico = `${bloque ? bloque[1] : rutina}\n\nREGLAS ADICIONALES DE COPY Y ESTRUCTURA (de SKILL.md §4; mandan sobre lo anterior si chocan):\n${reglasCopy}`;
   const slugs = capitulosPara({ plan, tipo, formatoElegido, protocolos });
   const protocolo = plan ? bloqueProtocolo({ slugs, protocolos }) : '';
+// El contrato de salida, escrito sin rodeos y en el bloque que manda (va al final del system, pegado
+// al encargo). Cada campo mal tipado revienta una corrida entera, así que aquí se declara la FORMA:
+// qué es obligatorio, qué es opcional y de qué tipo es cada cosa. Los tipos que el modelo confunde
+// (caption objeto, hashtags dentro del caption, numero_fantasma booleano) van nombrados uno por uno.
+const CONTRATO_SALIDA = `CONTRATO DE SALIDA (manda sobre cualquier ejemplo anterior de este prompt)
+Responde UN SOLO objeto JSON, sin markdown y sin texto alrededor. Escribe el carrusel al desnudo, con "formato_elegido" a su lado (también se acepta envuelto en {"rutina","carrusel",…}, pero prefiere el desnudo). Los tipos de abajo NO son negociables: un campo con la forma equivocada tira la corrida entera.
+
+OBLIGATORIOS del carrusel: "slug" texto, "look" texto, "formato" texto, "caption" TEXTO, "slides" lista de objetos.
+OBLIGATORIO de cada lámina: "layout" texto.
+OPCIONALES del carrusel: "fecha", "tema", "tipo", "serie", "palabra_clave", "entregable" (textos); "objetivo" (texto, o lista de 2 como mucho); "marca" objeto {"handle","sello"}; "hashtags" LISTA de textos (3 a 5); "notas" TEXTO.
+OPCIONALES de cada lámina: "rol", "kicker", "titulo", "subtitulo", "cuerpo", "loop", "numero", "numero_fantasma", "dato", "cita", "autor", "prompt", "etiqueta", "boton", "pie", "etiqueta_top", "sticker", "alt" (todos TEXTO); "items", "chips", "pasos" (listas); "a", "b" objetos {"titulo","items"}; "imagen" objeto {"src","pos","panel","tamano","duotono","prompt"}.
+
+Los seis errores de forma que hay que evitar:
+1. "caption" es TEXTO plano con saltos \\n. NUNCA un objeto {"primera_linea","texto","hashtags"} ni una lista.
+2. "hashtags" es una lista propia del carrusel, al mismo nivel que "caption". NUNCA dentro del caption ni dentro de un objeto.
+3. "notas" es UN texto (usa \\n si son varios apuntes), no una lista.
+4. "numero_fantasma" es el número como TEXTO ("01"), nunca true: lo que escribas ahí se pinta gigante en la lámina.
+5. "alt" va dentro de cada lámina, como texto, siempre.
+6. No inventes campos: nada de "qa", "palabras" ni "n" por lámina. La calidad la mide scripts/qa.mjs, no tú.
+
+Ejemplo de la FORMA (contenido de relleno y solo 2 láminas; el número de láminas lo manda el FORMATO-PLAN):
+{"formato_elegido":"carrusel-lista","slug":"ejemplo-de-forma","fecha":"2026-01-31","tema":"Tema de ejemplo","tipo":"lista","formato":"3:4","look":"guia-rapida","serie":"Guía rápida","objetivo":"saves","palabra_clave":"FICHA","entregable":"la hoja de una página por DM","marca":{"handle":"@tucuenta","sello":"IA aplicada al negocio real"},"slides":[{"rol":"portada","layout":"portada-titulo","titulo":"Tu negocio no *camina* sin ti","subtitulo":"3 señales y qué delegar","chips":["3 señales"],"pie":"Desliza","imagen":{"src":"https://ejemplo/foto.png","pos":"recorte","panel":true},"alt":"Portada del carrusel sobre delegar en tu negocio."},{"rol":"cta","layout":"cta-cara","titulo":"¿Quieres la *ficha*?","cuerpo":"Comenta FICHA y te la mando por DM.","boton":"Comenta FICHA","alt":"Lámina final que invita a comentar la palabra FICHA."}],"caption":"Si te vas tres días y el negocio se para, tienes un empleo con tu nombre.\\n\\nMándaselo a tu socio que aprueba cada precio.\\n\\nComenta FICHA y te mando la hoja.","hashtags":["#dueñosdenegocio","#delegar","#pymes"],"notas":"Avisos esperados de QA: la lámina 2 es el CTA por ser un ejemplo corto."}`;
+
   const dinamico = [
+    CONTRATO_SALIDA,
     `FORMATO DE LAS LÁMINAS: escribe "formato": "${formato}" en el carrusel (manda sobre el 4:5 de la rutina).`,
-    `SALIDA AMPLIADA: además de los campos del contrato, la envoltura lleva "formato_elegido": el slug del protocolo de formato que aplicaste (${protocolos ? [...protocolos.capitulos.keys()].join(', ') : 'según PROTOCOLOS-FORMATO.md'}) o null si no aplicaste ninguno.`,
+    `FORMATO_ELEGIDO: escribe en "formato_elegido" el slug del protocolo de formato que aplicaste (${protocolos ? [...protocolos.capitulos.keys()].join(', ') : 'según PROTOCOLOS-FORMATO.md'}) o null si no aplicaste ninguno.`,
     textoEstructura(),
     textoPlanVisual(),
     banco ? reglasBanco(banco) : '',
@@ -240,25 +269,8 @@ const system = componerSystem();
 const mensajes = [{ role: 'user', content: encargo }];
 if (volcarPrompt) { fs.writeFileSync(volcarPrompt, JSON.stringify({ system, mensajes }, null, 2)); log(`Prompt → ${volcarPrompt}`); }
 
-// El prompt pide el carrusel DIRECTO (con formato_elegido al lado), no envuelto en {carrusel:…}.
-// Aceptamos las dos formas: la envuelta que usan las rutinas de Hermes y la plana que devuelve
-// el modelo. Sin esto, una respuesta perfectamente buena se descartaba con «no trae carrusel.slides».
-const CLAVES_ENVOLTURA = ['rutina', 'formato_elegido', 'faltantes', 'confianza', 'escalar_a_claude', 'motivo'];
-function comoContrato(json) {
-  if (!json || typeof json !== 'object') return json;
-  if (json.carrusel || json.escalar_a_claude) return json;
-  if (!Array.isArray(json.slides)) return json;
-  const carrusel = Object.fromEntries(Object.entries(json).filter(([k]) => !CLAVES_ENVOLTURA.includes(k)));
-  return {
-    rutina: 'carrusel',
-    carrusel,
-    faltantes: Array.isArray(json.faltantes) ? json.faltantes : [],
-    confianza: typeof json.confianza === 'number' ? json.confianza : 1,
-    escalar_a_claude: false,
-    motivo: json.motivo ?? null,
-    formato_elegido: json.formato_elegido ?? null,
-  };
-}
+// comoContrato, normalizarCarrusel y verificarSalida viven en scripts/lib/contrato.mjs: la aduana
+// entre lo que devuelve el modelo y lo que espera el motor está en un solo sitio y tiene pruebas.
 
 // ---------- llamada (o simulación) ----------
 let salida;
@@ -272,13 +284,17 @@ if (simularPath) {
   const r = await cliente.pedirJson(mensajes, { system });
   salida = comoContrato(r.json);
 }
-if (!salida || typeof salida !== 'object') fallo('El modelo no devolvió JSON válido dos veces.', 4, { error: 'json_invalido' });
-if (salida.escalar_a_claude) fallo(`El modelo escaló: ${salida.motivo}`, 3, { error: 'escalado', motivo: salida.motivo || null, faltantes: salida.faltantes || [] });
-if (!salida.carrusel || !Array.isArray(salida.carrusel.slides) || !salida.carrusel.slides.length) fallo('La salida no trae carrusel.slides', 4, { error: 'sin_slides' });
+if (salida && typeof salida === 'object' && salida.carrusel) salida = { ...salida, carrusel: normalizarCarrusel(salida.carrusel) };
+{
+  const v = verificarSalida(salida);
+  if (!v.ok) fallo(v.mensaje, v.error === 'json_invalido' ? 4 : 4, { error: v.error, campo: v.campo });
+  if (v.escalado) fallo(`El modelo escaló: ${salida.motivo}`, 3, { error: 'escalado', motivo: salida.motivo || null, faltantes: salida.faltantes || [] });
+}
 
 // ---------- normalizar y validar (nunca confiar en la salida) ----------
 const aSlug = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
-function normalizar(c) {
+function normalizar(carruselCrudo) {
+  const c = normalizarCarrusel(carruselCrudo);
   const look = lookForzado || (LOOKS.includes(c.look) ? c.look : null) || lookRecomendado;
   if (look !== c.look) log(`· look «${c.look}» no existe o está forzado; uso ${look}`);
   const marcaJson = { ...(c.marca || {}) };
@@ -343,7 +359,8 @@ if (!sinRender) {
       { role: 'user', content: `RUTINA: carrusel (ronda ${ronda + 1})\n\nqa_previo:\n${JSON.stringify({ errores: informe.errores, avisos: informe.avisos.slice(0, 12) }, null, 2)}\n\nCorrige cada error, conserva todo lo demás (incluidas las imagen.src) y devuelve el contrato completo.` },
     ], { system });
     const corregido = comoContrato(r.json);
-    if (!corregido || !corregido.carrusel || !Array.isArray(corregido.carrusel.slides) || !corregido.carrusel.slides.length) { log('· la corrección no devolvió un carrusel válido; me quedo con la versión anterior'); break; }
+    const vr = verificarSalida(corregido);
+    if (!vr.ok || vr.escalado) { log(`· la corrección no devolvió un carrusel usable (${vr.escalado ? 'el modelo escaló' : vr.mensaje}); me quedo con la versión anterior`); break; }
     validacion = validarImagenes(normalizar(corregido.carrusel), carpeta);
     carrusel = validacion.carrusel;
     salida = { ...corregido, faltantes: faltantesDe(corregido, validacion.quitadas) };
