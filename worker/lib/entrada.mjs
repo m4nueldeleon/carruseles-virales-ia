@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { log, aviso } from './log.mjs';
 import { ejecutar, motivoDeSalida } from './procesos.mjs';
+import { revisarEnlace, traerSeguro } from './red.mjs';
 
 const TIMEOUT_REFERENCIA_MS = 15 * 60_000; // Apify puede tardar varios minutos con un reel
 const TIMEOUT_VISION_MS = 5 * 60_000;
@@ -71,6 +72,8 @@ async function leerImagenes(objetivo, rutaMd, config) {
 
 async function referenciaDeLink(pedido, dirEntrada, ruta, config) {
   if (!pedido.entrada_url) return { fallo: 'El pedido no trae el link' };
+  const revision = await revisarEnlace(pedido.entrada_url);
+  if (!revision.ok) return { fallo: `${revision.motivo}. Usa un enlace público (http o https).` };
   const r = await ejecutar('python3', [path.join(config.skillDir, 'scripts', 'referencia.py'), pedido.entrada_url, '--out', dirEntrada],
     { cwd: config.skillDir, timeoutMs: TIMEOUT_REFERENCIA_MS, alStderr: (l) => log('  referencia.py:', l) });
   const avisoPy = (r.stderr.match(/AVISO:\s*(.+)/) || [])[1] || '';
@@ -88,8 +91,9 @@ async function referenciaDeLink(pedido, dirEntrada, ruta, config) {
   return { ruta, hayReferencia: true, tema: null };
 }
 
+// La imagen la manda quien edita desde la app: se baja con el portero de red.mjs, nunca con fetch a secas.
 async function descargarImagen(url, dirEntrada) {
-  const r = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  const r = await traerSeguro(url, { timeoutMs: 60_000 });
   if (!r.ok) throw new Error(`respuesta ${r.status}`);
   const tipo = (r.headers.get('content-type') || '').split(';')[0].trim();
   const datos = Buffer.from(await r.arrayBuffer());
@@ -106,6 +110,7 @@ async function referenciaDeImagen(pedido, dirEntrada, ruta, config) {
   try {
     imagen = await descargarImagen(pedido.entrada_imagen_url, dirEntrada);
   } catch (e) {
+    if (e.bloqueado) return { fallo: `${e.message}. Sube la imagen al pedido en vez de pegar un enlace.` };
     return { fallo: `No pude descargar la imagen del pedido (${e.message}). Vuelve a subirla.` };
   }
   fs.writeFileSync(ruta, `# Referencia\n\n- **Tipo:** imagen\n- **Fuente:** captura subida al pedido\n`);

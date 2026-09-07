@@ -8,6 +8,7 @@ import { decidirFormatos, detectarLogos, recortarTema } from '../lib/entrada.mjs
 import { extraerCaption, humanizarMotivo, limpiarTitulo, leerResumenEscribir, listarSlides, crearZip } from '../lib/salida.mjs';
 import { cargarConfig, diagnosticar, APPS_POR_OMISION } from '../lib/config.mjs';
 import { motivoDeSalida, ultimaLinea } from '../lib/procesos.mjs';
+import { ipInterna, nombreProhibido, revisarEnlace, MENSAJE_BLOQUEO } from '../lib/red.mjs';
 
 const APPS = APPS_POR_OMISION.split(',');
 
@@ -120,4 +121,44 @@ test('humanizarMotivo explica los errores de la API en español', () => {
   assert.match(humanizarMotivo('Anthropic 529: {"error":{"message":"Overloaded"}}'), /no está respondiendo \(error 529\)/);
   assert.equal(humanizarMotivo('No existe la referencia'), 'No existe la referencia');
   assert.equal(humanizarMotivo(''), '');
+});
+
+// ---------- el portero de enlaces (que un link de la app no toque la red interna del servidor) ----------
+
+const resolverFalso = (mapa) => async (host) => {
+  if (!mapa[host]) throw new Error('sin dominio');
+  return mapa[host].map((address) => ({ address, family: address.includes(':') ? 6 : 4 }));
+};
+
+test('ipInterna reconoce loopback, privadas, enlace local y metadatos de nube', () => {
+  for (const dir of ['127.0.0.1', '10.0.0.1', '172.16.0.1', '172.31.255.255', '192.168.1.1',
+    '169.254.169.254', '0.0.0.0', '100.64.0.1', '::1', '::', 'fc00::1', 'fd12::3', 'fe80::1', '::ffff:127.0.0.1', 'no-es-ip']) {
+    assert.equal(ipInterna(dir), true, `debería bloquear ${dir}`);
+  }
+  for (const dir of ['8.8.8.8', '1.1.1.1', '172.32.0.1', '93.184.216.34', '2606:2800:220:1::']) {
+    assert.equal(ipInterna(dir), false, `debería dejar pasar ${dir}`);
+  }
+});
+
+test('nombreProhibido corta localhost, dominios internos y hosts sin punto', () => {
+  for (const host of ['localhost', 'LOCALHOST', 'mi-servicio.local', 'api.internal', 'supabase-db', 'metadata.google.internal', '']) {
+    assert.equal(nombreProhibido(host), true, `debería bloquear ${host}`);
+  }
+  for (const host of ['example.com', 'localhost.mi-dominio.com', 'cdn.instagram.com', '8.8.8.8']) {
+    assert.equal(nombreProhibido(host), false, `debería dejar pasar ${host}`);
+  }
+});
+
+test('revisarEnlace bloquea lo interno y deja pasar lo público', async () => {
+  const resolver = resolverFalso({ 'ejemplo-publico.com': ['93.184.216.34'], 'trampa.com': ['10.1.2.3'], 'mixto.com': ['8.8.8.8', '127.0.0.1'] });
+  for (const enlace of ['http://127.0.0.1:9000', 'http://169.254.169.254/latest/meta-data/', 'http://localhost',
+    'http://10.0.0.1', 'http://[::1]/', 'file:///etc/passwd', 'ftp://ejemplo-publico.com/x', 'http://2130706433/', 'no es un enlace']) {
+    const r = await revisarEnlace(enlace, { resolver });
+    assert.equal(r.ok, false, `debería bloquear ${enlace}`);
+    assert.equal(r.motivo, MENSAJE_BLOQUEO);
+  }
+  assert.equal((await revisarEnlace('http://trampa.com/', { resolver })).ok, false);
+  assert.equal((await revisarEnlace('http://mixto.com/', { resolver })).ok, false);
+  assert.equal((await revisarEnlace('https://ejemplo-publico.com/foto.jpg', { resolver })).ok, true);
+  assert.match((await revisarEnlace('https://no-existe.com/', { resolver })).motivo, /No encontré ese dominio/);
 });

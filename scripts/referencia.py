@@ -19,10 +19,69 @@ Soporta:
 Escribe <out>/referencia.md con metadatos + texto. Nunca inventa: si algo falla, lo dice.
 """
 from __future__ import annotations
-import argparse, html, json, os, re, shutil, subprocess, sys, tempfile, urllib.parse, urllib.request
+import argparse, html, ipaddress, json, os, re, shutil, socket, subprocess, sys, tempfile, urllib.error, urllib.parse, urllib.request
 from pathlib import Path
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+
+BLOQUEO = "Ese enlace no se puede abrir desde el servidor"
+SIN_DOMINIO = "No encontré ese dominio; revisa el enlace"
+NOMBRES_INTERNOS = ("localhost", "localhost.localdomain", "metadata", "metadata.google.internal")
+SUFIJOS_INTERNOS = (".local", ".internal", ".localhost", ".home.arpa", ".lan")
+
+
+def _ip_interna(direccion: str) -> bool:
+    """Loopback, enlace local (incluye 169.254.169.254), privadas y reservadas. Ante la duda, interna."""
+    try:
+        ip = ipaddress.ip_address(direccion)
+    except ValueError:
+        return True
+    return bool(ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
+                or ip.is_multicast or ip.is_unspecified)
+
+
+def enlace_bloqueado(url: str) -> str | None:
+    """Motivo por el que no se puede abrir el enlace desde el servidor, o None si es seguro.
+    Evita que un link pegado en la app sirva para tocar servicios internos o los metadatos de la nube."""
+    partes = urllib.parse.urlparse(url)
+    if partes.scheme not in ("http", "https"):
+        return BLOQUEO
+    host = (partes.hostname or "").strip(".").lower()
+    if not host or host in NOMBRES_INTERNOS or host.endswith(SUFIJOS_INTERNOS):
+        return BLOQUEO
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        if "." not in host:  # un nombre sin punto es un vecino de la red interna, no un sitio de internet
+            return BLOQUEO
+    else:
+        return BLOQUEO if _ip_interna(host) else None
+    try:
+        infos = socket.getaddrinfo(host, partes.port or (443 if partes.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
+    except OSError:
+        return SIN_DOMINIO
+    return BLOQUEO if any(_ip_interna(i[4][0]) for i in infos) else None
+
+
+class _RedireccionRevisada(urllib.request.HTTPRedirectHandler):
+    """Una redirección hacia una dirección interna también se bloquea."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
+        if enlace_bloqueado(newurl):
+            raise urllib.error.HTTPError(newurl, code, BLOQUEO, headers, fp)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_ABRIDOR = urllib.request.build_opener(_RedireccionRevisada)
+
+
+def abrir(req, timeout: int):
+    """urlopen con portero: revisa el destino y cada salto de redirección."""
+    destino = req.full_url if isinstance(req, urllib.request.Request) else str(req)
+    motivo = enlace_bloqueado(destino)
+    if motivo:
+        raise ValueError(motivo)
+    return _ABRIDOR.open(req, timeout=timeout)
 
 
 def limpiar_vtt(texto: str) -> str:
@@ -86,7 +145,7 @@ IG_POST = re.compile(r"instagram\.com/(?:[^/?#]+/)?(?:p|reel|reels)/([A-Za-z0-9_
 def descargar(url: str, destino: Path) -> bool:
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with abrir(req, 120) as r:
             destino.write_bytes(r.read())
         return True
     except Exception:  # noqa: BLE001
@@ -139,7 +198,7 @@ def instagram_post(url: str, out: Path, idioma: str) -> tuple[str, dict]:
 def articulo(url: str) -> tuple[str, dict]:
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "es,en;q=0.8"})
     try:
-        with urllib.request.urlopen(req, timeout=60) as r:
+        with abrir(req, 60) as r:
             raw = r.read().decode(r.headers.get_content_charset() or "utf8", errors="ignore")
     except Exception as e:  # noqa: BLE001
         return "", {"error": f"No pude descargar la página: {e}"}
@@ -175,6 +234,10 @@ def main() -> int:
     out.mkdir(parents=True, exist_ok=True)
     texto, meta, tipo = "", {}, "texto"
     if re.match(r"https?://", fuente):
+        motivo = enlace_bloqueado(fuente)
+        if motivo:
+            print("AVISO:", motivo, file=sys.stderr)
+            return 3
         host = urllib.parse.urlparse(fuente).netloc.lower()
         if "youtube.com" in host or "youtu.be" in host:
             tipo, (texto, meta) = "youtube", youtube(fuente, a.idioma)

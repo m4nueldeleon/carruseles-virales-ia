@@ -120,6 +120,7 @@ El progreso de `escribir.mjs` (rondas de QA, render) aparece con el prefijo `esc
 | Huérfanos | Un pedido o corrección con más de `WORKER_HUERFANO_MIN` (90) minutos en `procesando` se marca `error` (el servidor se reinició a medias) |
 | Disco | Las carpetas de `trabajo/` se borran a los `TRABAJO_RETENCION_DIAS` (7) días; las láminas ya viven en Vercel Blob |
 | Instagram | La API acepta 10 láminas; con más de 10 se suben a mano desde la app (lo dice `caption.txt`) |
+| Enlaces del pedido | Solo `http` y `https` hacia internet. Un enlace que apunte a la red interna del servidor (localhost, 10.x, 172.16-31.x, 192.168.x, 169.254.169.254, nombres `.local`/`.internal` o sin punto) se rechaza con «Ese enlace no se puede abrir desde el servidor», y también si llega ahí por una redirección |
 | Logos de apps | Si la entrada menciona CapCut, Claude, ChatGPT, WhatsApp, Canva, Excel, Notion, Instagram, TikTok, YouTube o Gemini (con mayúscula), se pide su logo real con `--logos` |
 
 ## Protocolo de estados
