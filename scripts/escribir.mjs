@@ -69,6 +69,7 @@ import { ACENTO_POR_LOOK, prepararLogos, componerParesLogos, describirLogos } fr
 import { escribirCaption, escribirMetadata } from './lib/entrega.mjs';
 import { FORMATOS, LOOKS } from './lib/construir-html.mjs';
 import { comoContrato, normalizarCarrusel, verificarSalida } from './lib/contrato.mjs';
+import { lineaDeTotal, USO_VACIO } from './lib/costes.mjs';
 
 const DIR_SKILL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -393,10 +394,15 @@ if (!sinRender) {
 // ---------- entrega ----------
 escribirCaption({ carpeta, carrusel, salida, modelo: simularPath ? `${modelo} (simulado)` : modelo, imagenUnica: carrusel.slides.length === 1 });
 escribirMetadata({ carpeta, carrusel, salida, informe, rondas: rondasHechas, modelo: simularPath ? 'simulado' : modelo, formatoPlan: plan, referencia: refPath || null, fecha, instrucciones });
+// Lo que costó esta versión, sumando la llamada principal, la de elegir formato y las rondas de corrección.
+// Va al log y al resumen JSON: el worker lo guarda y así el gasto por pedido deja de ser una adivinanza.
+const uso = cliente ? cliente.uso() : USO_VACIO;
+if (uso.llamadas) log(lineaDeTotal(uso));
 const resumen = {
   carpeta, slug: carrusel.slug, formato_plan: plan, formato_elegido: salida.formato_elegido || formatoElegido || null, look: carrusel.look,
   laminas: carrusel.slides.length, indice_qa: informe ? informe.indice : null, veredicto_qa: informe ? informe.veredicto : null,
   palabra_clave: carrusel.palabra_clave || null, faltantes: salida.faltantes || [], confianza: salida.confianza ?? null,
+  uso, coste_usd: Number(uso.coste_usd.toFixed(4)),
 };
 if (salidaJson) console.log(JSON.stringify(resumen));
 else {

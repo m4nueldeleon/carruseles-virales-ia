@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { costeDeUso, lineaDeUso, sumarUso, USO_VACIO } from './costes.mjs';
 
 // El endpoint es conmutable: ANTHROPIC_BASE_URL permite hablar con un gateway compatible con la API
 // Messages (OpenRouter sirve uno idéntico: mismas cabeceras, mismo cuerpo, misma respuesta). Sirve de
@@ -42,6 +43,7 @@ export function parametroRechazado(mensaje) {
 const sinClave = (objeto, clave) => Object.fromEntries(Object.entries(objeto).filter(([k]) => k !== clave));
 // El aviso va siempre a stderr, lo lea o no quien llama (el worker lo recoge en su log).
 const constancia = texto => { try { process.stderr.write(`${texto}\n`); } catch {} };
+const maxTokensDe = cuerpo => (cuerpo && cuerpo.max_tokens) || '?';
 
 // Las líneas comentadas del .env no cuentan (suele quedar ahí la llave vieja) y, como en la terminal,
 // si hay varias asignaciones manda la última.
@@ -79,10 +81,12 @@ export function extraerJson(texto) {
 
 // `muestreo` decide si se mandan temperature/top_p/top_k. Por omisión se deduce del modelo; se puede
 // forzar (true/false) para probar el respaldo o para un modelo nuevo que la lista todavía no conoce.
-export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = TIMEOUT_MS, log = () => {}, muestreo = null } = {}) {
+export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = TIMEOUT_MS, log = () => {}, muestreo = null, ttlCache = '5m' } = {}) {
   if (!llave) throw new Error('Falta ANTHROPIC_API_KEY (exporta la variable o guárdala en ~/.anthropic-cli/.env como ANTHROPIC_API_KEY=...).');
   const mandarMuestreo = muestreo === null ? admiteMuestreo(modelo) : Boolean(muestreo);
   const yaRechazados = new Set(); // lo que este modelo rechazó en esta corrida no se vuelve a mandar
+  // Lo que lleva gastado esta corrida. Es lo único mutable del cliente y solo lo escribe `llamar`.
+  let uso = USO_VACIO;
 
   async function llamarUnaVez(cuerpo, signal) {
     const r = await fetch(API, {
@@ -122,8 +126,17 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
       try {
         const j = await llamarUnaVez(cuerpo, ctrl.signal);
         const texto = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
-        if (j.usage) log(`  · ${modelo}: ${j.usage.input_tokens} tokens de entrada, ${j.usage.output_tokens} de salida${j.usage.cache_read_input_tokens ? ` (${j.usage.cache_read_input_tokens} desde caché)` : ''}`);
-        return { texto, usage: j.usage || null, stop: j.stop_reason || null };
+        const coste = costeDeUso(j.usage, modelo, ttlCache);
+        if (j.usage) {
+          uso = sumarUso(uso, j.usage, coste);
+          log(lineaDeUso(modelo, j.usage, coste, j.stop_reason));
+        }
+        // Sin bloque de texto la respuesta no sirve para nada, y con `max_tokens` la culpa es del techo,
+        // no del modelo: hay que decirlo aquí o quien llama solo ve «no devolvió JSON» y repite la llamada.
+        if (!texto && j.stop_reason === 'max_tokens') {
+          constancia(`  · ${modelo} agotó max_tokens (${maxTokensDe(cuerpo)}) sin escribir texto: sube el techo o baja el esfuerzo de razonamiento`);
+        }
+        return { texto, usage: j.usage || null, stop: j.stop_reason || null, coste };
       } catch (e) {
         const sobra = e.status === 400 ? parametroRechazado(e.message) : null;
         if (sobra && sobra in cuerpo && parametrosQuitados < PARAMETROS_MUESTREO.length) {
@@ -159,5 +172,5 @@ export function crearCliente({ llave, modelo = MODELO_POR_OMISION, timeoutMs = T
     return { json: extraerJson(segunda.texto), texto: segunda.texto, usage: segunda.usage };
   }
 
-  return { llamar, pedirJson, modelo };
+  return { llamar, pedirJson, modelo, uso: () => uso };
 }
