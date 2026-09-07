@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { log, aviso } from './log.mjs';
-import { ejecutar, ultimaLinea } from './procesos.mjs';
+import { ejecutar, motivoDeSalida } from './procesos.mjs';
 
 const TIMEOUT_REFERENCIA_MS = 15 * 60_000; // Apify puede tardar varios minutos con un reel
 const TIMEOUT_VISION_MS = 5 * 60_000;
@@ -66,7 +66,7 @@ async function leerImagenes(objetivo, rutaMd, config) {
   const r = await ejecutar('node', [script, objetivo, '--out', rutaMd, '--append'],
     { cwd: config.skillDir, timeoutMs: TIMEOUT_VISION_MS, alStderr: (l) => log('  leer-imagen:', l) });
   if (r.codigo === 0 && fs.existsSync(rutaMd)) return { ok: true };
-  return { ok: false, motivo: `No pude leer la imagen de referencia. ${ultimaLinea(r.stderr)}`.trim() };
+  return { ok: false, motivo: `No pude leer la imagen de referencia. ${motivoDeSalida(r.stderr)}`.trim() };
 }
 
 async function referenciaDeLink(pedido, dirEntrada, ruta, config) {
@@ -81,7 +81,7 @@ async function referenciaDeLink(pedido, dirEntrada, ruta, config) {
     if (!lectura.ok) aviso(lectura.motivo);
   }
   if (!fs.existsSync(ruta) || (palabrasEn(ruta) === 0 && !laminas.length)) {
-    const detalle = avisoPy || ultimaLinea(r.stderr) || 'El link no devolvió texto.';
+    const detalle = avisoPy || motivoDeSalida(r.stderr) || 'El link no devolvió texto.';
     return { fallo: `No pude leer el contenido del link. ${detalle} Pega el texto o la transcripción como entrada de tipo texto.`.replace(/\s+/g, ' ').trim() };
   }
   anexarInstrucciones(ruta, pedido.instrucciones);

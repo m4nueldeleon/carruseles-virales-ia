@@ -5,9 +5,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { decidirFormatos, detectarLogos, recortarTema } from '../lib/entrada.mjs';
-import { extraerCaption, limpiarTitulo, leerResumenEscribir, listarSlides, crearZip } from '../lib/salida.mjs';
+import { extraerCaption, humanizarMotivo, limpiarTitulo, leerResumenEscribir, listarSlides, crearZip } from '../lib/salida.mjs';
 import { cargarConfig, diagnosticar, APPS_POR_OMISION } from '../lib/config.mjs';
-import { ultimaLinea } from '../lib/procesos.mjs';
+import { motivoDeSalida, ultimaLinea } from '../lib/procesos.mjs';
 
 const APPS = APPS_POR_OMISION.split(',');
 
@@ -79,4 +79,45 @@ test('cargarConfig aplica valores por omisión y banderas', () => {
 test('ultimaLinea limpia colores y vacíos', () => {
   assert.equal(ultimaLinea('a\n\x1b[31mb\x1b[0m\n\n'), 'b');
   assert.equal(ultimaLinea(''), '');
+});
+
+// Lo que Node imprime cuando escribir.mjs revienta: el motivo útil está a media pila, no al final.
+const RASTRO_NODE = [
+  '/skill/scripts/lib/anthropic.mjs:76',
+  "      const e = new Error(`Anthropic ${r.status}: ${detalle}`);",
+  '                ^',
+  '',
+  'Error: Anthropic 400: {"type":"error","error":{"type":"invalid_request_error","message":"`temperature` is deprecated for this model."}}',
+  '    at llamarUnaVez (file:///skill/scripts/lib/anthropic.mjs:76:17)',
+  '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)',
+  '  status: 400',
+  '}',
+  '',
+  'Node.js v22.20.0',
+].join('\n');
+
+test('motivoDeSalida ignora el rastro de pila y el pie de Node', () => {
+  const motivo = motivoDeSalida(RASTRO_NODE);
+  assert.ok(!/Node\.js v/.test(motivo), 'no debe quedarse con «Node.js v22.20.0»');
+  assert.ok(!/\bat \b/.test(motivo), 'no debe quedarse con un marco de la pila');
+  assert.ok(motivo.startsWith('Anthropic 400:'), motivo);
+});
+
+test('motivoDeSalida toma la línea del escritor y aguanta la salida vacía', () => {
+  assert.equal(motivoDeSalida('render → v1\n\x1b[31m✗ No existe la referencia\x1b[0m\n'), 'No existe la referencia');
+  assert.equal(motivoDeSalida(''), '');
+  assert.equal(motivoDeSalida('\n   \n}\nNode.js v22.20.0\n'), '');
+  assert.equal(motivoDeSalida(null), '');
+});
+
+test('humanizarMotivo explica los errores de la API en español', () => {
+  const crudo = motivoDeSalida(RASTRO_NODE);
+  assert.equal(humanizarMotivo(crudo),
+    'La API de Anthropic rechazó la petición (400): `temperature` is deprecated for this model.');
+  assert.match(humanizarMotivo('Anthropic 400: {"error":{"message":"Your credit balance is too low to access the API."}}'), /crédito/);
+  assert.match(humanizarMotivo('Anthropic 401: {"error":{"message":"API key is invalid."}}'), /clave del servidor/);
+  assert.match(humanizarMotivo('Anthropic 429: {"error":{"message":"rate limit"}}'), /unos minutos/);
+  assert.match(humanizarMotivo('Anthropic 529: {"error":{"message":"Overloaded"}}'), /no está respondiendo \(error 529\)/);
+  assert.equal(humanizarMotivo('No existe la referencia'), 'No existe la referencia');
+  assert.equal(humanizarMotivo(''), '');
 });

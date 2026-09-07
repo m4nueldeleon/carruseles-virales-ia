@@ -31,6 +31,32 @@ export function tituloPortada(carrusel) {
   return limpiarTitulo(carrusel?.slides?.[0]?.titulo) || null;
 }
 
+// ---------- el error, dicho en español ----------
+
+// El mensaje que manda la API viene envuelto en JSON: «{"error":{"message":"…"}}».
+function mensajeDeApi(bruto) {
+  const m = String(bruto || '').match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  const texto = m ? m[1].replace(/\\"/g, '"').replace(/\\n/g, ' ') : String(bruto || '');
+  return texto.replace(/\s+/g, ' ').replace(/[{}"]+$/, '').trim();
+}
+
+// Traduce el error técnico del escritor a algo que entienda quien pidió el carrusel.
+// Lo que no reconoce lo devuelve tal cual: más vale un texto raro que ninguno.
+export function humanizarMotivo(motivo) {
+  const texto = String(motivo || '').trim();
+  const m = texto.match(/Anthropic\s+(\d{3})\s*:?\s*([\s\S]*)/);
+  if (!m) return texto;
+  const codigo = Number(m[1]);
+  const mensaje = mensajeDeApi(m[2]);
+  if (/credit balance|billing|insufficient|quota/i.test(mensaje)) {
+    return 'Se acabó el crédito de la API de Anthropic: hay que recargar la cuenta para seguir generando carruseles.';
+  }
+  if (codigo === 401 || codigo === 403) return 'La API de Anthropic no aceptó la clave del servidor: hay que revisarla.';
+  if (codigo === 429) return 'La API de Anthropic pidió esperar por exceso de peticiones. Vuelve a intentarlo en unos minutos.';
+  if (codigo >= 500) return `La API de Anthropic no está respondiendo (error ${codigo}). Es temporal: vuelve a intentarlo en unos minutos.`;
+  return `La API de Anthropic rechazó la petición (${codigo})${mensaje ? `: ${mensaje}` : ''}`;
+}
+
 // escribir.mjs --json imprime UNA línea JSON en stdout; se toma la última que parsee, por si el render habló antes.
 export function leerResumenEscribir(stdout) {
   const lineas = String(stdout || '').split('\n').map((l) => l.trim()).filter((l) => l.startsWith('{') && l.endsWith('}'));

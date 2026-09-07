@@ -5,9 +5,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { log, aviso, fallo, ahoraIso } from './lib/log.mjs';
 import { diagnosticar, EJEMPLO_SIMULACION } from './lib/config.mjs';
-import { ejecutar, ultimaLinea } from './lib/procesos.mjs';
+import { ejecutar, motivoDeSalida } from './lib/procesos.mjs';
 import { construirReferencia, decidirFormatos, detectarLogos } from './lib/entrada.mjs';
-import { crearZip, extraerCaption, leerJsonSiExiste, leerResumenEscribir, listarSlides, tituloPortada } from './lib/salida.mjs';
+import { crearZip, extraerCaption, humanizarMotivo, leerJsonSiExiste, leerResumenEscribir, listarSlides, tituloPortada } from './lib/salida.mjs';
 import { subirVersion } from './lib/blob.mjs';
 
 const ARCHIVOS_EJEMPLO = ['carrusel.json', 'caption.txt', 'preview.jpg', 'portada-270.jpg', 'qa.json', 'metadata.json'];
@@ -23,10 +23,12 @@ export function crearPipeline({ config, repo, almacen }) {
   const sinRutas = (texto) => [config.trabajoDir, config.privadoDir, config.skillDir]
     .reduce((t, dir) => t.split(dir).join('…'), String(texto || ''));
 
+  // El motivo que acaba en la pantalla de quien pidió el carrusel: el mensaje útil del escritor
+  // (nunca el rastro de pila ni el «Node.js v22»), traducido al español cuando viene de la API.
   function motivoLegible(resultado) {
     if (resultado.expiro) return `La versión tardó más de ${config.timeoutVersionMin} minutos y se canceló`;
-    const linea = ultimaLinea(resultado.stderr) || ultimaLinea(resultado.stdout);
-    return sinRutas(linea.replace(/^[✗x]\s*/, '')).slice(0, TOPE_MOTIVO) || 'El escritor terminó sin explicar el motivo';
+    const crudo = motivoDeSalida(resultado.stderr) || motivoDeSalida(resultado.stdout);
+    return sinRutas(humanizarMotivo(crudo)).slice(0, TOPE_MOTIVO) || 'El escritor terminó sin explicar el motivo';
   }
 
   // TRABAJO_DIR/<pedido>/ con copia de la ficha y el histórico: qa.mjs los busca en la carpeta madre de la versión.

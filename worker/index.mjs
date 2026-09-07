@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { cargarConfig, diagnosticar, resumenConfig, PEDIDO_EJEMPLO } from './lib/config.mjs';
 import { log, aviso, fallo } from './lib/log.mjs';
-import { ejecutar, ultimaLinea, dormir } from './lib/procesos.mjs';
+import { ejecutar, motivoDeSalida, ultimaLinea, dormir } from './lib/procesos.mjs';
 import { crearCliente } from './lib/supabase.mjs';
 import { crearRepositorio } from './lib/bd.mjs';
 import { crearRepositorioSimulado } from './lib/bd-simulada.mjs';
@@ -40,7 +40,7 @@ async function actualizarSkill(config) {
   if (!fs.existsSync(path.join(config.skillDir, '.git'))) return;
   const antes = await cabezaGit(config.skillDir);
   const r = await ejecutar('git', ['-C', config.skillDir, 'pull', '--ff-only', '--quiet'], { timeoutMs: 120_000 });
-  if (r.codigo !== 0) return aviso(`No se pudo actualizar la skill: ${ultimaLinea(r.stderr) || 'sin detalle'}`);
+  if (r.codigo !== 0) return aviso(`No se pudo actualizar la skill: ${motivoDeSalida(r.stderr) || 'sin detalle'}`);
   const despues = await cabezaGit(config.skillDir);
   if (antes === despues) return;
   const cambios = await ejecutar('git', ['-C', config.skillDir, 'diff', '--name-only', antes, despues], { timeoutMs: 10_000 });
@@ -63,7 +63,7 @@ async function refrescarBanco(config) {
   const r = await ejecutar('python3', [path.join(config.skillDir, 'scripts', 'banco-fotos.py'), '--banco', config.bancoDir, 'bajar', config.bancoUrl],
     { cwd: config.skillDir, timeoutMs: 20 * 60_000 });
   if (r.codigo === 0) log(`Banco de fotos: ${ultimaLinea(r.stdout)}`);
-  else aviso(`No se pudo refrescar el banco de fotos: ${ultimaLinea(r.stderr)}`);
+  else aviso(`No se pudo refrescar el banco de fotos: ${motivoDeSalida(r.stderr)}`);
 }
 
 function limpiarTrabajo(config) {

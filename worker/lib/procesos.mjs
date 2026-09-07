@@ -40,11 +40,37 @@ export function ejecutar(comando, args, { cwd, env = process.env, timeoutMs = 60
   });
 }
 
-// Última línea con contenido, sin códigos de color de terminal.
+const lineasLimpias = (texto) => String(texto || '').split('\n')
+  .map((l) => l.replace(/\x1b\[[0-9;]*m/g, '').trim())
+  .filter(Boolean);
+
+// Última línea con contenido, sin códigos de color: sirve para leer un resultado (un SHA, un resumen),
+// nunca para explicar un fallo — para eso está motivoDeSalida.
 export function ultimaLinea(texto) {
-  return String(texto || '').split('\n')
-    .map((l) => l.replace(/\x1b\[[0-9;]*m/g, '').trim())
-    .filter(Boolean).pop() || '';
+  return lineasLimpias(texto).pop() || '';
+}
+
+// Lo que Node imprime alrededor del error y que no le dice nada a quien pidió el carrusel.
+const RUIDO = [
+  /^at\s/,                 // marcos del rastro de pila
+  /^Node\.js\s+v?\d/i,     // el pie que Node imprime al morirse
+  /^\^+$/,                 // el cursor que señala la línea del código
+  /^[{}[\]();,^]+$/,       // llaves, paréntesis y comas sueltos
+  /^\.{3}\s*\d*\s*more/i,  // «... 3 more» del rastro
+  /^(throw|return|await)\b/, // el eco de la línea de código que reventó
+  /^\/.*:\d+$/,            // la ruta del archivo con su número de línea
+  /^node:internal\//,      // rutas internas de Node
+];
+
+// El motivo útil de una salida: la línea con «Error:» y, si no la hay, la última línea con sentido.
+// Devuelve '' cuando no hay nada que contar; quien llama pone el texto por omisión.
+export function motivoDeSalida(texto) {
+  const utiles = lineasLimpias(texto).filter((l) => !RUIDO.some((re) => re.test(l)));
+  const conError = utiles.filter((l) => /(^|\s)\w*Error\b\s*:/.test(l));
+  return (conError.at(-1) || utiles.at(-1) || '')
+    .replace(/^[✗x]\s*/, '')
+    .replace(/^(?:Uncaught\s+)?Error\s*:\s*/, '')
+    .trim();
 }
 
 export const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
