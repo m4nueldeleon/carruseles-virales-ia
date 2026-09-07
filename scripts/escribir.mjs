@@ -243,10 +243,25 @@ function textoEstructura() {
   return '';
 }
 
+// El banco de rostro viaja en el bloque estable del system (con punto de corte de caché), lejos del
+// encargo: ahí se lee barato, pero el modelo lo atiende menos y devuelve carruseles con menos fotos de las
+// que pide la marca. La salida NO es sacarlo del caché —ahí está el ahorro— sino repetir aquí abajo, en el
+// bloque dinámico, la cuenta exacta de imágenes, corta y en imperativo, y decirle dónde está la lista.
 function textoPlanVisual() {
-  if (banco) return 'PLAN VISUAL OBLIGATORIO: la portada, al menos una lámina de cuerpo y la lámina cta llevan imagen.src del banco (reglas del BANCO DE ROSTRO); al menos otra lámina de cuerpo lleva imagen.prompt (ilustración, ícono 3D o escena, sin texto) o una imagen de la lista de imágenes disponibles. Escribe alt en cada lámina.';
-  if (esImagenUnica()) return 'PLAN VISUAL: la única lámina lleva imagen (una de las imágenes disponibles o imagen.prompt con la persona de la marca o el objeto del tema, sin texto), salvo que el protocolo pida texto puro. Escribe alt.';
-  return 'PLAN VISUAL OBLIGATORIO: la portada lleva imagen (imagen.prompt con la persona de la marca en una situación del tema, sin texto), al menos dos láminas de cuerpo llevan imagen.prompt (ilustración, ícono 3D o escena, sin texto) y la lámina cta lleva la cara de la marca. Escribe alt en cada lámina.';
+  if (banco) return `MÍNIMO VISUAL (no negociable; el carrusel se rechaza si falta uno):
+1. Portada: "imagen" con "src" del BANCO DISPONIBLE (la cara de la marca).
+2. DOS láminas distintas entre la portada y el cierre con "imagen" y "src" (del banco o de las imágenes disponibles). Una "imagen" que solo lleva "prompt" todavía no existe: no cuenta para este mínimo.
+3. Lámina cta: "imagen" con "src" del banco (la cara de la marca).
+4. "alt" en TODAS las láminas.
+Son CUATRO "src" como mínimo, las cuatro distintas y del MISMO tipo de rostro: o las cuatro avatares del MISMO estilo, o las cuatro fotos reales. Un avatar «vector» junto a uno «popart» y a una foto real es un carrusel roto. Si además quieres una ilustración o un ícono 3D, va en una lámina APARTE con "imagen": {"prompt": …} (sin texto en la imagen), encima de las cuatro.
+La lista con las "src" está MÁS ARRIBA en este prompt, en «BANCO DISPONIBLE»: vuelve a leerla y copia las URL EXACTAS, sin inventar ni recortar ninguna. Cuenta las cuatro antes de responder.`;
+  if (esImagenUnica()) return 'MÍNIMO VISUAL: la única lámina lleva "imagen" (una de las imágenes disponibles, o "src" del BANCO DISPONIBLE que está más arriba en este prompt, o "prompt" con la persona de la marca o el objeto del tema, sin texto), salvo que el protocolo pida texto puro. Escribe "alt".';
+  return `MÍNIMO VISUAL (no negociable; el carrusel se rechaza si falta uno):
+1. Portada: "imagen": {"prompt": …} con la persona de la marca en una situación del tema, sin texto.
+2. Dos láminas entre la portada y el cierre con "imagen": {"prompt": …} (ilustración, ícono 3D o escena, sin texto).
+3. Lámina cta: la cara de la marca.
+4. "alt" en TODAS las láminas.
+Cuenta las imágenes antes de responder.`;
 }
 
 function componerSystem() {
@@ -304,9 +319,9 @@ Ejemplo de la FORMA (contenido de relleno y solo 2 láminas; el número de lámi
     `FORMATO DE LAS LÁMINAS: escribe "formato": "${formato}" en el carrusel (manda sobre el 4:5 de la rutina).`,
     `FORMATO_ELEGIDO: escribe en "formato_elegido" el slug del protocolo de formato que aplicaste (${protocolos ? [...protocolos.capitulos.keys()].join(', ') : 'según PROTOCOLOS-FORMATO.md'}) o null si no aplicaste ninguno.`,
     textoEstructura(),
-    textoPlanVisual(),
     logos.listos.length ? `IMÁGENES DISPONIBLES EN LA CARPETA DEL CARRUSEL (escribe la ruta EXACTA en imagen.src; son logos reales de terceros: pequeños, como acompañante en pos "abajo" o "centro", nunca protagonistas de la portada ni sugiriendo patrocinio):\n${describirLogos(logos.listos).join('\n')}` : '',
     'IMÁGENES: cualquier imagen.src que no sea una URL https de la lista del banco o una ruta de la lista de imágenes disponibles se descarta al validar.',
+    textoPlanVisual(),  // lo último que lee antes del encargo: es lo que más se olvidaba
   ].filter(Boolean).join('\n\n');
   // Dos puntos de corte, no uno:
   //   1) al final de lo estable  → lo leen TODAS las versiones del pedido y todas las rondas de corrección;
