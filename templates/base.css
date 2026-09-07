@@ -177,7 +177,10 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
    de arriba abajo, así que el contador y el «Desliza» del pie SIEMPRE caen sobre ella y solo se leen si la
    foto es clara justo ahí. Un traje azul o negro se los tragaba y nadie lo veía. Misma salida que arriba:
    se esconden; el @ vive del lado libre y el contador de arriba sigue. */
-.con-img-derecha .bottom .pager, .con-img-derecha .bottom .desliza { visibility: hidden; }
+/* Con la foto a la derecha ocupa el 42% del ancho de arriba abajo, así que TODO lo que vive
+   pegado al borde derecho cae encima de ella: el contador de arriba igual que el pie. Se esconden
+   los tres; el número de lámina lo lleva el kicker y el «Desliza» solo pierde una repetición. */
+.con-img-derecha .bottom .pager, .con-img-derecha .bottom .desliza, .con-img-derecha .top .pager { visibility: hidden; }
 .con-recorte.recorte-grande .recorte { width: 50%; height: 84%; right: 0; }
 .con-recorte.recorte-grande .contenido { right: 50%; padding-right: 40px; }
 /* el panel arranca a un cuarto de la altura: la tarjeta es el pedestal de la figura y el aire de arriba
