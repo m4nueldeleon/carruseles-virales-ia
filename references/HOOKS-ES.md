@@ -33,7 +33,7 @@ Cinco de las estructuras están adaptadas de Carrusel Studio de Ruva IA (youtube
 
 | # | Fórmula | Estructura | Ejemplo real | Para qué objetivo |
 |---|---|---|---|---|
-| 1 | **Negación / alto** | «No *X* sin antes ver esto» · «Deja de *X*» · «No les hables *igual a todos*» | «No les hables igual a todos. 5 generaciones. 5 formas de vender.» → 98,609 de alcance, 3,345 guardados (más que los likes) | saves, shares |
+| 1 | **Negación / alto / ruptura** | «No *X* sin antes ver esto» · «Deja de *X*» · «No les hables *igual a todos*» · imperativo de ruptura: «Despide a tu *editor*», «Olvídate de *X*», «Cancela *X*» (nombra lo que el lector paga o sufre y le da permiso de soltarlo) | «No les hables igual a todos. 5 generaciones. 5 formas de vender.» → 98,609 de alcance, 3,345 guardados (más que los likes) | saves, shares |
 | 2 | **Número + promesa** (lista finita) | Número impar y chico (3-8) + sustantivo concreto + tensión («que el 99% no conoce», «gratis») | «8 páginas para dominar Claude» → 921 guardados sobre 12,055 (7.6%) | saves |
 | 3 | **Se nota / te descubren** (amenaza social) | «Se nota cuando *X*» · «Tu cliente se da cuenta cuando *X*» | «Se nota cuando un texto fue escrito con IA» → el reel más visto de la cuenta (465,013 de alcance, 21,170 guardados). Enmarcar como «que suene a ti», nunca «indetectable» | shares, follows |
 | 4 | **Contraste / ya pasó** | Creencia cómoda (negada) → hecho consumado en ≤3 palabras («Ya entró.») · «Antes 8 horas. Ahora *20 minutos*» | «La IA no llegó a tocar la puerta de Wall Street. Ya entró.» → 34,882 de alcance, 1,474 guardados, 226 seguidores | shares |

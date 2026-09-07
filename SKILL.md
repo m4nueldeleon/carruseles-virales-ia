@@ -83,6 +83,25 @@ me llevo), identidad (el lector se reconoce) y verificable (la portada promete l
 láminas cumplen). Gana el de mayor suma; empate → el más corto. Muestra los 3 solo si el usuario
 pidió opciones; si no, elige y sigue.
 
+### 3b. Versiones por formato (siempre, no solo cuando lo pidan)
+
+Una misma idea rinde distinto según el formato. Antes de escribir el guion completo, propón
+**3 o 4 versiones en formatos distintos** y renderiza solo su portada para compararlas mirando:
+la del formato de la referencia, una **imagen única** (meme, tuit o dato en una sola lámina), un
+**carrusel corto** de 5 láminas y un **carrusel de 8 a 10**. `references/PROTOCOLOS-FORMATO.md`
+dice qué exige cada formato y cómo elegir. Se produce entera la que gane; las portadas
+descartadas se guardan en `_versiones/` de la carpeta del carrusel por si el usuario quiere otra.
+
+### 3c. La portada se decide a concurso, no de una
+
+La portada es el 80% del resultado. Genera **3 o 4 portadas** que crucen dos títulos con dos
+tratamientos visuales (avatar con el objeto del tema, iconos reales de las marcas, recorte grande,
+portada-foto) y júzgalas con un panel de 4 criterios, cada uno del 1 al 5: **gancho visual**
+(¿algo imponente o curioso obliga a entrar?), **legibilidad en la cuadrícula** (mírala en
+`portada-270.jpg`, no en el PNG grande), **promesa clara** (se entiende qué me llevo sin leer el
+caption) y **marca** (se reconoce a la persona y su tono). Gana la de mayor suma; en empate, la
+de título más corto. Si ninguna pasa de 16/20, ninguna sirve: cambia el gancho, no el color.
+
 ## 4. Escribir `carrusel.json` (el guion)
 
 Sigue el contrato de `references/LAYOUTS.md` (campos y límites exactos) y las reglas de voz de
@@ -236,6 +255,17 @@ tasas, no totales) y actualiza `historico.json`. Antes del siguiente carrusel, l
 hit (≥3x la mediana) → repite formato y haz serie; flop (<0.5x) → no repitas ese gancho ni ese
 tema tal cual. Detalle en `references/MEDICION.md`.
 
+## 9. Autoentrenamiento (cada corrección se aprende en el momento)
+
+Cuando el usuario corrige algo («no uses X», «así no», «me gustó Y, hazlo siempre»), la
+corrección se escribe en la skill **antes de terminar el turno**, no en una nota mental: la regla
+va al archivo de `references/` que corresponde (imágenes, avatares, layouts, copy, formatos), la
+excepción de marca va a `MI-MARCA.md`, y si el motor lo permite se convierte en una comprobación
+de `scripts/qa.mjs` para que no dependa de la memoria de nadie. Después se hace commit y push del
+repo público (sin datos privados) y se re-empaqueta el `.skill`. Cuando el usuario manda links de
+referencia para aprender, se deconstruyen con `references/REFERENCIAS-ENTRADA.md` §«Estudio en
+lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`.
+
 ## Lo que el usuario puede pedirte
 
 | Dice | Haces |
@@ -251,6 +281,7 @@ tema tal cual. Detalle en `references/MEDICION.md`.
 | «Empaqueta la skill» | `bash scripts/empaquetar.sh` → `dist/*.skill` para subir a claude.ai |
 | «Haz una serie» | 3-5 carruseles con el mismo look y esqueleto, numerados, un tema por pieza (anota en `notas` que el look se repite a propósito) |
 | «Otro carrusel hoy» | Corre `siguiente-look.mjs`: mira las carpetas hermanas del día, no solo el histórico |
+| «Aprende de estos carruseles» / links de referencia | `REFERENCIAS-ENTRADA.md` §«Estudio en lote»: bajar los posts a `_entrenamiento/refs/`, un análisis por post con visión, clasificar por formato, protocolo por formato con refutador, escribir `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`, commit, push, `.skill` |
 | «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
 | «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
 | «Sube / baja mi banco a la nube» | `banco-fotos.py subir --mi-marca MI-MARCA.md` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`. Con `--rotar` cambia el prefijo y mata las URL viejas; el almacén publica `robots.txt` con `Disallow: /` para no indexarse |

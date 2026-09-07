@@ -67,7 +67,7 @@ function bloqueImagen(slide, dirCarrusel, dirSalida) {
   if (pos === 'fondo') return { html: `<div class="bg" style="background-image:url('${url}')"></div><div class="scrim"></div>`, clase: 'con-img-fondo' };
   if (pos === 'derecha') return { html: `<div class="img-derecha" style="background-image:url('${url}')"></div>`, clase: 'con-img-derecha' };
   if (pos === 'centro') return { html: `<div class="img-centro" style="background-image:url('${url}')"></div>`, clase: 'con-img-centro' };
-  if (pos === 'recorte') return { html: `${img.panel ? '<div class="panel"></div>' : ''}<div class="recorte" style="background-image:url('${url}')"></div>`, clase: `con-recorte${img.panel ? ' con-panel' : ''}` };
+  if (pos === 'recorte') return { html: `${img.panel ? '<div class="panel"></div>' : ''}<div class="recorte" style="background-image:url('${url}')"></div>`, clase: `con-recorte${img.panel ? ' con-panel' : ''}${img.tamano === 'grande' ? ' recorte-grande' : ''}` };
   if (pos === 'recorte-izquierda') return { html: `${img.panel ? '<div class="panel" style="right:auto;left:0"></div>' : ''}<div class="recorte izquierda" style="background-image:url('${url}')"></div>`, clase: `con-recorte recorte-izq${img.panel ? ' con-panel' : ''}` };
   if (pos === 'arriba') return { html: `<div class="foto" style="background-image:url('${url}')"></div>`, clase: 'con-foto-arriba' };
   return { html: `<div class="img-abajo ${img.sangra ? 'sangra' : ''}" style="background-image:url('${url}')"></div>`, clase: 'con-img-abajo' };

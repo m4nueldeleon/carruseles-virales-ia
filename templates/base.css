@@ -170,6 +170,10 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
    El contador de arriba sí vive sobre el panel, y por eso cada look le da su color. */
 .con-panel .panel { bottom: 120px; }
 .con-recorte .recorte { bottom: 120px; height: 72%; }
+.con-recorte.recorte-grande .recorte { width: 58%; height: 86%; right: -40px; }
+.con-recorte.recorte-grande .contenido { right: 52%; padding-right: 24px; }
+.con-recorte.recorte-grande.con-panel .panel { width: 56%; }
+.con-recorte.recorte-grande .titulo.t-xl, .con-recorte.recorte-grande .titulo.t-l { font-size: 84px; }
 .con-panel .top .pager { color: var(--acento-ink); }
 .con-recorte.recorte-izq .contenido { right: var(--safe); left: 50%; }
 .panel { position: absolute; z-index: 0; right: 0; top: 0; bottom: 0; width: 52%; background: var(--acento); }

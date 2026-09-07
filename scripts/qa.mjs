@@ -35,7 +35,7 @@ const CEBO = ['etiqueta a un amigo', 'etiqueta a', 'dale like', 'sígueme para m
 const DEPENDE_DE_LA_1 = [/\bcomo te dec[ií]a\b/i, /\bcomo vimos\b/i, /\bcontin[uú]a(mos)?\b/i, /\bcomo dije\b/i];
 const ENVIO = /\b(m[aá]nda(se)?lo|env[ií]a(se)?lo|comp[aá]rte(se)?lo|p[aá]sa(se)?lo|reenv[ií]a(se)?lo)\b/i;
 const FORMULAS_HOOK = [
-  /^\s*no\b/i, /\bsin antes\b/i, /\bdeja de\b/i, /\d/, /\bvs\.?\b|\bcontra\b|\bantes\b.*\bahora\b/i, /\?\s*$/,
+  /^\s*no\b/i, /\bsin antes\b/i, /\b(deja de|despide|despídete|olvida|olvídate|cancela|borra|tira|apaga)\b/i, /\d/, /\bvs\.?\b|\bcontra\b|\bantes\b.*\bahora\b/i, /\?\s*$/,
   /\bnadie te dice\b|\bnadie te enseña\b/i, /\bse nota\b|\bse dan cuenta\b/i, /\bgratis\b/i, /\bmal\b/i, /\berror(es)?\b/i,
 ];
 

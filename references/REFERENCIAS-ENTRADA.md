@@ -262,3 +262,37 @@ Resultado: 9 láminas, misma fórmula de gancho, estructura mejorada, cero frase
 - [ ] Los datos ajenos llevan fuente en lámina o caption.
 - [ ] Ninguna imagen ni captura proviene de la referencia.
 - [ ] El campo `referencia` del JSON apunta al link o archivo de origen.
+
+## Estudio en lote: aprender de 10-30 referencias de golpe
+
+Cuando el usuario manda una lista de links «para que aprendas», no se analizan al vuelo: se bajan
+a disco, se miran una por una con visión y se convierten en protocolos. Procedimiento (probado el
+2026-09-07 con 23 posts):
+
+1. **Bajar los posts.** Un solo run de `apify/instagram-scraper` con todas las URL en `directUrls`
+   y `resultsType: "posts"` devuelve, por post: tipo (`Sidecar` = carrusel, `Image`, `Video`),
+   caption, likes, comentarios, medidas y la lista de láminas (`childPosts[].displayUrl`; los
+   reels traen `videoUrl`). Guarda el dataset con la API (`api.apify.com/v2/datasets/<id>/items`)
+   en `_entrenamiento/apify-posts.json`, nunca en el contexto de la conversación (pesa cientos de KB).
+2. **Una carpeta por post** en `_entrenamiento/refs/NN-<shortCode>/` con `meta.json` y las láminas
+   `01.jpg…NN.jpg` bajadas con `curl`. Índice en `_entrenamiento/indice.json`. Si el scraper omite un
+   post (pasa con 1 de cada 20), repítelo solo.
+3. **Deconstruir en paralelo**, un agente por post, con la ficha de este documento ampliada:
+   formato, gancho literal, promesa, estructura por lámina, anatomía visual (paleta en hex,
+   tipografía, jerarquía, contraste, tipo de cada imagen: foto real, captura, ilustración de IA,
+   meme, logo), lo humano (error humano deliberado, humor, humor negro, cultura pop, jerga de
+   redes), mecanismo viral, CTA, métricas y su lectura (comentarios por encima de likes = palabra
+   clave por DM), qué aplica a la marca y qué no, lecciones. Salida estructurada, no prosa.
+4. **Clasificar por formato con código** (el campo `formato`), no a ojo. Cada formato es un
+   producto distinto: imagen única de meme, imagen única de tuit, carrusel educativo, carrusel de
+   lista, noticia, historia, contrarian, tutorial, reel.
+5. **Un protocolo por formato**, escrito por un agente con todas las deconstrucciones de ese
+   formato, y **refutado** por otro que quita toda regla sin evidencia y añade lo que se repite y
+   faltaba. Cada regla lleva su evidencia (qué post la muestra).
+6. **Integrar**: `ANATOMIA-REFERENCIAS.md` (una ficha por post, con URL, sin transcribir las
+   láminas: se estudia el ángulo, no se copia el texto) y `PROTOCOLOS-FORMATO.md` (un capítulo por
+   formato + cómo elegir formato + patrones transversales). Nota al principio de `FORMATOS.md`.
+7. **Cerrar**: commit y push del repo (los posts ajenos NO van al repo, solo el análisis),
+   re-empaquetar el `.skill`, anotar en memoria.
+
+Las láminas ajenas se quedan en `_entrenamiento/` de la carpeta privada, fuera del repo público.
