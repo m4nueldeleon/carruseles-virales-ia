@@ -32,7 +32,7 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
 /* Capas de fondo */
 .bg { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; }
 .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 1; }
-.img-abajo { position: absolute; left: 0; right: 0; bottom: 110px; height: 42%; z-index: 1;
+.img-abajo { position: absolute; left: var(--safe); right: var(--safe); bottom: 160px; height: 40%; z-index: 1;
   background-size: contain; background-position: bottom center; background-repeat: no-repeat; }
 .img-abajo.sangra { background-size: cover; }
 .img-derecha { position: absolute; right: 0; top: 0; bottom: 0; width: 42%; z-index: 1;
@@ -169,12 +169,13 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
    «Desliza» nunca caen sobre la foto ni sobre el bloque de acento, y se leen siempre.
    El contador de arriba sí vive sobre el panel, y por eso cada look le da su color. */
 .con-panel .panel { bottom: 120px; }
-.con-recorte .recorte { bottom: 120px; height: 72%; }
-.con-recorte.recorte-grande .recorte { width: 52%; height: 84%; right: 0; }
-.con-recorte.recorte-grande .contenido { right: 52%; padding-right: 24px; }
+.con-recorte .recorte { bottom: 0; height: 80%; right: 0; }
+.con-recorte.con-panel .recorte { bottom: 120px; height: 72%; }
+.con-recorte.recorte-grande .recorte { width: 50%; height: 84%; right: 0; }
+.con-recorte.recorte-grande .contenido { right: 50%; padding-right: 40px; }
 /* el panel arranca a un cuarto de la altura: la tarjeta es el pedestal de la figura y el aire de arriba
    queda del color del look, que no se lee como hueco */
-.con-recorte.recorte-grande.con-panel .panel { width: 52%; top: 26%; }
+.con-recorte.recorte-grande.con-panel .panel { width: 50%; top: 26%; }
 .con-recorte.recorte-grande.con-panel .top .pager { color: var(--ink-dim); }  /* el contador ya no cae sobre el panel */
 .con-recorte.recorte-grande .titulo.t-xl, .con-recorte.recorte-grande .titulo.t-l { font-size: 84px; }
 .con-panel .top .pager { color: var(--acento-ink); }
