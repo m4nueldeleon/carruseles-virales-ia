@@ -1,0 +1,31 @@
+# docker-compose.yml: el worker del Generador de carruseles en el VPS.
+#   docker compose up -d --build     levanta (o reconstruye) el worker
+#   docker compose logs -f           mira lo que hace
+#   docker compose restart           recarga el worker cuando un git pull tocó worker/
+services:
+  worker:
+    build:
+      context: .
+      args:
+        # main en producción; una rama de trabajo para probar antes de mezclar (SKILL_RAMA en .env)
+        SKILL_RAMA: ${SKILL_RAMA:-main}
+    image: ccm-carruseles-worker
+    container_name: ccm-carruseles-worker
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # Lo privado de la marca (MI-MARCA.md, historico.json, assets/fotos/reales/): solo lectura.
+      - ./privado:/privado:ro
+      # Carpetas de trabajo por pedido (y _banco si privado/ no trae el banco): lectura y escritura.
+      - ./trabajo:/trabajo
+    # VPS de 2 CPU: una versión a la vez; Chromium necesita memoria compartida para renderizar.
+    mem_limit: 3g
+    shm_size: 1g
+    # Al detener, el worker termina el pedido en curso antes de salir (SIGTERM); después Docker lo mata.
+    stop_grace_period: 60s
+    init: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
