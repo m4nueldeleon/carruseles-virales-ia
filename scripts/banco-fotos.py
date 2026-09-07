@@ -397,7 +397,11 @@ def cmd_subir(args) -> None:
     sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
     from banco_nube import subir_banco
     mi_marca = Path(args.mi_marca).expanduser() if args.mi_marca else None
-    nuevo = subir_banco(args.banco, args.prefijo, cargar_catalogo(args.banco), rotar=args.rotar, mi_marca=mi_marca)
+    catalogo = cargar_catalogo(args.banco)
+    from banco_nube import prefijo_de
+    # sin --prefijo explícito, se sube al prefijo que ya tiene el banco (si rotó, al rotado); si no, al default
+    prefijo = args.prefijo if args.prefijo_explicito else (prefijo_de(catalogo.get("base_url")) or args.prefijo)
+    nuevo = subir_banco(args.banco, prefijo, catalogo, rotar=args.rotar, mi_marca=mi_marca)
     print(f"Banco en la nube: {nuevo['base_url']}/catalogo.json" + ("" if mi_marca else " — pon esa URL en MI-MARCA.md (banco_url)."))
 
 
@@ -450,7 +454,7 @@ def construir_parser() -> argparse.ArgumentParser:
     a.set_defaults(fn=cmd_anotar)
     sub.add_parser("catalogo").set_defaults(fn=cmd_catalogo)
     su = sub.add_parser("subir", help="sube el banco a Vercel Blob y escribe las URL en el catálogo")
-    su.add_argument("--prefijo", default="banco", help="carpeta en el almacén; con --rotar se genera una impredecible")
+    su.add_argument("--prefijo", default="banco", help="carpeta en el almacén; sin él se reutiliza el prefijo actual del catálogo; con --rotar se genera una impredecible")
     su.add_argument("--rotar", action="store_true", help="prefijo nuevo, borra el anterior: las URL viejas dejan de servir")
     su.add_argument("--mi-marca", help="ruta de MI-MARCA.md para actualizar banco_url")
     su.set_defaults(fn=cmd_subir)
@@ -469,6 +473,7 @@ def construir_parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     argumentos = construir_parser().parse_args()
+    argumentos.prefijo_explicito = "--prefijo" in sys.argv
     argumentos.banco = argumentos.banco.expanduser()
     argumentos.banco.mkdir(parents=True, exist_ok=True)
     argumentos.fn(argumentos)
