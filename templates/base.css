@@ -169,7 +169,7 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
    «Desliza» nunca caen sobre la foto ni sobre el bloque de acento, y se leen siempre.
    El contador de arriba sí vive sobre el panel, y por eso cada look le da su color. */
 .con-panel .panel { bottom: 120px; }
-.con-panel .recorte { bottom: 120px; height: 72%; }
+.con-recorte .recorte { bottom: 120px; height: 72%; }
 .con-panel .top .pager { color: var(--acento-ink); }
 .con-recorte.recorte-izq .contenido { right: var(--safe); left: 50%; }
 .panel { position: absolute; z-index: 0; right: 0; top: 0; bottom: 0; width: 52%; background: var(--acento); }

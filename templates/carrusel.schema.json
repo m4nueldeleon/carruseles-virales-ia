@@ -16,7 +16,7 @@
       }
     },
     "look": { "enum": ["guia-rapida", "noticia", "oscuro-tech", "recurso", "bosque", "editorial-mono"] },
-    "formato": { "enum": ["4:5", "3:4", "1:1", "9:16"], "default": "4:5" },
+    "formato": { "enum": ["3:4", "4:5", "1:1", "9:16"], "default": "3:4" },
     "serie": { "type": "string", "description": "etiqueta arriba a la izquierda (ej. «Guía rápida»)" },
     "tema": { "type": "string" },
     "tipo": { "enum": ["guia", "lista", "recurso", "noticia", "tutorial", "contrarian", "historia", "comparativa", "prompt"] },

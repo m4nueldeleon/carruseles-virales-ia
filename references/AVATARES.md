@@ -1,9 +1,46 @@
 # Avatares con estilo a partir de las fotos reales
 
-Un avatar es la cara de la marca dibujada en el estilo del look. Sirve cuando la foto real
-pesa demasiado (láminas de cuerpo, cheatsheet, CTA con humor) o cuando el carrusel quiere
-un tono distinto al de la foto de estudio. **Nunca sustituye a la foto real en la portada
-por omisión**: la portada lleva la cara real salvo que el tema pida ilustración.
+Un avatar es la cara de la marca dibujada en el estilo del look, generada **a partir de sus
+fotos reales**. Las fotos son el insumo; el avatar es la pieza que se publica.
+
+**El avatar es la primera opción cuando el carrusel quiere ser dinámico y llamativo**, que es
+casi siempre: una foto de estudio es estática y elegante, un avatar puede señalarte, levantar
+la palma, sacar el celular y traer líneas de acción. La foto real se reserva para cuando la
+pieza pide credibilidad sobria (una noticia dura, un dato serio, una lámina de autoridad).
+
+La regla de una sola fuente de rostro sigue en pie: todo el carrusel es avatar del mismo estilo,
+o todo foto real, o todo personaje generado. Nunca mezcla.
+
+## La pose es lo que da el dinamismo
+
+Pide poses **con verbo**, no retratos. Cada avatar hace algo:
+
+| Rol de la lámina | Pose que funciona |
+|---|---|
+| Portada | Mostrando el objeto del tema (celular, laptop, hoja) y señalándolo, boca abierta anunciando |
+| «Lo que sí» | Explicando con las manos, pulgar arriba, sosteniendo algo |
+| «Lo que no» / advertencia | Palma al frente en gesto de alto, cejas levantadas |
+| Alivio / antes-y-ahora | Brazos abiertos, encogiéndose de hombros, riendo |
+| CTA | Inclinado hacia la cámara, señalando al lector, sonrisa amplia |
+
+Añade siempre al prompt: `dynamic pose`, `action lines radiating behind him`, y el gesto concreto.
+Sin eso el modelo devuelve un retrato de busto, que es justo lo que no sirve.
+
+## La trampa del color (medida el 2026-09-07)
+
+El avatar lleva **el acento del look en la piel y en las manos**. Un avatar pop-art del look
+`noticia` tiene la cara y la mano en amarillo. Si lo pones sobre un `panel` amarillo, la mano
+desaparece y se ve un muñón.
+
+Regla: **el avatar va sobre el fondo del look, no sobre el panel del acento**, salvo que el
+avatar que elijas tenga la piel en tono claro. Antes de armar la lámina, mira el recorte
+compuesto sobre el color que va detrás.
+
+## Recortar bien
+
+El recortador devuelve la ilustración con todo su aire alrededor y la figura sale pequeña en la
+lámina. Pásale siempre `banco-fotos.py recortar` (o su limpiador) para que recorte al sujeto:
+la diferencia entre una figura que llena el panel y una que flota perdida.
 
 ## Un estilo por look (probado el 2026-09-06)
 

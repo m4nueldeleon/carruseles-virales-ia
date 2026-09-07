@@ -141,7 +141,47 @@ Reglas:
 - Deja aire en la composición: el margen seguro es de 80 px por lado y hay 140 px al pie que Instagram tapa o recorta en el grid. Nada importante de la imagen (una cara, un objeto clave) va en esas franjas.
 - Con `fondo` el scrim del look oscurece la parte baja para que el título se lea. Compón la escena con el sujeto en la mitad superior y espacio vacío abajo. Adaptado de Carrusel Studio de Ruva IA (youtube.com/@RuvaIA): toda foto de fondo lleva una viñeta que oscurece borde y pie; aquí ya la pone el look con `--scrim`, no la agregues a la imagen.
 
-## 5. Logos de terceros
+## 5. Marcas, apps y productos: el logo REAL, nunca uno dibujado
+
+Cuando la lámina habla de una herramienta con nombre (CapCut, Claude, WhatsApp, Excel, Canva),
+va **su logo de verdad, bajado de internet**. Un ícono inventado por la IA con la forma
+aproximada de la app se lee como falso y le quita autoridad a la pieza. Esto no es opcional.
+
+**De dónde sacarlo, en este orden:**
+
+1. **El ícono oficial de la app en la tienda.** La API pública de la App Store devuelve el
+   icono a 512 px sin autenticación y es la fuente más confiable y estable:
+   ```bash
+   curl -s "https://itunes.apple.com/search?term=<app>&entity=software&limit=3&country=us" \
+     | python3 -c "import json,sys; [print(r['trackName'],'|',r['sellerName'],'|',r['artworkUrl512']) for r in json.load(sys.stdin)['results']]"
+   ```
+   Verifica el `sellerName` antes de bajarlo: hay imitaciones con nombres parecidos.
+2. **El sitio oficial de la marca** (sala de prensa, `/brand`, `/press`), o el icono que sirve la
+   propia app (`https://<dominio>/images/...`).
+3. Repositorios de marcas como último recurso, y solo si el archivo se ve idéntico al oficial.
+   Los CDN que exigen clave (`brandfetch`, `logo.dev`) devuelven 403: no pierdas tiempo ahí.
+
+**Cómo montarlo en la lámina.** Los iconos de app son cuadrados; recórtalos con esquinas
+redondeadas y móntalos sobre fondo transparente, como se ven en un teléfono. Dos marcas que se
+conectan se leen mejor como `icono + icono` con un signo del color del acento en medio,
+dibujado con formas (no con tipografía, que la imagen no lleva letras):
+
+```python
+from PIL import Image, ImageDraw
+LADO, RADIO, GAP = 420, 96, 150
+def icono_redondeado(ruta, lado=LADO, radio=RADIO):
+    im = Image.open(ruta).convert("RGBA").resize((lado, lado), Image.LANCZOS)
+    if im.getchannel("A").getextrema()[0] < 250:          # si trae alfa, ponle su fondo de marca
+        fondo = Image.new("RGBA", im.size, (240, 234, 220, 255)); fondo.alpha_composite(im); im = fondo
+    mascara = Image.new("L", (lado, lado), 0)
+    ImageDraw.Draw(mascara).rounded_rectangle([0, 0, lado - 1, lado - 1], radius=radio, fill=255)
+    im.putalpha(mascara); return im
+```
+
+Guárdalo en `assets/img/NN-<marca-a>-mas-<marca-b>.png` y anota en `imagen.prompt` de dónde salió
+cada logo. **Un logo de tercero nunca es el protagonista de la portada** ni sugiere patrocinio.
+
+## 5b. Logos de terceros (criterio general)
 
 Cuando la lámina habla de una herramienta (un modelo, una app), el logo real ayuda a que se entienda. Dos fuentes que funcionan:
 

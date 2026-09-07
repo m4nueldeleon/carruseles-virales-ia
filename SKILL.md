@@ -1,6 +1,6 @@
 ---
 name: carruseles-virales-ia
-description: Produce carruseles de Instagram de alto rendimiento (PNG 1080x1350 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel) o una captura de pantalla de referencia. Aplica la psicología del swipe, del guardado y del compartido; escribe con voz humana; diseña por código con 6 looks rotativos; pasa una puerta de calidad medible (índice de viralidad 0-100) y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
+description: Produce carruseles de Instagram de alto rendimiento (PNG 1080x1440 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel) o una captura de pantalla de referencia. Aplica la psicología del swipe, del guardado y del compartido; escribe con voz humana; diseña por código con 6 looks rotativos; pasa una puerta de calidad medible (índice de viralidad 0-100) y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
 version: 1.0 (2026-09-06)
 author: Manuel de León
 license: MIT
@@ -40,7 +40,7 @@ motor en `scripts/`, las plantillas en `templates/` y el conocimiento en `refere
 | Look | El que diga `node "<skill>/scripts/siguiente-look.mjs" <carpeta-de-trabajo> --tipo <tipo>` (ver §2) |
 | Palabra clave | Una de las ya conectadas en `MI-MARCA.md` §4 **si su entregable coincide**; si no, una palabra nueva de ≤8 letras que nombre el entregable, y `caption.txt` avisa que hay que conectarla antes de publicar |
 | Entregable por DM | Algo que NO está en el carrusel (plantilla, prompt completo, guion, link). Confirma que existe o que se va a crear antes de publicar; queda en `metadata.entregable_existe` |
-| Formato | `4:5` (1080x1350). Nunca 1:1. `3:4` (1080x1440) es válido y encaja en la cuadrícula: úsalo solo en una prueba A/B, sin mezclar |
+| Formato | `3:4` (1080x1440): es el que Instagram prioriza desde 2026, da ~7% más alto que `4:5` y coincide con la cuadrícula del perfil, así que la portada no se recorta. `4:5` (1080x1350) sigue siendo válido para una prueba A/B. Nunca 1:1. Todas las láminas del carrusel llevan el mismo formato |
 
 ## 1. La entrada: tema, link o captura → `referencia.md`
 
@@ -139,7 +139,7 @@ lámina por lámina y cúmplelo. Mínimos que QA revisa:
 
 | Lámina | Qué lleva |
 |---|---|
-| Portada | La cara de la marca en una situación del tema (foto real del banco `assets/fotos/reales/`, avatar o retrato Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Con `recorte` el título vive en la mitad izquierda: **máximo 6 palabras y ninguna de más de 11 letras**, o el ajuste automático lo encoge por debajo del mínimo (QA lo avisa). Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
+| Portada | La cara de la marca en una situación del tema (avatar del look, foto real del banco `assets/fotos/reales/` o retrato Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Con `recorte` el título vive en la mitad izquierda: **máximo 6 palabras y ninguna de más de 11 letras**, o el ajuste automático lo encoge por debajo del mínimo (QA lo avisa). Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
 | Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Tres láminas seguidas con el mismo layout **y** el mismo tratamiento visual (sin imagen, sin marcador, sin número) se ven como PDF: varía la imagen o el recurso, no necesariamente el layout |
 | Guardable | Tipográfica (es la que se lee), con `kicker` «Guarda esto» y, si sobra espacio, un ícono pequeño `abajo` |
 | CTA | La cara de la marca como `recorte` grande (o `marca.avatar`) señalando al botón, con la misma fuente de rostro que la portada (todo real o todo Soul) |
@@ -150,16 +150,24 @@ Recursos de personalidad que existen en el motor (úsalos, con medida: dos o tre
 `grano` textura fina · `foto-texto` (foto arriba, texto abajo) · `numero_fantasma` · chips.
 
 Cómo se consigue cada imagen (`references/IMAGENES.md`):
-- **La cara de la marca, en este orden**: (1) el banco de **fotos reales**
-  (`assets/fotos/reales/catalogo.json`: situación, fondo, lado del sujeto, looks y temas afines,
-  `recorte` PNG con alfa y `url` pública); (2) los **avatares** ilustrados del mismo catálogo
-  (`avatares`, un estilo por look, `references/AVATARES.md`) cuando el tono pide dibujo;
-  (3) el personaje generado (`assets/fotos/soul/catalogo.json`, o uno nuevo con `soul_2` +
-  `soul_id` de `MI-MARCA.md` pidiendo «subject on the right/left third»). Un carrusel usa una
-  sola de las tres fuentes. Si el banco no tiene la pose que pide el tema, se amplía con
+- **La cara de la marca.** Hay tres bancos y se elige por lo que la pieza necesita:
+  **avatares** (`avatares` en `assets/fotos/reales/catalogo.json`, un estilo por look) cuando el
+  carrusel quiere ser dinámico y llamativo, que es la mayoría; **fotos reales**
+  (`assets/fotos/reales/catalogo.json`: situación, fondo, lado del sujeto, looks y temas,
+  `recorte` PNG con alfa y `url` pública) cuando la pieza pide credibilidad sobria; el
+  **personaje generado** (`assets/fotos/soul/`) cuando falta una escena que ninguno cubre.
+  Los avatares se generan **desde las fotos reales**, con poses que hacen algo (señalar,
+  levantar la palma, mostrar el celular) y líneas de acción: `references/AVATARES.md` trae los
+  prompts y la trampa del color (el avatar lleva el acento del look en la piel, así que no va
+  sobre un `panel` de ese mismo acento). Un carrusel usa una sola de las tres fuentes. Si el banco no tiene la pose que pide el tema, se amplía con
   `scripts/banco-fotos.py` (cosechar → hoja → curar → recortar → anotar → subir) y queda para
   la próxima vez. Si `MI-MARCA.md` trae `banco_url`, el banco vive en la nube: en una máquina
   nueva `banco-fotos.py bajar <banco_url>` lo trae entero, y `imagen.src` acepta esas URL.
+- **Marcas y apps con nombre propio** (CapCut, Claude, WhatsApp, Excel): su **logo real**, bajado
+  de internet, nunca uno dibujado por la IA. La API de la App Store lo da a 512 px sin clave;
+  móntalo con esquinas redondeadas sobre fondo transparente (receta en `IMAGENES.md` §5).
+- **Ningún PNG con fondo sólido**: el fondo del slide es un degradado y la caja del PNG se ve.
+  Todo objeto va con transparencia (genera sobre fondo liso y pasa `remove_background`).
 - **Objetos, íconos e ilustraciones**: `nano_banana_pro` (la herramienta puede servirlo como
   `nano_banana_2`), estilo del look (plano y cálido para guía/recurso; 3D con halo para
   oscuro-tech; fotográfico para noticia), fondo liso del color del look o transparente.

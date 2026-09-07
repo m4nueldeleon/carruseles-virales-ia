@@ -10,10 +10,10 @@ Antes de escribir, entiende dónde cabe el texto. Todas las medidas salen de `te
 
 | Zona | Medida | Qué pasa ahí |
 |---|---|---|
-| Lienzo | 1080 × 1350 px en `4:5` (1440 en `3:4`, 1080 en `1:1`, 1920 en `9:16`) | Fondo a sangre |
+| Lienzo | 1080 × 1440 px en `3:4` (1350 en `4:5`, 1080 en `1:1`, 1920 en `9:16`) | Fondo a sangre |
 | Margen seguro | 80 px por lado | Ningún texto lo cruza. QA marca error si lo hace |
 | Barra superior | y = 56 px | Etiqueta de serie a la izquierda, contador `01/08` a la derecha |
-| Área de contenido | de 150 px arriba a 150 px abajo, 920 px de ancho | Aquí vive todo el texto de la lámina: 1,050 px de alto en 4:5 |
+| Área de contenido | de 150 px arriba a 150 px abajo, 920 px de ancho | Aquí vive todo el texto de la lámina: 1,140 px de alto en 3:4, 1,050 en 4:5 |
 | Barra inferior | y = 52 px desde abajo | `@handle` a la izquierda; a la derecha `Desliza →` en portada o `3 de 8` |
 | Franja tapada por Instagram | últimos 140 px | Nada crítico ahí: QA avisa |
 
@@ -30,7 +30,7 @@ Tres niveles tipográficos por lámina, no más: título (84 a 156 px), subtítu
 | `fecha` | no | texto | `AAAA-MM-DD` de publicación prevista |
 | `marca` | sí | objeto | Ver abajo. `handle` es obligatorio |
 | `look` | sí | enum | `guia-rapida`, `noticia`, `oscuro-tech`, `recurso`, `bosque`, `editorial-mono` |
-| `formato` | no | enum | `4:5` (default), `3:4`, `1:1`, `9:16` |
+| `formato` | no | enum | `3:4` (default, 1080x1440: el que prioriza Instagram y el de la cuadrícula del perfil), `4:5` (1080x1350), `1:1`, `9:16`. Todas las láminas comparten formato |
 | `serie` | no | texto | Etiqueta de la barra superior en todas las láminas. 1 a 3 palabras |
 | `tema` | no | texto | Una frase. No se renderiza |
 | `tipo` | no | enum | `guia`, `lista`, `recurso`, `noticia`, `tutorial`, `contrarian`, `historia`, `comparativa`, `prompt` |

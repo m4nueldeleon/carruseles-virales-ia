@@ -120,7 +120,7 @@ function cuerpoSlide(s, marca, dirCarrusel, dirSalida) {
 
 export function construirHTML({ data, dirCarrusel, dirSalida, dirSkill, embeberFuentes = false }) {
   const look = LOOKS.includes(data.look) ? data.look : 'guia-rapida';
-  const [w, h] = FORMATOS[data.formato] || FORMATOS['4:5'];
+  const [w, h] = FORMATOS[data.formato] || FORMATOS['3:4'];
   const marca = data.marca || {};
   const baseCss = fs.readFileSync(path.join(dirSkill, 'templates', 'base.css'), 'utf8');
   const lookCss = fs.readFileSync(path.join(dirSkill, 'templates', 'looks', `${look}.css`), 'utf8');
