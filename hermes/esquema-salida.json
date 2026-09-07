@@ -24,7 +24,8 @@
     "escalar_a_claude": { "type": "boolean" },
     "motivo": { "type": ["string", "null"] },
     "revisar_humano": { "type": "boolean", "description": "Obligatorio en true cuando confianza < 0.6." },
-    "ronda": { "type": "integer", "minimum": 0, "maximum": 2, "description": "0 primera salida; 1 y 2 rondas de corrección con qa_previo." }
+    "ronda": { "type": "integer", "minimum": 0, "maximum": 2, "description": "0 primera salida; 1 y 2 rondas de corrección con qa_previo." },
+    "formato_elegido": { "type": ["string", "null"], "description": "slug del protocolo de formato aplicado (references/PROTOCOLOS-FORMATO.md) o null; lo pide escribir.mjs --formato-plan." }
   },
   "allOf": [
     {

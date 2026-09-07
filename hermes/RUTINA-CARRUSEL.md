@@ -253,7 +253,7 @@ entrada JSON ──► Hermes ──► respuesta JSON
 
 Paso a paso:
 
-1. **Armar la entrada.** El sistema que llama lee `MI-MARCA.md` y llena `marca` (handle, sello, audiencia, voz, palabras_prohibidas, palabra_clave, entregable). Lee `historico.json` para poner `look_anterior` con el look del último carrusel publicado. `tipo_sugerido` es opcional. Si `MI-MARCA.md` trae `banco_url`, descarga `<banco_url>/catalogo.json` y pásalo como `banco` (solo `fotos` y `avatares` con `situacion`, `fondo`, `sujeto`, `looks`, `temas`, `url`, `recorte_url`): Hermes elige la foto de portada y de CTA de ahí y el render la carga por URL.
+1. **Armar la entrada.** El sistema que llama lee `MI-MARCA.md` y llena `marca` (handle, sello, audiencia, voz, palabras_prohibidas, palabra_clave, entregable). Lee `historico.json` para poner `look_anterior` con el look del último carrusel publicado. `tipo_sugerido` es opcional. Si `MI-MARCA.md` trae `banco_url`, descarga `<banco_url>/catalogo.json` y pásalo como `banco` (solo `fotos` y `avatares` con `situacion`, `fondo`, `sujeto`, `looks`, `temas`, `url`, `recorte_url`): Hermes elige la foto de portada y de CTA de ahí y el render la carga por URL. Con la API de Anthropic, `scripts/escribir.mjs --banco <ruta o URL de catalogo.json>` arma ese resumen solo (nombre, situación, looks, temas y URL pública por foto o avatar), exige `imagen.src` del banco en portada, una lámina de cuerpo y CTA, un solo tipo de rostro y avatar nunca sobre panel del acento; `--formato-plan` inyecta además el capítulo de `references/PROTOCOLOS-FORMATO.md` que toca.
 2. **Llamar a Hermes** con el system prompt de la sección 2 y la entrada. Exigir JSON en la respuesta.
 3. **Validar la forma.** Comprobar la respuesta contra `hermes/esquema-salida.json`. Si `escalar_a_claude` es `true`, parar aquí y pasar `motivo` y `faltantes` a Claude o a la persona. Si el JSON no es válido, repetir la llamada una sola vez.
 4. **Guardar.** Extraer `carrusel`, añadir `marca.avatar` con la ruta de la foto de `MI-MARCA.md` y escribirlo en `<carpeta>/carrusel.json`. La carpeta se llama como el `slug`.
@@ -290,3 +290,4 @@ Campos de la envoltura:
 | `motivo` | string o null | Obligatorio como texto cuando se escala. |
 | `revisar_humano` | boolean, opcional | Marca de revisión manual. |
 | `ronda` | entero, opcional | 0 en la primera salida, 1 y 2 en correcciones. |
+| `formato_elegido` | string o null, opcional | Slug del protocolo de `references/PROTOCOLOS-FORMATO.md` que aplicó (`carrusel-lista`, `imagen-unica-meme`…). Lo pide `escribir.mjs --formato-plan`. |
