@@ -19,8 +19,9 @@ const esperar = ms => new Promise(r => setTimeout(r, ms));
 
 // Parámetros de muestreo: los modelos anteriores los aceptan, los nuevos los rechazan con un 400.
 export const PARAMETROS_MUESTREO = Object.freeze(['temperature', 'top_p', 'top_k']);
-// Familias que ya no admiten muestreo (Opus 5, Fable 5 y sus variantes con fecha o sufijo).
-const SIN_MUESTREO = /(opus-5|fable-5)/i;
+// Familias que ya no admiten muestreo (Opus 5, Fable 5 y sus variantes con fecha o sufijo). El número va
+// anclado: «opus-5», «opus-5-20260101» y «opus-5.1» sí; un futuro «opus-50» es otra familia y NO entra.
+const SIN_MUESTREO = /(opus|fable)-5(?!\d)/i;
 const TEXTO_DE_RECHAZO = /deprecat|not supported|unsupported|no longer|not allowed|cannot be used|unexpected|must not|remove/i;
 
 export const admiteMuestreo = modelo => !SIN_MUESTREO.test(String(modelo || ''));

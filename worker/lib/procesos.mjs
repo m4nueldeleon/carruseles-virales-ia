@@ -60,6 +60,7 @@ const RUIDO = [
   /^(throw|return|await)\b/, // el eco de la línea de código que reventó
   /^\/.*:\d+$/,            // la ruta del archivo con su número de línea
   /^node:internal\//,      // rutas internas de Node
+  /^[·•]/,                 // avisos de progreso del escritor («· render 3/8»), no son el fallo
 ];
 
 // El motivo útil de una salida: la línea con «Error:» y, si no la hay, la última línea con sentido.

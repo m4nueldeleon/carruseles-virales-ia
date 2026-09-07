@@ -63,7 +63,7 @@ async function refrescarBanco(config) {
   const r = await ejecutar('python3', [path.join(config.skillDir, 'scripts', 'banco-fotos.py'), '--banco', config.bancoDir, 'bajar', config.bancoUrl],
     { cwd: config.skillDir, timeoutMs: 20 * 60_000 });
   if (r.codigo === 0) log(`Banco de fotos: ${ultimaLinea(r.stdout)}`);
-  else aviso(`No se pudo refrescar el banco de fotos: ${motivoDeSalida(r.stderr)}`);
+  else aviso(`No se pudo refrescar el banco de fotos: ${motivoDeSalida(r.stderr) || 'sin detalle'}`);
 }
 
 function limpiarTrabajo(config) {
