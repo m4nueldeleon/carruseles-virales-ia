@@ -401,10 +401,20 @@ test('el libro del día suma, avisa al 80 %, frena en el tope y sobrevive a un r
   assert.equal(libro.alcanzoElTope(), true, '20 de 20 frena');
   assert.equal(libro.restante(), 0);
 
-  // Reinicio del contenedor: un libro nuevo sobre la misma carpeta recupera el gasto del día.
+  // Reinicio del contenedor: un libro nuevo sobre la misma carpeta recupera el gasto del día,
+  // y el aviso del 80 % vuelve a salir (el día ya iba por encima cuando se reinició).
+  const dichos = [];
+  const consolaReal = console.log;
+  console.log = (...partes) => dichos.push(partes.join(' '));
   const trasReinicio = crearLibroDiario({ dir, topeDiaUsd: 20, avisoPct: 80, ahora: () => reloj.fecha });
   assert.equal(trasReinicio.total(), 20);
+  trasReinicio.anotar(0.5);
   assert.equal(trasReinicio.alcanzoElTope(), true);
+  console.log = consolaReal;
+  const avisos80 = dichos.filter((l) => /El gasto de hoy va en/.test(l));
+  assert.equal(avisos80.length, 1, `el aviso del 80 % debe salir una sola vez: ${JSON.stringify(dichos)}`);
+  assert.match(avisos80[0], /\$20\.50 de un tope de \$20\.00 \(80 %\)/);
+  assert.equal(dichos.filter((l) => /Tope de gasto del día alcanzado/.test(l)).length, 1, 'y el del corte, también una');
 
   // Al día siguiente arranca de cero.
   reloj.fecha = new Date('2026-09-08T09:00:00');

@@ -61,7 +61,9 @@ export function crearLibroDiario({ dir, topeDiaUsd, avisoPct = 80, ahora = () =>
     estado.fecha = hoy;
     estado.usd = previo.usd;
     estado.trabajos = previo.trabajos;
-    estado.avisado = topeDiaUsd > 0 && previo.usd >= topeDiaUsd * (avisoPct / 100);
+    // A propósito NO se da por avisado aunque lo que se recogió del disco ya pase del 80 %: si el
+    // contenedor se reinicia con el día medio gastado, el aviso tiene que volver a salir en el log.
+    estado.avisado = false;
     estado.bloqueoDicho = false;
   }
 
