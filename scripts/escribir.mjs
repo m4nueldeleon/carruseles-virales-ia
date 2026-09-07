@@ -104,6 +104,19 @@ function fallo(msg, codigo = 2, extra = null) {
   process.exit(codigo);
 }
 
+// Traduce el fallo de la API a algo que una persona pueda leer y accionar.
+function motivoDeApi(e) {
+  const texto = String(e && e.message || e);
+  if (/credit balance is too low|insufficient.*credit|billing/i.test(texto)) {
+    return 'La cuenta de la API se quedó sin saldo. Recarga en console.anthropic.com (o apunta ANTHROPIC_BASE_URL y la llave a otro proveedor) y vuelve a lanzar el pedido.';
+  }
+  if (/invalid x-api-key|authentication|unauthorized|401/i.test(texto)) return 'La llave de la API no fue aceptada. Revisa ANTHROPIC_API_KEY en el servidor.';
+  if (/rate limit|429/i.test(texto)) return 'La API está limitando las peticiones ahora mismo. Vuelve a intentarlo en unos minutos.';
+  if (/overloaded|529|5\d\d/.test(texto)) return 'La API está caída o saturada en este momento. Vuelve a intentarlo en un rato.';
+  if (/fetch failed|ECONN|ETIMEDOUT|EAI_AGAIN|AbortError/i.test(texto)) return 'No se pudo conectar con la API (red o tiempo agotado). Vuelve a lanzar el pedido.';
+  return `La API rechazó la petición: ${texto.slice(0, 200)}`;
+}
+
 if (plan && !PLANES.includes(plan)) fallo(`--formato-plan debe ser uno de: ${PLANES.join(', ')}`);
 if (!FORMATOS[formato]) fallo(`--formato debe ser uno de: ${Object.keys(FORMATOS).join(', ')}`);
 if ((correccion && !basePath) || (basePath && !correccion)) fallo('El modo corrección necesita --correccion "texto" y --base carrusel.json juntos.');
@@ -282,7 +295,14 @@ if (simularPath) {
   log(`Simulación: uso ${simularPath} como respuesta del modelo (sin llamar a la API)`);
 } else {
   log(`Escribiendo con ${modelo}${plan ? ` · plan ${plan}` : ''}${formatoElegido ? ` · ${formatoElegido}` : ''}…`);
-  const r = await cliente.pedirJson(mensajes, { system });
+  let r;
+  try {
+    r = await cliente.pedirJson(mensajes, { system });
+  } catch (e) {
+    // Un fallo de la API no debe salir como volcado de Node: el worker lo copia tal cual a la pantalla
+    // del usuario. Se traduce a un motivo que se entienda y al código 2 («error de entorno»).
+    fallo(motivoDeApi(e), 2, { error: 'api', detalle: String(e.message || e).slice(0, 300) });
+  }
   salida = comoContrato(r.json);
 }
 if (salida && typeof salida === 'object' && salida.carrusel) salida = { ...salida, carrusel: normalizarCarrusel(salida.carrusel) };

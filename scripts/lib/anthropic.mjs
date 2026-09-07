@@ -8,7 +8,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-export const API = 'https://api.anthropic.com/v1/messages';
+// El endpoint es conmutable: ANTHROPIC_BASE_URL permite hablar con un gateway compatible con la API
+// Messages (OpenRouter sirve uno idéntico: mismas cabeceras, mismo cuerpo, misma respuesta). Sirve de
+// respaldo cuando la cuenta directa se queda sin saldo, sin tocar una línea del resto del código.
+export const API = process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com/v1/messages';
 export const VERSION_API = '2023-06-01';
 // La última versión de Opus disponible en la API; ANTHROPIC_MODEL la sobreescribe sin tocar código.
 export const MODELO_POR_OMISION = process.env.ANTHROPIC_MODEL || 'claude-opus-5';
@@ -42,16 +45,27 @@ const constancia = texto => { try { process.stderr.write(`${texto}\n`); } catch 
 
 // Las líneas comentadas del .env no cuentan (suele quedar ahí la llave vieja) y, como en la terminal,
 // si hay varias asignaciones manda la última.
-export function leerLlave() {
-  if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY.trim();
-  const archivo = path.join(os.homedir(), '.anthropic-cli', '.env');
+// Lee la última asignación con valor de una variable en un .env del usuario (las comentadas no cuentan).
+function deArchivo(carpeta, variable) {
+  const archivo = path.join(os.homedir(), carpeta, '.env');
   if (!fs.existsSync(archivo)) return null;
   const lineas = fs.readFileSync(archivo, 'utf8').split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
   for (const linea of lineas.reverse()) {
-    const m = linea.match(/^(?:export\s+)?ANTHROPIC_API_KEY\s*=\s*["']?([^"'\s]+)/);
+    const m = linea.match(new RegExp(`^(?:export\\s+)?${variable}\\s*=\\s*["']?([^"'\\s]+)`));
     if (m) return m[1];
   }
   return null;
+}
+
+// La llave, por orden: la de Anthropic (variable o ~/.anthropic-cli/.env) y, si no hay, la de OpenRouter
+// (variable o ~/.openrouter-cli/.env), que sirve el mismo endpoint. Quien use la de OpenRouter tiene que
+// apuntar ANTHROPIC_BASE_URL a su gateway; el modelo se nombra con prefijo («anthropic/claude-opus-5»).
+export function leerLlave() {
+  if (process.env.ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY.trim();
+  const anthropic = deArchivo('.anthropic-cli', 'ANTHROPIC_API_KEY');
+  if (anthropic) return anthropic;
+  if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY.trim();
+  return deArchivo('.openrouter-cli', 'OPENROUTER_API_KEY');
 }
 
 // Saca el primer objeto JSON de una respuesta que puede venir con ```json o con texto alrededor.
