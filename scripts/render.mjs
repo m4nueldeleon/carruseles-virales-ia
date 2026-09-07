@@ -28,6 +28,8 @@ if (!Array.isArray(data.slides) || data.slides.length === 0) { console.error('ca
 
 const dirSrc = path.join(carpeta, 'slides-src');
 const dirOut = path.join(carpeta, 'slides');
+// slides/ es salida generada: fuera los PNG de renders anteriores (copias, láminas que ya no existen) para no subir la equivocada
+if (fs.existsSync(dirOut)) for (const f of fs.readdirSync(dirOut)) if (/\.png$/i.test(f)) fs.unlinkSync(path.join(dirOut, f));
 fs.mkdirSync(dirSrc, { recursive: true });
 fs.mkdirSync(dirOut, { recursive: true });
 
