@@ -40,7 +40,8 @@ Qué hace por tipo de fuente:
 | Fuente | Cómo extrae | Requisito | Metadatos que guarda |
 |---|---|---|---|
 | YouTube (video o short) | Subtítulos automáticos o manuales, en este orden: idioma pedido, `es-419`, `es`, `en` | `yt-dlp` instalado | título, canal, duración, fecha, vistas, likes |
-| Instagram, TikTok, Facebook | Transcribe el audio con el actor `truefetch/video-to-text` de Apify y lo traduce al español | variable `APIFY_TOKEN` | autor, vistas, likes o reacciones, fecha |
+| Post o reel de Instagram (`/p/`, `/reel/`, `/reels/`) | Baja el post con el actor `apify/instagram-scraper`: caption, dueño, tipo, likes, comentarios y las láminas a `<out>/_referencia/NN.jpg` (un reel además se transcribe). Deja la sección «Lectura visual» pendiente: la llena Claude con visión o `node scripts/leer-imagen.mjs <out>/_referencia --out <out>/referencia.md --append` | variable `APIFY_TOKEN` | dueño, tipo, likes, comentarios, fecha, láminas |
+| TikTok, Facebook | Transcribe el audio con el actor `truefetch/video-to-text` de Apify y lo traduce al español | variable `APIFY_TOKEN` | autor, vistas, likes o reacciones, fecha |
 | Artículo web | Texto de `<article>` o, si no hay, párrafos, encabezados y listas de más de 40 caracteres | Nada | título, url |
 | PDF | `pdftotext` o `PyPDF2` | Uno de los dos | nombre del archivo |
 | `.txt` / `.md` | Tal cual | Nada | nombre del archivo |
@@ -59,7 +60,7 @@ Regla dura: si `referencia.md` dice "sin texto", Claude no describe el contenido
 
 ## (c) Captura o PNG de un carrusel ajeno
 
-Claude lee la imagen directo. Si son varias capturas, se leen en orden y se numeran. Si es una sola captura de la portada, se trabaja solo con la portada y se dice.
+Claude lee la imagen directo. Si son varias capturas, se leen en orden y se numeran. Si es una sola captura de la portada, se trabaja solo con la portada y se dice. Fuera de Claude Code, `node scripts/leer-imagen.mjs <imagen|carpeta> --out referencia.md --append` hace la misma lectura con visión por la API de Anthropic (hasta 10 imágenes) y escribe la sección «Lectura visual» con esta misma ficha; `--dry-run` mide el payload sin llamar.
 
 Qué se describe por lámina, en este orden y con este nivel de detalle:
 

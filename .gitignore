@@ -17,6 +17,9 @@ qa.json
 preview.jpg
 slides/
 slides-src/
+# Láminas ajenas que baja referencia.py y versiones descartadas: nunca al repo
+_referencia/
+_versiones/
 !ejemplos/**/slides/
 !ejemplos/**/preview.jpg
 !ejemplos/**/qa.json

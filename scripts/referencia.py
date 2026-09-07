@@ -6,7 +6,11 @@ parta de ella. Sin dependencias fuera de la librería estándar; usa yt-dlp si e
 
 Soporta:
   · YouTube (video o short)        → transcripción con subtítulos automáticos (yt-dlp)
-  · Instagram / TikTok / Facebook  → si hay APIFY_TOKEN, transcribe el video con el actor
+  · Instagram (/p/, /reel/, /reels/) → si hay APIFY_TOKEN, baja el post con el actor apify/instagram-scraper:
+                                     caption, dueño, likes, comentarios, tipo y las láminas a <out>/_referencia/NN.jpg
+                                     (un reel además se transcribe). La lectura visual de esas láminas la hace
+                                     `node scripts/leer-imagen.mjs <out>/_referencia --out <out>/referencia.md --append`
+  · TikTok / Facebook              → si hay APIFY_TOKEN, transcribe el video con el actor
                                      truefetch/video-to-text; si no, deja instrucciones
   · Artículo web (http/https)      → texto principal de la página
   · PDF                            → texto (pdftotext si existe; si no, PyPDF2 si está instalado)
@@ -76,6 +80,62 @@ def apify_video(url: str, idioma: str) -> tuple[str, dict]:
     return texto, meta
 
 
+IG_POST = re.compile(r"instagram\.com/(?:[^/?#]+/)?(?:p|reel|reels)/([A-Za-z0-9_-]+)")
+
+
+def descargar(url: str, destino: Path) -> bool:
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            destino.write_bytes(r.read())
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def instagram_post(url: str, out: Path, idioma: str) -> tuple[str, dict]:
+    """Post o reel de Instagram con el actor apify/instagram-scraper: caption, dueño, likes, comentarios, tipo
+    y las láminas (childPosts[].displayUrl o displayUrl) a <out>/_referencia/NN.jpg. Si el post es un video,
+    además intenta la transcripción con truefetch/video-to-text (es un segundo run del actor)."""
+    token = os.environ.get("APIFY_TOKEN")
+    if not token:
+        return "", {"error": "Para leer un post de Instagram exporta APIFY_TOKEN (actor apify/instagram-scraper) o pega el caption y guarda las láminas a mano en _referencia/."}
+    api = "https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=" + token
+    body = json.dumps({"directUrls": [url], "resultsType": "posts", "resultsLimit": 1}).encode()
+    req = urllib.request.Request(api, data=body, headers={"Content-Type": "application/json", "User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=300) as r:
+            items = json.load(r)
+    except Exception as e:  # noqa: BLE001
+        return "", {"error": f"Apify (instagram-scraper) falló: {e}"}
+    if not items or not isinstance(items, list):
+        return "", {"error": "Apify no devolvió el post (¿privado, borrado o URL incorrecta?)."}
+    it = items[0]
+    if it.get("error"):
+        return "", {"error": f"Apify: {it.get('error')} {it.get('errorDescription', '')}".strip()}
+    tipo_post = it.get("type") or ("Sidecar" if it.get("childPosts") else "Image")
+    meta = {"dueño": it.get("ownerUsername"), "nombre": it.get("ownerFullName"), "tipo_post": tipo_post, "likes": it.get("likesCount"),
+            "comentarios": it.get("commentsCount"), "vistas_video": it.get("videoViewCount"), "fecha": it.get("timestamp"), "shortcode": it.get("shortCode")}
+    meta = {k: v for k, v in meta.items() if v is not None}
+    urls = [c.get("displayUrl") for c in (it.get("childPosts") or []) if c.get("displayUrl")] or ([it["displayUrl"]] if it.get("displayUrl") else [])
+    carpeta = out / "_referencia"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    archivos = [str(carpeta / f"{i:02d}.jpg") for i, u in enumerate(urls, 1) if descargar(u, carpeta / f"{i:02d}.jpg")]
+    meta["laminas"] = f"{len(archivos)} de {len(urls)} descargadas en {carpeta}"
+    meta["laminas_archivos"] = archivos
+    meta["laminas_carpeta"] = str(carpeta)
+    texto = (it.get("caption") or "").strip()
+    if tipo_post == "Video":
+        transcripcion, meta_video = apify_video(url, idioma)
+        if transcripcion.strip():
+            texto = f"{texto}\n\n[Transcripción del video]\n{transcripcion.strip()}" if texto else transcripcion.strip()
+        elif meta_video.get("error"):
+            meta["transcripcion"] = meta_video["error"]
+    if not texto and not archivos:
+        meta["error"] = "El post no trajo caption ni láminas."
+    return texto, meta
+
+
 def articulo(url: str) -> tuple[str, dict]:
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "es,en;q=0.8"})
     try:
@@ -118,6 +178,8 @@ def main() -> int:
         host = urllib.parse.urlparse(fuente).netloc.lower()
         if "youtube.com" in host or "youtu.be" in host:
             tipo, (texto, meta) = "youtube", youtube(fuente, a.idioma)
+        elif "instagram.com" in host and IG_POST.search(fuente):
+            tipo, (texto, meta) = "instagram-post", instagram_post(fuente, out, a.idioma)
         elif any(h in host for h in ("instagram.com", "tiktok.com", "facebook.com", "fb.watch")):
             tipo, (texto, meta) = "video-social", apify_video(fuente, a.idioma)
         else:
@@ -135,7 +197,7 @@ def main() -> int:
     palabras = len(texto.split())
     md = ["# Referencia", "", f"- **Tipo:** {tipo}", f"- **Fuente:** {fuente}"]
     for k, v in meta.items():
-        if k in ("subtitulos",):
+        if k in ("subtitulos", "laminas_archivos", "laminas_carpeta"):
             continue
         md.append(f"- **{k}:** {v}")
     if tipo == "imagen":
@@ -144,7 +206,13 @@ def main() -> int:
         cuerpo_texto = texto.strip()
     else:
         cuerpo_texto = "_(sin texto: ver el aviso de arriba; pega aquí la transcripción o el guion)_"
-    md += [f"- **Palabras:** {palabras}", "", "## Texto", "", cuerpo_texto, "",
+    laminas = []
+    if meta.get("laminas_archivos"):
+        laminas = ["## Láminas descargadas", ""] + [f"- {p}" for p in meta["laminas_archivos"]] + [
+            "", "## Lectura visual", "",
+            f"_(pendiente: `node scripts/leer-imagen.mjs \"{meta['laminas_carpeta']}\" --out \"{out / 'referencia.md'}\" --append` la escribe con visión por API; "
+            "en Claude Code, mira las láminas y llena aquí la ficha lámina por lámina)_", ""]
+    md += [f"- **Palabras:** {palabras}", "", "## Texto", "", cuerpo_texto, "", *laminas,
            "## Ficha de ingeniería inversa (llenar antes de escribir el carrusel)", "",
            "1. **Gancho literal de la referencia:** ", "2. **Promesa (qué se lleva quien la ve):** ",
            "3. **Estructura por roles** (portada / rehook / cuerpo / cheatsheet / cta) y qué hace cada lámina: ",
