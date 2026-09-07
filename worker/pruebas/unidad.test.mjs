@@ -328,6 +328,19 @@ test('leerUso entiende la línea del escritor y descarta el resto del log', () =
   }
 });
 
+// El worker no llama al cliente de la API: lo lanza como proceso hijo y le lee stderr. Esta prueba ata las
+// dos mitades del contrato, que están en repos-carpetas distintas (scripts/ es la skill, worker/ el servidor)
+// y ya se rompieron una vez al cambiar la redacción de la línea sin tocar el patrón de aquí.
+test('el worker lee la línea que de verdad imprime el cliente de la API', async () => {
+  const { lineaDeUso } = await import('../../scripts/lib/costes.mjs');
+  const usage = { input_tokens: 207, output_tokens: 2183, cache_creation_input_tokens: 14827, cache_read_input_tokens: 20581 };
+  const uso = leerUso(lineaDeUso('claude-opus-5', usage, 0.1234, 'end_turn').trim());
+  assert.deepEqual(uso, { modelo: 'claude-opus-5', entrada: 207, salida: 2183, lectura: 20581, escritura5m: 14827, escritura1h: 0 });
+  // La línea del total de la versión NO es una línea de consumo: si se leyera, cada llamada contaría doble.
+  const { lineaDeTotal } = await import('../../scripts/lib/costes.mjs');
+  assert.equal(leerUso(lineaDeTotal({ llamadas: 2, entrada: 207, escritura_cache: 0, lectura_cache: 20581, salida: 2183, pensamiento: 0, coste_usd: 0.12 }).trim()), null);
+});
+
 test('preciosDe normaliza el nombre del modelo y no confunde familias', () => {
   assert.equal(preciosDe('claude-opus-5').salida, 25);
   assert.equal(preciosDe('anthropic/claude-opus-5').salida, 25);        // gateway tipo OpenRouter

@@ -57,20 +57,22 @@ export const USO_VACIO = Object.freeze({
 const dinero = n => `$${n.toFixed(4)}`;
 
 // La línea que se escribe en stderr por cada llamada. Enseña las cuatro partidas por separado porque el
-// caché solo se ve si se miran separadas: «escritura 14827 · lectura 0» es el síntoma de que no se lee.
+// caché solo se ve si se miran separadas: «14827 de escritura en caché, 0 de lectura» es el síntoma exacto
+// de que se paga por guardar algo que nunca se lee.
+//
+// FORMATO ESTABLE: el worker lee esta misma línea de stderr para llevar el gasto del día y frenar un pedido
+// desbocado (worker/lib/costos.mjs, leerUso). Si se cambia la redacción hay que cambiar allí el patrón:
+//   · <modelo>: <N> tokens de entrada, <N> de salida (<N> de escritura en caché, <N> de lectura de caché)
 export function lineaDeUso(modelo, usage, coste, stop) {
-  const partes = [
-    `entrada ${usage?.input_tokens ?? '?'}`,
-    `escritura de caché ${usage?.cache_creation_input_tokens || 0}`,
-    `lectura de caché ${usage?.cache_read_input_tokens || 0}`,
-    `salida ${usage?.output_tokens ?? '?'}`,
-  ];
-  if (usage?.thinking_tokens) partes.push(`de ellos ${usage.thinking_tokens} de razonamiento`);
-  if (coste !== null && coste !== undefined) partes.push(dinero(coste));
+  const cache = `(${usage?.cache_creation_input_tokens || 0} de escritura en caché, ${usage?.cache_read_input_tokens || 0} de lectura de caché)`;
+  const extra = [];
+  if (usage?.thinking_tokens) extra.push(`${usage.thinking_tokens} de razonamiento`);
+  if (coste !== null && coste !== undefined) extra.push(dinero(coste));
   // stop_reason «max_tokens» es la señal de que la respuesta se cortó a media frase: hasta hoy pasaba
   // en silencio y quien llama solo veía «no devolvió JSON».
-  if (stop && stop !== 'end_turn') partes.push(`stop_reason=${stop}`);
-  return `  · ${modelo}: ${partes.join(' · ')}`;
+  if (stop && stop !== 'end_turn') extra.push(`stop_reason=${stop}`);
+  return `  · ${modelo}: ${usage?.input_tokens ?? 0} tokens de entrada, ${usage?.output_tokens ?? 0} de salida ${cache}`
+    + (extra.length ? ` · ${extra.join(' · ')}` : '');
 }
 
 export const lineaDeTotal = uso =>
