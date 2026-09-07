@@ -26,18 +26,62 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/537.36 (KHTML, li
 
 BLOQUEO = "Ese enlace no se puede abrir desde el servidor"
 SIN_DOMINIO = "No encontré ese dominio; revisa el enlace"
-NOMBRES_INTERNOS = ("localhost", "localhost.localdomain", "metadata", "metadata.google.internal")
+NOMBRES_INTERNOS = ("localhost", "localhost.localdomain", "ip6-localhost", "ip6-loopback",
+                    "metadata", "metadata.google.internal")
 SUFIJOS_INTERNOS = (".local", ".internal", ".localhost", ".home.arpa", ".lan")
 
+# Una IPv4 se puede esconder dentro de una IPv6 de cuatro formas distintas, y `is_private` no las ve todas.
+NAT64 = ipaddress.ip_network("64:ff9b::/32")          # traductor NAT64 (incluye el /96 estándar)
+TRADUCIDA = ipaddress.ip_network("::ffff:0:0/96")     # SIIT
+COMPATIBLE = ipaddress.ip_network("::/96")            # ::a.b.c.d (aquí caen «::» y «::1»)
+SEIS_A_CUATRO = ipaddress.ip_network("2002::/16")     # 6to4
+# 100.64.0.0/10: red de operador y de varias nubes. Python 3.13+ ya NO la cuenta como privada.
+COMPARTIDA = ipaddress.ip_network("100.64.0.0/10")
+FORMA_NUMERICA = re.compile(r"^(0x[0-9a-f]+|\d+)(\.(0x[0-9a-f]+|\d+))*$", re.I)
 
-def _ip_interna(direccion: str) -> bool:
-    """Loopback, enlace local (incluye 169.254.169.254), privadas y reservadas. Ante la duda, interna."""
+
+def _ipv4_escondida(ip):
+    """La IPv4 disfrazada dentro de una IPv6 (mapeada, compatible, traducida o 6to4), o None."""
+    if ip.version != 6:
+        return None
+    if ip.ipv4_mapped:
+        return ip.ipv4_mapped
+    entero = int(ip)
+    if ip in NAT64 or ip in TRADUCIDA or ip in COMPATIBLE:
+        return ipaddress.ip_address(entero & 0xFFFFFFFF)
+    if ip in SEIS_A_CUATRO:
+        return ipaddress.ip_address((entero >> 80) & 0xFFFFFFFF)
+    return None
+
+
+def _ip_interna(direccion) -> bool:
+    """Decide sobre la dirección de verdad, no sobre cómo está escrita: se desenvuelve la IPv4 que venga
+    escondida dentro de una IPv6 y se exige que la dirección sea global. Ante la duda, interna."""
     try:
         ip = ipaddress.ip_address(direccion)
     except ValueError:
         return True
-    return bool(ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved
-                or ip.is_multicast or ip.is_unspecified)
+    escondida = _ipv4_escondida(ip)
+    if escondida is not None and _ip_interna(escondida):
+        return True
+    if ip.version == 6 and ip in NAT64:
+        return True                       # el traductor NAT64 nunca es un destino legítimo
+    if ip.version == 4 and ip in COMPARTIDA:
+        return True
+    return not ip.is_global or bool(ip.is_private or ip.is_loopback or ip.is_link_local
+                                    or ip.is_reserved or ip.is_multicast or ip.is_unspecified)
+
+
+def _host_numerico_raro(host: str) -> bool:
+    """Una IPv4 escrita de otra forma: 2130706433, 0177.0.0.1, 0x7f000001. Cada resolutor la lee distinto
+    —macOS lee «0177.0.0.1» como 177.0.0.1 y glibc como 127.0.0.1—, así que lo que aquí se valide no sería
+    lo que después se conecta. No se adivina: se bloquea."""
+    if not FORMA_NUMERICA.match(host):
+        return False
+    try:
+        return str(ipaddress.IPv4Address(host)) != host
+    except ValueError:
+        return True
 
 
 def enlace_bloqueado(url: str) -> str | None:
@@ -48,6 +92,8 @@ def enlace_bloqueado(url: str) -> str | None:
         return BLOQUEO
     host = (partes.hostname or "").strip(".").lower()
     if not host or host in NOMBRES_INTERNOS or host.endswith(SUFIJOS_INTERNOS):
+        return BLOQUEO
+    if _host_numerico_raro(host):
         return BLOQUEO
     try:
         ipaddress.ip_address(host)
@@ -60,6 +106,7 @@ def enlace_bloqueado(url: str) -> str | None:
         infos = socket.getaddrinfo(host, partes.port or (443 if partes.scheme == "https" else 80), proto=socket.IPPROTO_TCP)
     except OSError:
         return SIN_DOMINIO
+    # TODAS las direcciones que devuelva el DNS, no solo la primera: basta una interna para cerrar el paso.
     return BLOQUEO if any(_ip_interna(i[4][0]) for i in infos) else None
 
 
@@ -127,7 +174,7 @@ def apify_video(url: str, idioma: str) -> tuple[str, dict]:
     body = json.dumps({"video_url": url, "translate": "spanish" if idioma == "es" else idioma}).encode()
     req = urllib.request.Request(api, data=body, headers={"Content-Type": "application/json", "User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=300) as r:
+        with abrir(req, 300) as r:
             items = json.load(r)
     except Exception as e:  # noqa: BLE001
         return "", {"error": f"Apify falló: {e}"}
@@ -163,7 +210,7 @@ def instagram_post(url: str, out: Path, idioma: str) -> tuple[str, dict]:
     body = json.dumps({"directUrls": [url], "resultsType": "posts", "resultsLimit": 1}).encode()
     req = urllib.request.Request(api, data=body, headers={"Content-Type": "application/json", "User-Agent": UA})
     try:
-        with urllib.request.urlopen(req, timeout=300) as r:
+        with abrir(req, 300) as r:
             items = json.load(r)
     except Exception as e:  # noqa: BLE001
         return "", {"error": f"Apify (instagram-scraper) falló: {e}"}

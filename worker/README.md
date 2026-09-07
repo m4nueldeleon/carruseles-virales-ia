@@ -120,8 +120,43 @@ El progreso de `escribir.mjs` (rondas de QA, render) aparece con el prefijo `esc
 | Huérfanos | Un pedido o corrección con más de `WORKER_HUERFANO_MIN` (90) minutos en `procesando` se marca `error` (el servidor se reinició a medias) |
 | Disco | Las carpetas de `trabajo/` se borran a los `TRABAJO_RETENCION_DIAS` (7) días; las láminas ya viven en Vercel Blob |
 | Instagram | La API acepta 10 láminas; con más de 10 se suben a mano desde la app (lo dice `caption.txt`) |
-| Enlaces del pedido | Solo `http` y `https` hacia internet. Un enlace que apunte a la red interna del servidor (localhost, 10.x, 172.16-31.x, 192.168.x, 169.254.169.254, nombres `.local`/`.internal` o sin punto) se rechaza con «Ese enlace no se puede abrir desde el servidor», y también si llega ahí por una redirección |
+| Enlaces del pedido | Solo `http` y `https` hacia internet. Un enlace que apunte a la red interna del servidor se rechaza con «Ese enlace no se puede abrir desde el servidor», y también si llega ahí por una redirección. Ver «El portero de enlaces» abajo |
 | Logos de apps | Si la entrada menciona CapCut, Claude, ChatGPT, WhatsApp, Canva, Excel, Notion, Instagram, TikTok, YouTube o Gemini (con mayúscula), se pide su logo real con `--logos` |
+
+## El portero de enlaces
+
+Un link pegado en la app lo abre el servidor, no el navegador de quien lo pegó. Sin portero, ese link sirve
+para leer los servicios internos del VPS o el punto de metadatos de la nube. El portero vive en dos sitios,
+porque hay dos caminos que bajan cosas de internet: `worker/lib/red.mjs` (Node, imágenes del pedido) y
+`scripts/referencia.py` (Python, referencias de link). Los dos siguen las mismas dos reglas.
+
+**Se decide sobre los bytes de la dirección, no sobre cómo está escrita.** Una misma dirección se escribe de
+muchas formas y una lista de patrones de texto siempre se queda corta — así se coló el IPv6 mapeado
+`::ffff:127.0.0.1`, que el analizador de URL normaliza a `::ffff:7f00:1` antes de llegar al filtro. La
+dirección se expande a sus 16 (o 4) bytes y ahí se decide. Queda fuera:
+
+| Familia | Qué cubre |
+|---|---|
+| IPv4 privadas y locales | `0/8`, `10/8`, `127/8`, `169.254/16` (metadatos de nube), `172.16/12`, `192.168/16` |
+| IPv4 reservadas | `100.64/10` (red de operador y de varias nubes), `192.0/16`, `198.18/15`, de `224` en adelante (multicast, reservado y `255.255.255.255`) |
+| IPv6 | `::`, `::1`, `fc00::/7`, `fe80::/10`, `ff00::/8` y el prefijo NAT64 `64:ff9b::/32` |
+| IPv4 escondidas en IPv6 | mapeada `::ffff:a.b.c.d`, compatible `::a.b.c.d`, traducida `::ffff:0:a.b.c.d` y 6to4 `2002:a.b.c.d::` — se saca la IPv4 y se le aplica la tabla de arriba |
+| Nombres | `localhost` y parientes, sufijos `.local` `.internal` `.localhost` `.home.arpa` `.lan`, y cualquier host sin punto (así se llaman los contenedores vecinos dentro de Docker) |
+| IPv4 mal escritas | `2130706433`, `0177.0.0.1`, `0x7f000001`. Node las normaliza a la forma punteada y caen por bytes; si alguna llegara sin normalizar no se adivina cómo la leería el sistema (macOS lee `0177.0.0.1` como `177.0.0.1` y glibc como `127.0.0.1`): se bloquea |
+
+**Se conecta a la dirección que ya se aprobó.** Si se revisa el nombre y después se deja que la librería lo
+resuelva otra vez por su cuenta, un dominio con TTL cero puede contestar una dirección pública en la primera
+consulta y una interna en la segunda (el «reenganche de DNS»). Por eso `traerSeguro` no usa `fetch`: usa
+`node:http`/`node:https` con un `lookup` fijo que devuelve solo la IP aprobada, y el nombre original sigue
+viajando en la cabecera `Host` y en el saludo TLS, así que el certificado se sigue verificando contra el
+dominio de verdad. Cada salto de una redirección pasa otra vez por el portero antes de pedirse, y hay tope
+de 5 saltos y de 64 MB por descarga.
+
+Las pruebas de esto (`node --test worker/pruebas/unidad.test.mjs`) levantan un servicio interno de verdad en
+`127.0.0.1` e intentan alcanzarlo con las 25 formas de la tabla, por Node y por Python, y comprueban que el
+servicio no recibió ni una sola petición. No se prueba llamando al filtro con una dirección escrita a mano:
+esa prueba daba falsa tranquilidad, porque comprobaba el filtro contra el texto que el filtro ya esperaba.
+
 
 ## Protocolo de estados
 
