@@ -1,5 +1,8 @@
 # Formatos de carrusel y estructura lámina por lámina
 
+> Antes de elegir tipo y estructura, consulta `PROTOCOLOS-FORMATO.md` (protocolo por formato, verificado contra la evidencia, con el árbol para elegir formato y la regla de proponer 3-4 versiones con portada renderizada).
+> La evidencia detrás de cada protocolo está en `ANATOMIA-REFERENCIAS.md` (23 posts deconstruidos el 2026-09-07: gancho, estructura, anatomía visual, lo humano, mecanismo, CTA y lecciones).
+
 Este documento dice qué carrusel armar y en qué orden van las láminas. Los nombres de `tipo`, `rol`, `layout` y `look` son los del contrato (`templates/carrusel.schema.json` y `scripts/lib/construir-html.mjs`). Si un nombre no está aquí, no existe: `qa.mjs` lo rechaza.
 
 ## Vocabulario del contrato
