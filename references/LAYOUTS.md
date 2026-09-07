@@ -408,6 +408,8 @@ Por qué pasa QA: portada de 6 palabras con número y acento; lámina 2 con `rol
 
 Corre `node scripts/qa.mjs <carpeta>` después de cada cambio al JSON. Sale con código 1 si hay errores.
 
+**Excepción: imagen única (`qa.mjs --imagen-unica`).** Una pieza de una sola lámina (meme, tuit, dato; protocolos `imagen-unica-*` de `PROTOCOLOS-FORMATO.md`) no es un carrusel fallido: con la bandera QA acepta exactamente 1 lámina, no exige rehook, guardable ni lámina de CTA (el CTA y la palabra clave viven en el caption), pide `"pie": ""` (sin «Desliza») y `"sin_top": true` (sin contador 01/01), basta 1 número, y el índice se calcula sobre lo que sí aplica (una imagen única bien hecha pasa de 80). Sin la bandera, 1 lámina sigue siendo error. `escribir.mjs --formato-plan imagen-unica` la corre sola.
+
 ## Errores frecuentes al escribir el JSON
 
 1. **Comillas tipográficas.** `“titulo”` no es JSON. Usa comillas rectas `"` para claves y valores. Dentro del texto sí puedes usar las tipográficas.

@@ -2,9 +2,12 @@
 // qa.mjs — Puerta de calidad de un carrusel. Mide lo que se puede medir por código y calcula un
 // índice de viralidad (0-100) con la rúbrica de references/PSICOLOGIA-VIRALIDAD.md.
 //
-//   node scripts/qa.mjs <carpeta-del-carrusel> [--json] [--estricto]
+//   node scripts/qa.mjs <carpeta-del-carrusel> [--json] [--estricto] [--imagen-unica]
 //
 // Sale con código 1 si hay ERRORES (bloquean la entrega). Los AVISOS no bloquean pero restan puntos.
+// --imagen-unica: la pieza es UNA lámina (meme, tuit, dato). No exige rehook, guardable ni lámina de CTA
+// (el CTA vive en el caption), pide pie vacío y sin_top, y ajusta el índice para que una imagen única bien
+// hecha pueda pasar. Excepción documentada en references/LAYOUTS.md y PROTOCOLOS-FORMATO.md.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +19,7 @@ const args = process.argv.slice(2);
 const carpeta = path.resolve(args.find(a => !a.startsWith('--')) || '.');
 const salidaJson = args.includes('--json');
 const estricto = args.includes('--estricto');
+const imagenUnica = args.includes('--imagen-unica');
 
 const data = JSON.parse(fs.readFileSync(path.join(carpeta, 'carrusel.json'), 'utf8'));
 const dirSrc = path.join(carpeta, 'slides-src');
@@ -75,7 +79,8 @@ const masReciente = recientes.filter(r => r.look && r.slug !== data.slug).sort((
 
 // ---------- estructura ----------
 const N = data.slides.length;
-if (N < 5) err(0, `Solo ${N} láminas: un carrusel útil lleva 6-12 (hasta 20 si es guía larga).`);
+if (imagenUnica && N !== 1) err(0, `Modo --imagen-unica con ${N} láminas: la pieza lleva exactamente 1 (para un carrusel, corre QA sin la bandera).`);
+else if (!imagenUnica && N < 5) err(0, `Solo ${N} láminas: un carrusel útil lleva 6-12 (hasta 20 si es guía larga). Si es una imagen única, corre QA con --imagen-unica.`);
 if (N > 20) err(0, `${N} láminas: Instagram permite máximo 20.`);
 if (N > 12) aviso(0, `${N} láminas: más de 12 baja la tasa de finalización; considera partir en serie.`);
 const portada = data.slides[0];
@@ -96,16 +101,23 @@ data.slides.forEach((s, i) => {
   if (elems > tope) aviso(i + 1, `${elems} elementos en una lámina: la memoria de trabajo aguanta ~4 (7 en la guardable). Agrupa o parte.`);
 });
 const cta = data.slides.filter(s => s.rol === 'cta');
-if (cta.length === 0) err(N, 'No hay lámina de CTA (rol "cta").');
+if (!imagenUnica && cta.length === 0) err(N, 'No hay lámina de CTA (rol "cta").');
+if (imagenUnica && cta.length) aviso(1, 'Imagen única con lámina de CTA: en este formato el CTA vive en el caption.');
 if (cta.length > 1) err(N, 'Más de una lámina de CTA: un carrusel pide UNA sola acción.');
-if (data.slides[N - 1]?.rol !== 'cta') aviso(N, 'La última lámina no es el CTA.');
+if (!imagenUnica && data.slides[N - 1]?.rol !== 'cta') aviso(N, 'La última lámina no es el CTA.');
 const conLoop = data.slides.filter(s => (s.rol || 'cuerpo') === 'cuerpo' && s.loop).length;
 const cuerpoN = data.slides.filter(s => (s.rol || 'cuerpo') === 'cuerpo').length;
 if (cuerpoN > 0 && conLoop / cuerpoN < 0.5) aviso(0, `Solo ${conLoop} de ${cuerpoN} láminas de cuerpo cierran con open loop ("loop"): mete uno al pie de la mayoría.`);
 const guardable = data.slides.some(s => ['lista', 'pasos', 'prompt', 'comparativa'].includes(s.layout) || s.rol === 'cheatsheet');
-if (!guardable) aviso(0, 'No hay lámina guardable (lista, pasos, prompt o comparativa): es lo que justifica el SAVE.');
+if (!imagenUnica && !guardable) aviso(0, 'No hay lámina guardable (lista, pasos, prompt o comparativa): es lo que justifica el SAVE.');
 const conNumero = data.slides.filter(s => /\d/.test(textoDe(s))).length;
-if (conNumero < 2) aviso(0, `Solo ${conNumero} lámina(s) con números/porcentajes: mete al menos 2 datos concretos.`);
+const minNumeros = imagenUnica ? 1 : 2;
+if (conNumero < minNumeros) aviso(0, `Solo ${conNumero} lámina(s) con números/porcentajes: mete al menos ${minNumeros} dato(s) concreto(s).`);
+if (imagenUnica) {
+  if (portada.pie !== '') aviso(1, 'Imagen única con «Desliza» al pie: escribe "pie": "" (no hay más láminas).');
+  if (!portada.sin_top) aviso(1, 'Imagen única con contador 01/01 arriba: escribe "sin_top": true.');
+  if (portada.loop) aviso(1, 'Imagen única con loop: no hay lámina siguiente que lo cumpla.');
+}
 
 // ---------- copy ----------
 const todoTexto = data.slides.map(textoDe).join('\n') + '\n' + (data.caption || '');
@@ -132,13 +144,13 @@ if (data.caption) {
   const primera = data.caption.split('\n')[0];
   if (primera.length > 125) aviso(0, `La primera línea del caption tiene ${primera.length} caracteres; se cortan a ~125 antes de "más".`);
   if (data.palabra_clave && !data.caption.toUpperCase().includes(String(data.palabra_clave).toUpperCase())) err(0, `La palabra clave «${data.palabra_clave}» no aparece en el caption.`);
-  if (data.palabra_clave && !cta.some(c => textoDe(c).toUpperCase().includes(String(data.palabra_clave).toUpperCase()))) err(N, `La palabra clave «${data.palabra_clave}» no está en la lámina de CTA.`);
+  if (!imagenUnica && data.palabra_clave && !cta.some(c => textoDe(c).toUpperCase().includes(String(data.palabra_clave).toUpperCase()))) err(N, `La palabra clave «${data.palabra_clave}» no está en la lámina de CTA.`);
   if (!ENVIO.test(data.caption) && !data.slides.some(s => ENVIO.test(textoDe(s)))) aviso(0, 'Falta la frase de envío con destinatario («Mándaselo a tu socio que…»): los envíos son la señal #1 de alcance a no seguidores.');
 } else aviso(0, 'No hay caption.');
 const conImagen = data.slides.filter(s => s.imagen && s.imagen.src);
 if (!portada.imagen || !portada.imagen.src) aviso(1, 'La portada no lleva imagen: la cara de la marca en una situación del tema sube la atención y la identidad.');
 const cuerpoConImg = data.slides.filter(s => (s.rol || 'cuerpo') === 'cuerpo' && s.imagen && s.imagen.src).length;
-if (cuerpoConImg < 2) aviso(0, `Solo ${cuerpoConImg} lámina(s) de cuerpo con imagen: el plan visual pide al menos 2 (ícono/ilustración, foto en situación o captura).`);
+if (!imagenUnica && cuerpoConImg < 2) aviso(0, `Solo ${cuerpoConImg} lámina(s) de cuerpo con imagen: el plan visual pide al menos 2 (ícono/ilustración, foto en situación o captura).`);
 { const seq = data.slides.map(s => s.layout); let rep = 1; for (let i = 1; i < seq.length; i++) { rep = seq[i] === seq[i - 1] ? rep + 1 : 1; if (rep === 4) { aviso(i + 1, `Cuatro láminas seguidas con el layout ${seq[i]}: rompe el ritmo con una imagen, un dato-hero o una foto-texto.`); break; } } }
 const conAlt = data.slides.filter(s => s.alt).length;
 if (conAlt === 0) aviso(0, 'Ninguna lámina trae `alt` (texto alternativo con la palabra clave del tema): Instagram y Google indexan ese texto.');
@@ -247,16 +259,20 @@ function parseColor(s, fondo) {
   const pts = {
     gancho: (palPortada >= 3 && palPortada <= 7 ? 10 : palPortada <= 9 ? 6 : 0) + (hookOk ? 10 : 0) + (/\*[^*]+\*/.test(String(portada.titulo || '')) ? 4 : 0)
       + (subConNumero ? 3 : 0) + (portadaAnuncia ? 3 : 0),
-    estructura: (N >= 7 && N <= 12 ? 6 : N >= 5 ? 3 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) && s2.loop ? 4 : s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 2 : 0)
+    // Imagen única: 1 lámina es lo que pide el formato (6), no hay rehook ni loop que exigir (4 + 5), lo guardable o
+    // reenviable es la propia lámina (7) y el CTA vive en el caption (8 con palabra clave o pregunta de cierre).
+    estructura: imagenUnica
+      ? 6 + 4 + (conNumero >= 1 ? 5 : 0) + 5 + 7 + (data.caption && (data.palabra_clave || /\?\s*$/.test(data.caption.trim())) ? 8 : data.caption ? 5 : 0)
+      : (N >= 7 && N <= 12 ? 6 : N >= 5 ? 3 : 0) + (s2 && ['rehook', 'agitacion'].includes(s2.rol) && s2.loop ? 4 : s2 && ['rehook', 'agitacion'].includes(s2.rol) ? 2 : 0)
       + (conNumero >= 2 ? 5 : conNumero === 1 ? 2 : 0) + (cuerpoN && conLoop / cuerpoN >= 0.5 ? 5 : conLoop ? 2 : 0) + (guardable ? 7 : 0)
       + (cta.length === 1 && data.palabra_clave ? 8 : cta.length === 1 ? 5 : 0),
-    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 5) + (tiene(/palabras: máximo/) ? 0 : 3) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 4) + (cuerpoConImg >= 2 && portada.imagen && portada.imagen.src ? 4 : cuerpoConImg >= 1 ? 2 : 0),
+    legibilidad: (tiene(/mínimo \d+px/) ? 0 : 5) + (tiene(/palabras: máximo/) ? 0 : 3) + (tiene(/debajo de 3:1/) ? 0 : tiene(/Contraste \d|contraste \d/) ? 2 : 4) + (tiene(/desborda|margen seguro/) ? 0 : 4) + (imagenUnica ? (portada.imagen && portada.imagen.src ? 4 : 2) : cuerpoConImg >= 2 && portada.imagen && portada.imagen.src ? 4 : cuerpoConImg >= 1 ? 2 : 0),
     copy: (tiene(/Frase de IA/) ? 0 : 5) + (data.caption && data.caption.split('\n')[0].length <= 125 ? 2 : 0) + (hashtags.length >= 3 && hashtags.length <= 5 ? 2 : 0)
       + (tiene(/Cebo de interacción/) ? 0 : 3) + (tiene(/frase de envío/) ? 0 : 3),
   };
   const indice = Math.max(0, Math.min(100, Object.values(pts).reduce((a, b) => a + b, 0) - errores.length * 4));
   const veredicto = errores.length ? 'BLOQUEADO' : indice >= 80 ? 'LISTO' : indice >= 65 ? 'MEJORABLE' : 'REHACER';
-  const informe = { carpeta: path.basename(carpeta), laminas: N, look: data.look, indice, veredicto, puntos: pts, errores, avisos };
+  const informe = { carpeta: path.basename(carpeta), laminas: N, look: data.look, modo: imagenUnica ? 'imagen-unica' : 'carrusel', indice, veredicto, puntos: pts, errores, avisos };
   fs.writeFileSync(path.join(carpeta, 'qa.json'), JSON.stringify(informe, null, 2));
   if (salidaJson) console.log(JSON.stringify(informe, null, 2));
   else {
