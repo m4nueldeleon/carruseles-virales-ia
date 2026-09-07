@@ -15,3 +15,5 @@
 .kicker { background: var(--acento); color: var(--acento-ink); }
 .cta-boton { background: var(--acento); color: var(--acento-ink); }
 .item .idx { color: var(--acento); }
+/* sobre el panel amarillo, contador y «Desliza» van en tinta oscura */
+.sticker { background: var(--acento); color: var(--acento-ink); }

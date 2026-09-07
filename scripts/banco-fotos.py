@@ -273,11 +273,54 @@ def cmd_curar(args) -> None:
 
 # ---------- recortar ----------
 
+def solo_silueta_principal(alfa: "Image.Image") -> "Image.Image":
+    """Borra las manchas sueltas del recorte y deja la mancha más grande (el sujeto).
+
+    Los recortadores dejan trozos del fondo original flotando (un mueble oscuro, un
+    reflejo). En una lámina se ven como bloques de color sin explicación. Se recorre el
+    mapa a 1/8 para que sea barato y se escala la máscara de vuelta."""
+    ancho, alto = alfa.size
+    escala = max(1, max(ancho, alto) // 400)
+    chico = alfa.resize((max(1, ancho // escala), max(1, alto // escala)), Image.NEAREST)
+    w, h = chico.size
+    px = [1 if v > 60 else 0 for v in chico.getdata()]
+    etiqueta = [0] * (w * h)
+    mejor, mejor_tam, marca = None, 0, 0
+    for inicio in range(w * h):
+        if not px[inicio] or etiqueta[inicio]:
+            continue
+        marca += 1
+        pila, tam, celdas = [inicio], 0, []
+        etiqueta[inicio] = marca
+        while pila:
+            i = pila.pop()
+            tam += 1
+            celdas.append(i)
+            x, y = i % w, i // w
+            for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                if 0 <= nx < w and 0 <= ny < h:
+                    j = ny * w + nx
+                    if px[j] and not etiqueta[j]:
+                        etiqueta[j] = marca
+                        pila.append(j)
+        if tam > mejor_tam:
+            mejor, mejor_tam = celdas, tam
+    if not mejor or mejor_tam == sum(px):
+        return alfa
+    mascara = Image.new("L", (w, h), 0)
+    datos = mascara.load()
+    for i in mejor:
+        datos[i % w, i // w] = 255
+    grande = mascara.resize((ancho, alto), Image.BILINEAR).point(lambda v: 255 if v > 110 else 0)
+    return Image.eval(Image.merge("L", [alfa]), lambda v: v) if False else Image.composite(alfa, Image.new("L", alfa.size, 0), grande)
+
+
 def limpiar_alfa(ruta: Path) -> None:
-    """Quita halos y restos semitransparentes; recorta al sujeto con margen."""
+    """Quita halos, restos semitransparentes y manchas sueltas; recorta al sujeto con margen."""
     with Image.open(ruta) as im:
         im = im.convert("RGBA")
         alfa = im.getchannel("A").point(lambda a: 0 if a < 40 else (255 if a > 215 else a))
+        alfa = solo_silueta_principal(alfa)
         im.putalpha(alfa)
         caja = alfa.getbbox()
         if caja:

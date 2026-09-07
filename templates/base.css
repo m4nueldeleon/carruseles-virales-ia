@@ -30,13 +30,13 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
 .slide + .slide { margin-top: 24px; }
 
 /* Capas de fondo */
-.bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 0; }
+.bg { position: absolute; inset: 0; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; }
 .scrim { position: absolute; inset: 0; background: var(--scrim); z-index: 1; }
 .img-abajo { position: absolute; left: 0; right: 0; bottom: 110px; height: 42%; z-index: 1;
   background-size: contain; background-position: bottom center; background-repeat: no-repeat; }
 .img-abajo.sangra { background-size: cover; }
 .img-derecha { position: absolute; right: 0; top: 0; bottom: 0; width: 42%; z-index: 1;
-  background-size: cover; background-position: center; }
+  background-size: cover; background-position: center; background-repeat: no-repeat; }
 .img-centro { position: absolute; left: 0; right: 0; top: 18%; height: 44%; z-index: 1;
   background-size: contain; background-position: center; background-repeat: no-repeat; }
 
@@ -164,9 +164,13 @@ body { font-family: var(--f-body); -webkit-font-smoothing: antialiased; text-ren
 .con-recorte .contenido { right: 52%; }
 .con-recorte .titulo.t-xl, .con-recorte .titulo.t-l { font-size: 96px; }
 .con-recorte.con-panel .titulo.t-xl, .con-recorte.con-panel .titulo.t-l { font-size: 92px; }
-.con-panel .top .pager, .con-panel .bottom .desliza, .con-panel .bottom .pager { color: #fff; }
-.con-panel .bottom .desliza::after { color: #fff; }
 .con-panel .contenido { padding-right: 32px; }
+/* Con panel, la tarjeta (panel + recorte) termina antes del pie: así el handle y el
+   «Desliza» nunca caen sobre la foto ni sobre el bloque de acento, y se leen siempre.
+   El contador de arriba sí vive sobre el panel, y por eso cada look le da su color. */
+.con-panel .panel { bottom: 120px; }
+.con-panel .recorte { bottom: 120px; height: 72%; }
+.con-panel .top .pager { color: var(--acento-ink); }
 .con-recorte.recorte-izq .contenido { right: var(--safe); left: 50%; }
 .panel { position: absolute; z-index: 0; right: 0; top: 0; bottom: 0; width: 52%; background: var(--acento); }
 .slide.l-foto-texto .foto { position: absolute; left: 0; right: 0; top: 0; height: 47%; z-index: 1; background-size: cover; background-position: center 20%; }

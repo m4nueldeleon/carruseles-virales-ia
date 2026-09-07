@@ -23,10 +23,5 @@
 .cta-boton { background: var(--acento); color: #fff; }
 .desliza { border: 3px solid var(--acento); color: var(--acento); border-radius: 999px; padding: 10px 26px; }
 .avatar { border-color: var(--acento); }
-/* el pie crema del look queda encima del panel: el panel termina antes y el pie conserva su color */
-.panel { bottom: 120px; }
-.con-panel .bottom .desliza, .con-panel .bottom .pager { color: var(--acento); }
-.con-panel .bottom .desliza::after { color: var(--acento); }
-.con-panel .top .pager { color: #FFF7F2; }
 /* la barra superior es del color del acento: el sticker baja y cambia a tinta para no fundirse */
 .sticker { top: 150px; background: var(--ink); color: var(--bg); }
