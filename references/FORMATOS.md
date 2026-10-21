@@ -1,6 +1,8 @@
 # Formatos de carrusel y estructura lámina por lámina
 
-> Antes de elegir tipo y estructura, consulta `PROTOCOLOS-FORMATO.md` (protocolo por formato, verificado contra la evidencia, con el árbol para elegir formato y la regla de proponer 3-4 versiones con portada renderizada).
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
+> Antes de elegir tipo y estructura, consulta `PROTOCOLOS-FORMATO.md` (protocolo por formato, verificado contra la evidencia, con el árbol para elegir formato y la selección previa al gasto que define CALIDAD-Y-EVIDENCIA.md).
 > La evidencia detrás de cada protocolo está en `ANATOMIA-REFERENCIAS.md` (23 posts deconstruidos el 2026-09-07: gancho, estructura, anatomía visual, lo humano, mecanismo, CTA y lecciones).
 
 Este documento dice qué carrusel armar y en qué orden van las láminas. Los nombres de `tipo`, `rol`, `layout` y `look` son los del contrato (`templates/carrusel.schema.json` y `scripts/lib/construir-html.mjs`). Si un nombre no está aquí, no existe: `qa.mjs` lo rechaza.
@@ -34,30 +36,26 @@ Campos de lámina que usa cada layout (los demás se ignoran):
 
 ## Reglas que aplican a todos los tipos
 
-Son las que mide `qa.mjs`. Si las rompes, no hay entrega.
+Compatibilidad del motor histórico: verificar qué mide la versión activa de `qa.mjs`. Las restricciones técnicas no prueban rendimiento; no añadir texto o imágenes para satisfacer preferencias retiradas. Si un formato no tiene rama compatible, usar un formato soportado o corregir el adaptador con pruebas.
 
 | Regla | Medida |
 |---|---|
-| Número de láminas | 5 a 20. Ideal 7 a 12. Más de 12: parte en serie (2/2). |
+| Número de láminas | Según rama/adaptador compatible; elegir las necesarias para entregar el valor, sin ideal universal. |
 | Título de portada | 4 a 7 palabras, máximo 9. Una palabra en `*acento*`. |
 | Lámina 2 | `rol: rehook` o `agitacion`. Promesa concreta + `loop`. |
 | Palabras por lámina | ≤ 40. Lámina guardable (`lista`, `pasos`, `prompt`, `comparativa`): ≤ 70. |
 | `cuerpo` | ≤ 25 palabras. |
 | `kicker` | máximo 1 cada 3 láminas. |
-| Open loop | `loop` al pie en al menos la mitad de las láminas `cuerpo`. |
+| Open loop | Opcional y resuelto en la página siguiente; no rellenar para cumplir una proporción. |
 | Lámina guardable | al menos una con layout `lista`, `pasos`, `prompt` o `comparativa`, o con `rol: cheatsheet`. |
-| Números | al menos 2 láminas con cifra o porcentaje. |
-| CTA | una sola lámina `rol: cta`, la última, layout `cta-cara`. `palabra_clave` escrita en `boton` o `cuerpo` y en el caption. |
+| Números | Orientación de pasos o hechos con fuente; sin cuota mínima. |
+| CTA | Una acción realizable; en compactos puede ir en caption. DM sólo con recurso y entrega comprobados. |
 | Caption | primera línea ≤ 125 caracteres. 3 a 5 hashtags. |
 | Tipografía mínima | título 84 px, texto 38 px, micro 30 px. Margen seguro 80 px. Nada crítico en los 140 px inferiores. |
 
-Tres posiciones fijas dentro de cualquier secuencia:
+La secuencia se elige por utilidad: portada clara, valor temprano, desarrollo con ejemplo o prueba y cierre que cumple la promesa. La segunda página no repite el anuncio de la primera. El insight puede aparecer antes del final; una síntesis se conserva si sirve para usar. No son obligatorios rehook, cheatsheet y CTA separados en formatos compactos que ya resuelven esas funciones.
 
-1. **Lámina 2 = re-enganche.** Repite el dolor o la curiosidad de la portada con otras palabras y promete qué se lleva la persona en la última lámina ("al final tienes los 5 mensajes listos para copiar"). Cierra con `loop`.
-2. **El insight más valioso va en la última lámina de `cuerpo`**, que es la penúltima lámina de valor (la última de valor es la cheatsheet). Es el pago por llegar hasta el final. Nunca lo gastes en la lámina 3.
-3. **La cheatsheet va justo antes del CTA.** Es la lámina que se guarda: todo el recorrido en una sola pantalla.
-
-El CTA pide una sola acción: comentar la `palabra_clave`. Lo que se entrega por DM (`entregable`) tiene que ser algo que NO está en el carrusel: la plantilla completa, el PDF, el prompt en texto para copiar, el link. Si el carrusel ya lo dio todo, nadie comenta.
+El CTA puede pedir guardar, enviar a alguien o acceder a un recurso existente según objetivo. El valor prometido vive dentro de la pieza; un recurso por DM puede ampliar o facilitar copiar, sin retener lo esencial. No exigir palabra clave si no hay mecanismo comprobado.
 
 ## Evidencia del autor (@manueldeleonmjr)
 
@@ -73,7 +71,7 @@ Lecturas para este documento:
 
 - Los guardados superaron a los likes en las dos primeras. La señal de un carrusel útil es el save, no el like.
 - El patrón de portada que se repite es **"N cosas. N formas de X"**: número + categoría + verbo de negocio. Funciona porque la persona ve el mapa completo antes de deslizar.
-- La guía de 5 generaciones dejó 36 comentarios con casi 100K de alcance. Entregó todo en las láminas y no reservó nada para el DM. Por eso el CTA con palabra clave y entregable exclusivo es obligatorio.
+- La guía de 5 generaciones dejó 36 comentarios con casi 100K de alcance. Entregó todo en las láminas y no reservó nada para el DM. Esto no demuestra que un CTA por palabra clave mejorara los guardados ni obliga a usarlo; comparar captación y utilidad por separado.
 - Los carruseles con alcance parecido y cero carga útil (noticias ajenas, prueba social, vida personal) se quedan en el like. Regla: si no hay nada que aplicar el lunes, no hay save.
 
 ## Los 9 tipos
@@ -259,7 +257,7 @@ Si todo dio "no": tienes N ítems. Si son independientes entre sí (herramientas
 
 ## Cómo escribir el `loop`
 
-El `loop` es una frase de 3 a 8 palabras al pie que obliga a deslizar. El render le agrega la flecha; no la escribas.
+El `loop` es una transición opcional de 3 a 8 palabras que plantea una pregunta relevante y se resuelve al seguir. El render le agrega la flecha; no la escribas.
 
 | Sirve | No sirve |
 |---|---|
@@ -268,7 +266,7 @@ El `loop` es una frase de 3 a 8 palabras al pie que obliga a deslizar. El render
 | "El que más guarda va al final" | "Desliza para más" |
 | "Esto cambia en la 6" | "Y hay más" |
 
-Ponlo en la lámina 2 y en al menos la mitad de las de `cuerpo`. No lo pongas en la cheatsheet ni en el CTA.
+Úsalo sólo cuando aporte; no existe una proporción editorial obligatoria. No lo pongas en la cheatsheet ni en el CTA.
 
 ## Cómo escribir el CTA (`cta-cara`)
 
@@ -284,7 +282,7 @@ Ponlo en la lámina 2 y en al menos la mitad de las de `cuerpo`. No lo pongas en
 
 - `palabra_clave` en mayúsculas, la misma en `boton`, en el caption y en la respuesta automática.
 - Una sola acción. Nada de "guarda, comparte y sígueme".
-- `marca.avatar` con foto real: la cara al final es lo que convierte alcance en seguidores.
+- `marca.avatar` es opcional si el layout lo admite; una cara no demuestra conversión.
 - El `entregable` tiene que existir antes de publicar. Si el DM no entrega, la mecánica se quema.
 
 ## Checklist antes de renderizar
@@ -292,11 +290,11 @@ Ponlo en la lámina 2 y en al menos la mitad de las de `cuerpo`. No lo pongas en
 - [ ] `tipo` y `objetivo` elegidos con el árbol.
 - [ ] Portada con patrón "N cosas. N formas de X" o negación o dato, 4-7 palabras, `*acento*`.
 - [ ] Lámina 2 con `rol: rehook` o `agitacion`, promesa y `loop`.
-- [ ] Insight más fuerte en la última lámina `cuerpo`.
+- [ ] Valor temprano y secuencia comprensible; cada página justifica su función.
 - [ ] Una lámina `cheatsheet` con layout `lista`, `pasos`, `prompt` o `comparativa`, ≤ 70 palabras.
-- [ ] ≥ 2 láminas con cifras.
-- [ ] Última lámina `rol: cta`, layout `cta-cara`, `palabra_clave` en `boton` y en caption.
-- [ ] `entregable` definido y NO contenido en el carrusel.
+- [ ] Cantidades coherentes y estadísticas con fuente; ninguna cifra decorativa.
+- [ ] Una acción realizable conforme al formato; keyword idéntica sólo cuando hay DM verificado.
+- [ ] Si hay DM, recurso y entrega comprobados sin retener el valor prometido.
 - [ ] Máximo 12 láminas. Si hay más, serie.
 - [ ] `node scripts/qa.mjs <carpeta>` sin errores.
 
@@ -310,14 +308,6 @@ Ponlo en la lámina 2 y en al menos la mitad de las de `cuerpo`. No lo pongas en
 - **El loop compromete**: si el `loop` de la lámina N promete «el error que lo tira todo», el título de la lámina N+1 nombra ese error. QA no lo mide; se revisa leyendo en voz alta.
 - **CTA de una sola acción**: `boton: "Comenta PALABRA"`, título con la pregunta, cuerpo ≤15 palabras que dice qué llega por DM. La lámina guardable ya pidió el guardado con el kicker «Guarda esto».
 
-## Plan visual por tipo (mínimos)
+## Plan visual por función
 
-| Tipo | Portada | Cuerpo con imagen | CTA |
-|---|---|---|---|
-| guia / lista | recorte de la persona sobre panel + chips | ilustración de los ítems (`abajo`) + persona señalando en el `dato-hero` (`recorte`) | recorte de la persona |
-| recurso | persona con laptop o tablet (`derecha` o `recorte`) | ícono 3D del recurso (`centro`) + captura real de la página (`foto-texto`) | avatar |
-| noticia | foto de escena con `duotono` y scrim (`fondo`) | persona en escenario o señalando (`recorte`) + objeto de la noticia (`abajo`) | recorte |
-| tutorial | persona con el dispositivo del tutorial (`foto-texto` o `derecha`) | captura real de cada paso clave (`foto-texto`) + ícono 3D | recorte señalando |
-| contrarian | persona pensando o con manos abiertas (`recorte-izquierda`) | una foto en `duotono` para el mito + ilustración para la realidad | recorte |
-| historia | foto en situación a sangre (`fondo`) | dos fotos más de la secuencia (`foto-texto`) | avatar |
-| comparativa / prompt | persona señalando (`recorte`) | ícono 3D del objeto + `prompt` tipográfico | recorte |
+No hay mínimos editoriales de imágenes. Tutorial: captura propia del paso cuando sea necesaria. Comparativa: tabla legible. Prompt: instrucciones copiables. Noticia: fuente/objeto real pertinente. Historia: evidencia autorizada. Una fotografía repetida puede aportar identidad; un diagrama o texto pueden explicar la secuencia. El activo nuevo sólo se genera si añade información necesaria que el banco no resuelve y el runtime autoriza el gasto. Si el renderer exige un activo, reutilizar uno pertinente sin imponer fotos interiores.

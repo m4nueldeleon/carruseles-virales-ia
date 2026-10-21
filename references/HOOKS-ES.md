@@ -1,5 +1,7 @@
 # Ganchos en español para la portada (y para la lámina 2)
 
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
 La portada decide si el carrusel existe: lo que no gana el primer deslizamiento no se guarda ni
 se comparte, y en los datos del autor las piezas cuya portada no decía de qué iban se quedaron en
 1,800-2,100 de alcance frente a una mediana de 5,500. Este

@@ -1,5 +1,7 @@
 # Dirección de arte de un carrusel
 
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
 Este documento se lee antes de escribir `carrusel.json`, no después de renderizar. Define qué look usar, cómo se compone cada lámina y cómo se revisan los PNG. Todo lo que aquí se nombra (looks, layouts, campos) existe con ese nombre exacto en `templates/carrusel.schema.json`, `templates/base.css`, `templates/looks/*.css` y `scripts/lib/construir-html.mjs`. Si un nombre no está ahí, no existe.
 
 La medida manda sobre el gusto. Cada regla trae un número para que se pueda contar.
@@ -22,19 +24,9 @@ Por eso en esta skill:
 
 Esta lista se adapta de la skill `direccion-de-arte` del autor. La razón de fondo: la audiencia tiene 35 a 60 años, lee en el celular y a brazo extendido; el "look de IA" reduce el contraste y sube el ruido justo donde menos aguanta el ojo.
 
-### Rotar looks es obligatorio
+### Elegir look por función
 
-`node scripts/siguiente-look.mjs <carpeta-de-trabajo> --tipo <tipo>` aplica estas reglas en un solo orden y mira también las carpetas hermanas del día (no solo `historico.json`, que se llena al medir). Usa su `recomendado`.
-
-
-Dos carruseles consecutivos no pueden llevar el mismo look. Antes de elegir, lee `historico.json` (lo escribe `scripts/medir.py` en la carpeta padre de los carruseles; cada renglón trae `slug`, `fecha`, `look`, `tipo`, `reach`, `saves`, `save_rate`). Reglas:
-
-1. El `look` del último renglón queda vetado para el carrusel nuevo.
-2. En los últimos 4 renglones ningún look puede aparecer más de 2 veces.
-3. Alterna fondo claro y fondo oscuro: claros son `guia-rapida`, `recurso` y `editorial-mono`; oscuros son `noticia`, `oscuro-tech` y `bosque`. Si el anterior fue oscuro, el nuevo es claro, salvo que el tipo de contenido no lo permita (ver fichas).
-4. Si no existe `historico.json`, elige por tipo de contenido con la tabla de la sección 2 y anótalo en `notas`.
-
-La rotación no es capricho: en el feed del perfil las portadas se ven en cuadrícula de 3. Tres portadas iguales seguidas parecen un solo post.
+El script `siguiente-look.mjs` conserva un algoritmo histórico de rotación. Su salida es una sugerencia, no una ley de rendimiento. Leer el histórico para evitar repetir el mismo argumento; elegir el look que facilite lectura e identidad de marca. Se permite repetir look en una serie o mantener una retícula coherente. No generar arte nuevo sólo para alternar claro/oscuro ni cambiar color para simular una propuesta distinta. Anotar la decisión en `notas`.
 
 ## 2. Ficha de los 6 looks
 
@@ -111,9 +103,9 @@ No lo uses cuando hay más de 40 palabras por lámina: el Archivo Black a 84px y
 
 ### Cómo se elige, en orden
 
-1. Lee `historico.json` y aplica la rotación (sección 1).
+1. Lee `historico.json` y decide por función e identidad (sección 1).
 2. Cruza `tipo` con la tabla: `guia`/`lista` → `guia-rapida` o `recurso`; `noticia` → `noticia`; `tutorial`/`prompt` → `oscuro-tech`; `recurso` → `recurso`; `contrarian`/`historia` → `editorial-mono`; `comparativa` → `oscuro-tech` o `editorial-mono`; comunidad o evento → `bosque`.
-3. Si los dos candidatos sobreviven a la rotación, gana el que alterna claro/oscuro con el anterior.
+3. Si hay dos opciones igual de legibles, prioriza coherencia y activos existentes; no atribuir rendimiento al cambio de color.
 4. Anota en `notas` el look descartado y por qué. Eso alimenta la siguiente elección.
 
 ## 3. Reglas de composición medibles
@@ -130,7 +122,7 @@ Todo esto ya está en `base.css`; aquí se nombra para que se revise, no para qu
 | Ratio nivel 1 : nivel 3 | ≥ 2.5. Con título a 84 y micro a 32 da 2.6; con `t-xl` a 156 da 4.9. Si el ajuste automático baja el título por debajo de 84 px (el mínimo que revisa `qa.mjs`), hay que recortar texto | script `fit` en el HTML |
 | Un solo acento por lámina | Una palabra en `*acento*` en el título, o un `dato`, o un `numero`. Nunca dos elementos compitiendo por el color | `--acento` |
 | 60-30-10 | 60% fondo, 30% tinta, 10% acento. En una lámina de 1080×1350 el acento no pasa de ~145,000 px² (un título de una línea a 100 px, un chip, un botón) | proporción de área |
-| Esqueleto constante | 80% de las láminas usan el mismo layout de cuerpo (`punto-numero` o `texto-pleno`). El 20% restante es la variación: `dato-hero`, `comparativa`, `pasos`, `lista`, `cita`, `prompt` | campo `layout` |
+| Esqueleto constante | Mantener una retícula consistente y variar sólo cuando la función lo pida; sin proporción obligatoria. Recursos: `dato-hero`, `comparativa`, `pasos`, `lista`, `cita`, `prompt` | campo `layout` |
 | Una familia de layout por uso | `lista`, `comparativa`, `pasos`, `prompt`, `cita` y `dato-hero` aparecen máximo una vez cada uno por carrusel, salvo que el tipo lo pida (`comparativa` repite `comparativa` por criterio, `prompt` admite dos `prompt`, `tutorial` abre y cierra con `pasos`; ver FORMATOS.md). En guías y listas de 9 láminas o más se permite dos veces `lista` | campo `layout` |
 | Máximo 1 kicker cada 3 láminas | En 9 láminas, 3 kickers. El kicker ubica ("Paso 2 de 5"), no declama | campo `kicker` |
 | Palabras por lámina | ≤ 40 en láminas normales, ≤ 70 en guardables (`lista`, `pasos`, `prompt`, `comparativa`, rol `cheatsheet`). `cuerpo` ≤ 25 palabras | `qa.mjs` |
@@ -144,7 +136,7 @@ Sobre las imágenes: `imagen.pos` admite `fondo`, `abajo`, `derecha` y `centro`.
 
 ## 4. Reglas de portada
 
-La portada decide el 80% del alcance. Es la única lámina que Instagram muestra sin que nadie deslice y la que aparece en la cuadrícula del perfil. Las reglas salen de la auditoría de la cuenta del autor (septiembre 2026): las tres portadas con más guardados compartían la misma anatomía, y la única lámina publicada sin titular hizo 36,000 de alcance con 0 seguidores nuevos.
+La portada necesita una promesa clara y legible; no hay evidencia para asignarle un porcentaje fijo del alcance. Es la única lámina que Instagram muestra sin que nadie deslice y la que aparece en la cuadrícula del perfil. Las reglas salen de la auditoría de la cuenta del autor (septiembre 2026): las tres portadas con más guardados compartían la misma anatomía, y la única lámina publicada sin titular hizo 36,000 de alcance con 0 seguidores nuevos.
 
 | Elemento | Regla | Campo |
 |---|---|---|

@@ -1,6 +1,8 @@
 # Protocolos por formato
 
-Cada formato es un producto distinto y se trata distinto: una imagen única vive del reenvío en dos segundos, un carrusel-noticia vive de la prueba y la ventana de 48 horas, un reel-portada vive del gate por palabra clave, un dossier vive del tiempo de lectura. Lo que funciona en uno mata al otro. Regla de trabajo nueva: ante una referencia o una idea, no se produce una sola pieza; se proponen 3 o 4 versiones en formatos distintos (imagen única, carrusel corto de 5, carrusel de 8-10 y el formato de la referencia), cada una con su portada renderizada, y se elige mirando las portadas en `portada-270.jpg`, no leyendo el JSON. Los ocho protocolos que siguen salen del estudio de 23 posts documentado en `ANATOMIA-REFERENCIAS.md` y de una verificación contra la evidencia: cada regla lleva su etiqueta. REGLA = observado en las referencias del formato. NOTA = idiosincrático de una sola referencia. CONTRATO = política del motor de la skill (schema, qa.mjs, layouts). MARCA = decisión de `MI-MARCA.md` o de dirección de arte. HIPÓTESIS = sin evidencia, se mide antes de fijarse. Los nombres de `tipo`, `layout` y `look` son los del contrato descrito en `FORMATOS.md`.
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
+Cada formato necesita una recompensa y una secuencia distintas. Se comparan hasta tres propuestas textuales y se produce sólo la elegida, según `CALIDAD-Y-EVIDENCIA.md`; no se pagan ni renderizan tres o cuatro alternativas por rutina. Los ocho repertorios proceden del estudio histórico de 23 posts en `ANATOMIA-REFERENCIAS.md`. **OBSERVACIÓN** significa visto en esas referencias, incluso cuando N=1: no es causa de éxito ni requisito de producción. NOTA señala un caso particular; CONTRATO, una restricción histórica del motor que debe verificarse en su versión activa; MARCA, preferencia; HIPÓTESIS, mecanismo pendiente de medición. Se eligen los elementos que sirven al encargo, sin copiar la anatomía completa ni imponer rostro, DM, fotos o longitudes.
 
 Nota de motor (2026-09-07): las versiones por formato también se producen por API con `scripts/escribir.mjs --formato-plan <imagen-unica|carrusel-5|carrusel-8|referencia>`, que mete en el prompt solo el capítulo que toca más «Cómo elegir el formato» y «Lo que se repite». La imagen única ya tiene rama en QA: `scripts/qa.mjs --imagen-unica` acepta 1 lámina sin rehook, guardable ni lámina de CTA (el CTA vive en el caption), pide `pie: ""` y `sin_top: true` y ajusta el índice; sigue pendiente el look `nota-blanca` y los layouts `meme-*` (mientras, `texto-pleno` o `portada-titulo` con imagen).
 
@@ -26,26 +28,26 @@ No lo uses cuando no existe una captura real que probar (si hay que ilustrar la 
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Gancho por brecha | REGLA. La lámina 1 define el término desconocido con titular declarativo «ESTO ES [término]»; lo conocido cierra el tríptico. Los términos son los que el lector ya oye. | «THIS IS AEO» en la 1, «THIS IS SEO» en la 3 |
-| Fórmula fija de lámina de evidencia | REGLA. Titular manuscrito de 3-5 palabras arriba-izquierda → flecha blanca gruesa y curva → captura al centro-derecha al ~55% del ancho → conclusión roja abajo-izquierda con flecha roja fina. Se repite en todas. | Láminas 1 y 2 completas; la 3 omite la conclusión (decisión propia: incluirla por consistencia) |
-| Evidencia anotada en dos capas y en proporción | REGLA. Captura real con la consulta visible; frase clave resaltada con la selección nativa antes de capturar; encima, un óvalo grande si hay una respuesta, varios círculos si hay varios nombres, ninguna en la lámina de lo conocido. | Lámina 1 (selección azul + óvalo), 2 (círculos sobre marcas), 3 (sin anotación) |
-| Tríptico sobre un mismo hilo | REGLA. Tantas láminas de evidencia como conceptos; capturas distintas sobre UN tema que escalan (pregunta cotidiana → recomendación → sustantivo). | Tres búsquedas sobre tenis |
-| Síntesis dibujada | REGLA. Venn de tres (o tabla de dos) a mano, nombres en rojo, intersección verde, línea a «TU ESTRATEGIA» en el acento propio. Cero texto nuevo. | Lámina 4 |
-| Revelado progresivo | REGLA. La lámina siguiente es la misma, píxel por píxel, más una flecha verde y el nombre del método. Observado una vez; sin evidencia sobre repetirlo. | Láminas 4→5 |
-| Acrónimo = palabra clave + lámina-checklist | REGLA. Método con acrónimo de 3-4 letras que forma palabra real y ES la palabra del comentario. Una lámina de una fila por letra: letra roja gigante + 1-3 palabras en acento + ícono a mano + una pregunta contestable el lunes. Sin letrero «guarda esto». | Lámina 6 y «COMMENT 'CITE'» |
-| Ritmo de densidad | REGLA. 3-9 palabras en las láminas 1-5 con mitad inferior vacía permitida; la checklist llena el cuadro (~40, tope 70); el CTA vuelve a ~14. | Densidad medida de la referencia |
-| Roles de color | REGLA. Blanco afirma, rojo señala y concluye, acento propio = «lo tuyo», verde = síntesis; en el CTA puede entrar un quinto color cálido para la palabra clave (o fundirse en el dorado: decisión de marca). | Paleta de las 7 láminas |
-| Fondo carbón + capturas oscuras | REGLA. #2B2B2B plano; capturas en modo oscuro para que se fundan; si solo existen en claro, oscurecer o enmarcar. | Láminas 1-3 |
-| Texto a mano, legible | REGLA con límite. Escritura real con stylus exportada con alfa; error humano en la forma, nunca en la legibilidad (QA: .titulo ≥84 px, texto ≥38, micro ≥30, margen 80 px). Fuente manuscrita solo como fallback autorizado en DIRECCION-DE-ARTE. | Tipografía de la referencia; flechas finas que se pierden en teléfono |
-| Ejemplo mundano con marcas reconocibles | REGLA. La búsqueda es una que el lector pudo hacer hoy; en la lámina «la IA recomienda a otros», los nombres deben reconocerse al instante. | Nike, New Balance, PUMA dentro de la captura |
-| Un rostro, solo al final | REGLA. Sin cara en 1-6; foto real de la marca solo en el CTA, donde la voz pasa de enseñar a pedir. | Lámina 7 |
-| CTA de tres pisos | REGLA. Titular que promete ver el método aplicado y nombra la herramienta («MIRA CÓMO LO USO CON…»), evidencia propia (miniatura de la clase con duración), palabra clave a mano = método, igual en lámina y caption; el caption añade el escalón siguiente. | Lámina 7 + caption con curso gratis y masterclass |
-| Primera línea del caption | REGLA. Nombra los términos y cuantifica las láminas («Con 3 láminas te queda claro…»). Sin «link en bio», sin «guarda esto». Hashtags opcionales. | Caption de la referencia |
+| Gancho por brecha | OBSERVACIÓN. La lámina 1 define el término desconocido con titular declarativo «ESTO ES [término]»; lo conocido cierra el tríptico. Los términos son los que el lector ya oye. | «THIS IS AEO» en la 1, «THIS IS SEO» en la 3 |
+| Fórmula fija de lámina de evidencia | OBSERVACIÓN. Titular manuscrito de 3-5 palabras arriba-izquierda → flecha blanca gruesa y curva → captura al centro-derecha al ~55% del ancho → conclusión roja abajo-izquierda con flecha roja fina. Se repite en todas. | Láminas 1 y 2 completas; la 3 omite la conclusión (decisión propia: incluirla por consistencia) |
+| Evidencia anotada en dos capas y en proporción | OBSERVACIÓN. Captura real con la consulta visible; frase clave resaltada con la selección nativa antes de capturar; encima, un óvalo grande si hay una respuesta, varios círculos si hay varios nombres, ninguna en la lámina de lo conocido. | Lámina 1 (selección azul + óvalo), 2 (círculos sobre marcas), 3 (sin anotación) |
+| Tríptico sobre un mismo hilo | OBSERVACIÓN. Tantas láminas de evidencia como conceptos; capturas distintas sobre UN tema que escalan (pregunta cotidiana → recomendación → sustantivo). | Tres búsquedas sobre tenis |
+| Síntesis dibujada | OBSERVACIÓN. Venn de tres (o tabla de dos) a mano, nombres en rojo, intersección verde, línea a «TU ESTRATEGIA» en el acento propio. Cero texto nuevo. | Lámina 4 |
+| Revelado progresivo | OBSERVACIÓN. La lámina siguiente es la misma, píxel por píxel, más una flecha verde y el nombre del método. Observado una vez; sin evidencia sobre repetirlo. | Láminas 4→5 |
+| Acrónimo = palabra clave + lámina-checklist | OBSERVACIÓN. Método con acrónimo de 3-4 letras que forma palabra real y ES la palabra del comentario. Una lámina de una fila por letra: letra roja gigante + 1-3 palabras en acento + ícono a mano + una pregunta contestable el lunes. Sin letrero «guarda esto». | Lámina 6 y «COMMENT 'CITE'» |
+| Ritmo de densidad | OBSERVACIÓN. 3-9 palabras en las láminas 1-5 con mitad inferior vacía permitida; la checklist llena el cuadro (~40, tope 70); el CTA vuelve a ~14. | Densidad medida de la referencia |
+| Roles de color | OBSERVACIÓN. Blanco afirma, rojo señala y concluye, acento propio = «lo tuyo», verde = síntesis; en el CTA puede entrar un quinto color cálido para la palabra clave (o fundirse en el dorado: decisión de marca). | Paleta de las 7 láminas |
+| Fondo carbón + capturas oscuras | OBSERVACIÓN. #2B2B2B plano; capturas en modo oscuro para que se fundan; si solo existen en claro, oscurecer o enmarcar. | Láminas 1-3 |
+| Texto a mano, legible | OBSERVACIÓN con límite. Escritura real con stylus exportada con alfa; error humano en la forma, nunca en la legibilidad (QA: .titulo ≥84 px, texto ≥38, micro ≥30, margen 80 px). Fuente manuscrita solo como fallback autorizado en DIRECCION-DE-ARTE. | Tipografía de la referencia; flechas finas que se pierden en teléfono |
+| Ejemplo mundano con marcas reconocibles | OBSERVACIÓN. La búsqueda es una que el lector pudo hacer hoy; en la lámina «la IA recomienda a otros», los nombres deben reconocerse al instante. | Nike, New Balance, PUMA dentro de la captura |
+| Un rostro, solo al final | OBSERVACIÓN. Sin cara en 1-6; foto real de la marca solo en el CTA, donde la voz pasa de enseñar a pedir. | Lámina 7 |
+| CTA de tres pisos | OBSERVACIÓN. Titular que promete ver el método aplicado y nombra la herramienta («MIRA CÓMO LO USO CON…»), evidencia propia (miniatura de la clase con duración), palabra clave a mano = método, igual en lámina y caption; el caption añade el escalón siguiente. | Lámina 7 + caption con curso gratis y masterclass |
+| Primera línea del caption | OBSERVACIÓN. Nombra los términos y cuantifica las láminas («Con 3 láminas te queda claro…»). Sin «link en bio», sin «guarda esto». Hashtags opcionales. | Caption de la referencia |
 | Sin logo, @, numeración ni «Desliza» | REGLA de la referencia; MARCA en Manuel: sello solo en el CTA, @ micro opcional. | Sin marca en las 7 láminas |
 
 ### Portada
 
-La portada no es una promesa: es la primera lámina de contenido (definición de lo desconocido + su prueba). Titular manuscrito de 3-5 palabras, 100% blanco, declarativo («ESTO ES…», «ASÍ TE BUSCA LA IA»), sin palabra roja ni pregunta. Captura cotidiana del giro y la ciudad del lector con la consulta visible, frase resaltada, óvalo rojo grande y flecha a la conclusión roja de 3-6 palabras. Sin cara (excepción documentada a «Manuel en portada»). Sin «Desliza». Concurso de la skill: 3-4 candidatas que varían pantalla y titular, no color ni layout, ≥16/20 a 270 px.
+La portada no es una promesa: es la primera lámina de contenido (definición de lo desconocido + su prueba). Titular manuscrito de 3-5 palabras, 100% blanco, declarativo («ESTO ES…», «ASÍ TE BUSCA LA IA»), sin palabra roja ni pregunta. Captura cotidiana del giro y la ciudad del lector con la consulta visible, frase resaltada, óvalo rojo grande y flecha a la conclusión roja de 3-6 palabras. Sin cara (excepción documentada a «Manuel en portada»). Sin «Desliza». Comparación opcional de composición sólo sobre activos existentes; revisar la elegida a 270 px.
 
 ### Cuerpo
 
@@ -115,27 +117,27 @@ No cuando el valor está repartido en muchas láminas con criterio propio (usa `
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Metadato superior | REGLA (3/3 algo pequeño arriba; 2/3 mono gris). Una línea en mayúsculas, tracking 0.15-0.2em, 32-38 px, gris al 40-60%: dos objeciones resueltas o el capítulo. | «ONE FILE · NO API KEY», «02 / THE FIX», eyebrow de DcIF |
-| Titular | REGLA. 3-6 palabras en 1-2 líneas, grotesca bold 700-800 (no black), punto final si es frase, sin «!» ni adjetivos; una palabra o la segunda línea en acento. Negación o promesa en dos líneas. | «Claude can't watch YouTube.», «One skill. / Every frame.» |
-| Objeto protagonista | REGLA (3/3). Un objeto con sombra o render que encarna el entregable o la metáfora, 20-60% del alto, único bloque de contraste; arriba o abajo del titular. | Ícono, iris, tabla dorada |
-| Firma inferior | REGLA (3/3). Handle en la mono y gris del kicker a ~90%, glifo opcional en acento; nunca logo grande ni tagline. | Los tres |
-| Sin CTA ni tagline en la imagen | REGLA (2/3). La acción vive en el caption. | La única portada con LIKE/SHARE en imagen dio 33 comentarios |
-| Densidad y aire | REGLA (2/3). ≤11 palabras en la imagen y ≥40% libre. | DbQ 60-65% de aire; Dala 40% superior libre |
-| Paleta | REGLA (2/3). Fondo pleno + tinta + UN acento máximo, presente también en el objeto; sin metálicos. | DcIF con 8 colores es el contraejemplo |
-| Tipografía | REGLA (3/3 dos familias). Grotesca bold + mono; 2-3 tamaños; subtítulo opcional en caja baja a un tercio. La condensada metálica de DcIF no se porta. | Los tres |
+| Metadato superior | OBSERVACIÓN (3/3 algo pequeño arriba; 2/3 mono gris). Una línea en mayúsculas, tracking 0.15-0.2em, 32-38 px, gris al 40-60%: dos objeciones resueltas o el capítulo. | «ONE FILE · NO API KEY», «02 / THE FIX», eyebrow de DcIF |
+| Titular | OBSERVACIÓN. 3-6 palabras en 1-2 líneas, grotesca bold 700-800 (no black), punto final si es frase, sin «!» ni adjetivos; una palabra o la segunda línea en acento. Negación o promesa en dos líneas. | «Claude can't watch YouTube.», «One skill. / Every frame.» |
+| Objeto protagonista | OBSERVACIÓN (3/3). Un objeto con sombra o render que encarna el entregable o la metáfora, 20-60% del alto, único bloque de contraste; arriba o abajo del titular. | Ícono, iris, tabla dorada |
+| Firma inferior | OBSERVACIÓN (3/3). Handle en la mono y gris del kicker a ~90%, glifo opcional en acento; nunca logo grande ni tagline. | Los tres |
+| Sin CTA ni tagline en la imagen | OBSERVACIÓN (2/3). La acción vive en el caption. | La única portada con LIKE/SHARE en imagen dio 33 comentarios |
+| Densidad y aire | OBSERVACIÓN (2/3). ≤11 palabras en la imagen y ≥40% libre. | DbQ 60-65% de aire; Dala 40% superior libre |
+| Paleta | OBSERVACIÓN (2/3). Fondo pleno + tinta + UN acento máximo, presente también en el objeto; sin metálicos. | DcIF con 8 colores es el contraejemplo |
+| Tipografía | OBSERVACIÓN (3/3 dos familias). Grotesca bold + mono; 2-3 tamaños; subtítulo opcional en caja baja a un tercio. La condensada metálica de DcIF no se porta. | Los tres |
 | Fondo y textura | NOTA. Foto propia velada al 85% + retícula casi invisible; o grano + partículas + viñeta; o negro liso. | Una opción por referencia |
-| Apilamiento | REGLA (3/3 eje centrado). A) kicker → objeto → titular. B) capítulo → titular → objeto → subtítulo. Nada crítico en el 15% superior ni inferior; la firma sí puede ir al 90%. | DbQ y Dala |
-| Gancho: límite de una marca prestada | REGLA (2/3). Línea 1 del caption = negación sobre la herramienta + giro («Hasta que le das esto»). | Ambos Conrad |
-| Metáfora central | REGLA (2/3). Se elige UNA metáfora de la que salen objeto, titular y palabra clave. | «le di ojos» → iris → EYES |
-| Caption = cuerpo | REGLA (2/3). ≈100-130 palabras en 5-6 párrafos: negación + giro → dolor vivido → lo que todos hacen mal → arreglo (UNA pieza con tres «sin» o TRES piezas nombradas) → cifra desproporcionada → palabra en MAYÚSCULAS + «gratis» (+ cadencia) + hashtags. 0-1 emoji, solo en el CTA. | DbQ y Dala; DcIF enciclopédico es el contraejemplo |
-| Cifra de prueba | REGLA (3/3). Específica y desproporcionada (antes/después) o dato duro con decimales; nunca inventada. | 2h28 → ~40 s; 30 min → 90 s; $365.3M |
-| CTA palabra clave + follow secundario | REGLA (2/3). Una palabra que se escribe sin pensar (4-9 letras), soldada a la metáfora, con «gratis» y DM automático; follow permitido como acción secundaria; prohibido LIKE/SHARE principal. | EYES, BREAKDOWN |
-| Entregable de alto valor | REGLA (2/3). Lo que llega por DM es la cosa que funciona tal cual, no un resumen. | El archivo entero, la skill completa |
+| Apilamiento | OBSERVACIÓN (3/3 eje centrado). A) kicker → objeto → titular. B) capítulo → titular → objeto → subtítulo. Nada crítico en el 15% superior ni inferior; la firma sí puede ir al 90%. | DbQ y Dala |
+| Gancho: límite de una marca prestada | OBSERVACIÓN (2/3). Línea 1 del caption = negación sobre la herramienta + giro («Hasta que le das esto»). | Ambos Conrad |
+| Metáfora central | OBSERVACIÓN (2/3). Se elige UNA metáfora de la que salen objeto, titular y palabra clave. | «le di ojos» → iris → EYES |
+| Caption = cuerpo | OBSERVACIÓN (2/3). ≈100-130 palabras en 5-6 párrafos: negación + giro → dolor vivido → lo que todos hacen mal → arreglo (UNA pieza con tres «sin» o TRES piezas nombradas) → cifra desproporcionada → palabra en MAYÚSCULAS + «gratis» (+ cadencia) + hashtags. 0-1 emoji, solo en el CTA. | DbQ y Dala; DcIF enciclopédico es el contraejemplo |
+| Cifra de prueba | OBSERVACIÓN (3/3). Específica y desproporcionada (antes/después) o dato duro con decimales; nunca inventada. | 2h28 → ~40 s; 30 min → 90 s; $365.3M |
+| CTA palabra clave + follow secundario | OBSERVACIÓN (2/3). Una palabra que se escribe sin pensar (4-9 letras), soldada a la metáfora, con «gratis» y DM automático; follow permitido como acción secundaria; prohibido LIKE/SHARE principal. | EYES, BREAKDOWN |
+| Entregable de alto valor | OBSERVACIÓN (2/3). Lo que llega por DM es la cosa que funciona tal cual, no un resumen. | El archivo entero, la skill completa |
 | Serie y capítulo | NOTA (1/3). Etiqueta de capítulo y cadencia semanal convierten el follow en suscripción. | Dala |
-| Sin rostro del creador | REGLA (3/3). El objeto ocupa su lugar; Manuel es variante B a probar y entra en `cta-cara`. | Los tres se distinguen del feed de talking-heads |
+| Sin rostro del creador | OBSERVACIÓN (3/3). El objeto ocupa su lugar; Manuel es variante B a probar y entra en `cta-cara`. | Los tres se distinguen del feed de talking-heads |
 | Marca prestada y su logo | EVIDENCIA vs MARCA. La evidencia imita el logo (2/3); Manuel lo nombra en texto y usa objeto propio por derechos. | Asterisco de Claude, 13 logos |
 | Variante ranking | NOTA con KPI propio (guardados). Fila = nivel visual + glifo + cifra en acento; ≤4 filas por lámina; escala verificada; dato-sorpresa cruzado. | DcIF |
-| Acabado | REGLA (3/3 premium, sin plantilla). Mate keynote o cinematográfico con grano; sin neón, emojis-icono, vidrio ni metálico. | Los tres |
+| Acabado | OBSERVACIÓN (3/3 premium, sin plantilla). Mate keynote o cinematográfico con grano; sin neón, emojis-icono, vidrio ni metálico. | Los tres |
 
 ### Portada
 
@@ -214,29 +216,29 @@ No cuando el valor está en el paso a paso (el carrusel se guarda 9 veces más y
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Lienzo y fondo | REGLA. Blanco puro plano, sin textura ni barras; en chiste rápido domina el vacío, en mapa es el respiro. | 6/7 blanco (n14 85% vacío); n18 fondo de escena |
-| Titular-reacción en voz humana | REGLA (chat, perfil, notificación). 5-7 palabras arriba, gancho y prueba social a la vez; en Manuel es suya y con su nombre, sin emojis. | «Now who is this guy», «Nah this is wild» |
-| Tipografía | REGLA. Una familia de sistema por pieza, 1-3 pesos, negro #111 o gris grafito #3E3E3E; mayúsculas en títulos y ejes, caja normal en diálogo y UI. | n11 tres pesos; n14 uno |
-| Texto propio | REGLA. Chiste rápido 7-20 palabras; lista intervenida ~40 etiquetas; mapa ≤60 con etiquetas de 2-6 palabras y ≤2 líneas. | n10 7, n14 16, n6 ~20, n5 ~40, n11 ~55 |
-| Color | REGLA. Cero color de marca (7/7). El color viene de los objetos o de 1-2 tintas «por defecto» donde vive el dato. | n10 azul + rojo de Paint; n6 bloque de la wallet |
-| Ancla legible en miniatura | REGLA. Un elemento domina a 270 px: título ≥30% del ancho, cifra sobre el único color o etiqueta bold arriba (aunque mida ~4% del alto). | «MRR» 35%; «GOOD MARKETER» ~4% |
-| Setup → remate | REGLA. Planteamiento arriba, remate abajo o a la derecha; el remate puede ser una imagen sin texto (3/7); filas de menor a mayor. Excepción: el starter pack no tiene orden, el remate va en un satélite. | n6, n10, n18; n5; n11 |
-| Plantilla mental prestada | REGLA. Un formato que el lector ya sabe leer en menos de un segundo y UNA variable cambiada. | Chat, perfil, pastel, compass, starter pack, tira, guion |
-| Verosimilitud de la interfaz | REGLA. UI nativa con hora, nombre, fechas que cuadran; la credibilidad vive en los metadatos, no en la perfección (n6 tosca y es la más grande). WhatsApp Business, no iMessage. | n5, n6, n11 |
-| Objetos y jerarquía (mapas) | REGLA. Starter pack: 10-14 satélites de peso parejo. Matriz: 20-30 fichas con grado por posición; tamaños desiguales; 1-2 pisando el eje; prueba «se reconoce sin leer: sí/no» sin umbral numérico. | n3, n11 |
+| Lienzo y fondo | OBSERVACIÓN. Blanco puro plano, sin textura ni barras; en chiste rápido domina el vacío, en mapa es el respiro. | 6/7 blanco (n14 85% vacío); n18 fondo de escena |
+| Titular-reacción en voz humana | OBSERVACIÓN (chat, perfil, notificación). 5-7 palabras arriba, gancho y prueba social a la vez; en Manuel es suya y con su nombre, sin emojis. | «Now who is this guy», «Nah this is wild» |
+| Tipografía | OBSERVACIÓN. Una familia de sistema por pieza, 1-3 pesos, negro #111 o gris grafito #3E3E3E; mayúsculas en títulos y ejes, caja normal en diálogo y UI. | n11 tres pesos; n14 uno |
+| Texto propio | OBSERVACIÓN. Chiste rápido 7-20 palabras; lista intervenida ~40 etiquetas; mapa ≤60 con etiquetas de 2-6 palabras y ≤2 líneas. | n10 7, n14 16, n6 ~20, n5 ~40, n11 ~55 |
+| Color | OBSERVACIÓN. Cero color de marca (7/7). El color viene de los objetos o de 1-2 tintas «por defecto» donde vive el dato. | n10 azul + rojo de Paint; n6 bloque de la wallet |
+| Ancla legible en miniatura | OBSERVACIÓN. Un elemento domina a 270 px: título ≥30% del ancho, cifra sobre el único color o etiqueta bold arriba (aunque mida ~4% del alto). | «MRR» 35%; «GOOD MARKETER» ~4% |
+| Setup → remate | OBSERVACIÓN. Planteamiento arriba, remate abajo o a la derecha; el remate puede ser una imagen sin texto (3/7); filas de menor a mayor. Excepción: el starter pack no tiene orden, el remate va en un satélite. | n6, n10, n18; n5; n11 |
+| Plantilla mental prestada | OBSERVACIÓN. Un formato que el lector ya sabe leer en menos de un segundo y UNA variable cambiada. | Chat, perfil, pastel, compass, starter pack, tira, guion |
+| Verosimilitud de la interfaz | OBSERVACIÓN. UI nativa con hora, nombre, fechas que cuadran; la credibilidad vive en los metadatos, no en la perfección (n6 tosca y es la más grande). WhatsApp Business, no iMessage. | n5, n6, n11 |
+| Objetos y jerarquía (mapas) | OBSERVACIÓN. Starter pack: 10-14 satélites de peso parejo. Matriz: 20-30 fichas con grado por posición; tamaños desiguales; 1-2 pisando el eje; prueba «se reconoce sin leer: sí/no» sin umbral numérico. | n3, n11 |
 | Rostro o recorte | NOTA (2/7). Recorte de cuerpo entero a la derecha del mismo alto que la gráfica; avatar con 2-3 rasgos fijos. Una sola cara por pieza; nunca foto viral ajena (MARCA). | n10, n18 |
 | Firma | RECOMENDACIÓN (5/7 no firman). Texto plano al mismo cuerpo, justo debajo del bloque; handle solo en mapas; vestuario en la tira. Nunca logo ni marca de agua. | n14, n18 |
-| Acabado y error humano | REGLA. «Keynote en 20 minutos por alguien con criterio»; 1-2 imperfecciones decididas y anotadas; nunca en el remate, cifra o palabra clave. Nítido por decisión de marca (la evidencia borrosa no resta). | n3, n5, n6, n10, n11, n14 |
-| Composición y márgenes | REGLA. Margen 5-7%; nada toca los bordes salvo el recorte-remate hacia abajo; bloque bajo el centro en texto puro, cruz sobre el centro en matriz; izquierda para diálogo y UI, centrado para título + gráfica. | n14, n5, n10, n3, n6 |
-| Caption | REGLA. La imagen hace reír; el caption enseña o baja la guardia. Primera línea ≤125 como titular; después fórmula con escenarios, dato curioso, tesis con aforismo o confesión; 0-2 emojis; 0-3 hashtags. | n6, n18, n5, n14, n10 |
+| Acabado y error humano | OBSERVACIÓN. «Keynote en 20 minutos por alguien con criterio»; 1-2 imperfecciones decididas y anotadas; nunca en el remate, cifra o palabra clave. Nítido por decisión de marca (la evidencia borrosa no resta). | n3, n5, n6, n10, n11, n14 |
+| Composición y márgenes | OBSERVACIÓN. Margen 5-7%; nada toca los bordes salvo el recorte-remate hacia abajo; bloque bajo el centro en texto puro, cruz sobre el centro en matriz; izquierda para diálogo y UI, centrado para título + gráfica. | n14, n5, n10, n3, n6 |
+| Caption | OBSERVACIÓN. La imagen hace reír; el caption enseña o baja la guardia. Primera línea ≤125 como titular; después fórmula con escenarios, dato curioso, tesis con aforismo o confesión; 0-2 emojis; 0-3 hashtags. | n6, n18, n5, n14, n10 |
 | CTA y palabra clave | REGLA medida. Ninguna lleva CTA; ratio 0.08-1.7%; la pregunta abierta no lo cambia (n11 0.39%). Cierre por pregunta de identificación o por aforismo (4/7). Palabra clave solo con entregable que amplíe la imagen, solo en caption. | Todas |
-| Permanencia en dos velocidades | REGLA. Se entiende en 3 s y retiene 20-40 en mapas; en chiste y tira la imagen deja el sentido a medias y el caption lo completa. | n3, n11, n18 |
+| Permanencia en dos velocidades | OBSERVACIÓN. Se entiende en 3 s y retiene 20-40 en mapas; en chiste y tira la imagen deja el sentido a medias y el caption lo completa. | n3, n11, n18 |
 | Bandera de identidad y tesis | REGLA de fondo. Dos frases antes de renderizar: «quien lo manda está diciendo que ___» y «esto valida a ___ y pica a ___». | n14, n11, n10, n6, n18, n3 |
-| Formato | REGLA. Vertical 3:4 o 4:5 (5/7 son 4:5), nunca 1:1. | Todas |
+| Formato | OBSERVACIÓN. Vertical 3:4 o 4:5 (5/7 son 4:5), nunca 1:1. | Todas |
 
 ### Portada
 
-La portada ES la pieza. Concurso de 3-4 versiones cruzando dos chistes con dos plantillas mentales, ≥16/20 a 270 px; si ninguna pasa se cambia el chiste. Dos frases en `notas` (identidad y bando). Setup arriba en ≤7 palabras (títulos «Razones para X:», pie «Ranking de dueños según…», pregunta del contador, cliché entre comillas). Titular-reacción de Manuel en chat/perfil/notificación. Ancla legible (título 96-140 px, ejes ≥56, chat ≥36, etiquetas ≥28, firma al mismo cuerpo). Remate abajo o derecha sin explicación; puede ser imagen. Cero barras, kicker, chips, «Desliza», halo, paleta de look ni color de marca. Firma en texto plano o handle en mapas; si compite con el chiste, se quita. Prueba de los 3 segundos con alguien de 50 años. 1-2 imperfecciones decididas.
+La portada ES la pieza. Seleccionar el chiste en texto antes de renderizar; si no funciona, corregirlo sin arte pagado. Dos frases en `notas` (identidad y bando). Setup arriba en ≤7 palabras (títulos «Razones para X:», pie «Ranking de dueños según…», pregunta del contador, cliché entre comillas). Titular-reacción de Manuel en chat/perfil/notificación. Ancla legible (título 96-140 px, ejes ≥56, chat ≥36, etiquetas ≥28, firma al mismo cuerpo). Remate abajo o derecha sin explicación; puede ser imagen. Cero barras, kicker, chips, «Desliza», halo, paleta de look ni color de marca. Firma en texto plano o handle en mapas; si compite con el chiste, se quita. Prueba de los 3 segundos con alguien de 50 años. 1-2 imperfecciones decididas.
 
 ### Cuerpo
 
@@ -315,34 +317,34 @@ No cuando la noticia no se traduce a «qué hace el lunes el dueño de una empre
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Portada partida | REGLA (4/5 + variante). Imagen de reconocimiento en el 50-65% superior; franja oscura (35-50%) con el titular. Variante: foto a sangre con tarjeta oscura. | DcWB, DblQtr, Dao, Dannc; DbvN |
-| Reconocimiento del tema en 0.3 s | REGLA (5/5 nombre; 4/5 objeto). Nombre de la herramienta en el titular y su objeto visible (captura, logo en círculo, key visual, folder con el tema escrito). Manuel es la firma, el tema es el reconocimiento. | Dashboard, folder, Tesla, logo Stratton, esfera |
-| Titular condensado de 10-24 palabras | REGLA (4/5). Mayúsculas del look, 3-5 líneas, cada línea una unidad de sentido; el motor limita `titulo` a 9: repartir en `titulo` + `subtitulo`. | 15, 24, 11, 13 palabras |
-| Acento en 1-4 palabras | REGLA (4/5). Solo las que cargan el resultado; un acento por carrusel; segundo color una vez o nunca. | CLAUDE; STRATTON OAKMONT + GOING VIRAL; GPT-5.6 SOL |
-| Swipe explícito en portada, ausente en la última | REGLA (4/5). `pie: Desliza`; `cta-cara` sin barra inferior. | Mano amarilla, SWIPE FOR MORE, pastilla verde |
-| Gatillos del titular | REGLA (5/5). Hecho consumado + vigencia + prueba social + exclusividad honesta. MARCA: BRUTAL, INSANE y URGENTE rinden; Manuel las sustituye por decisión de voz. | Los cinco titulares |
-| Lámina 2 = prueba sola | REGLA (5/5 prueba; 4/5 sin texto). La captura, el antes/después, la foto del documento, la página 1: 0-30 palabras, sin promesa ni `loop`. | Dashboard, carpeta, memo 1/3, clip, «Así es» |
-| El tema escrito dentro de la prueba | REGLA (4/5). Título del dashboard, rótulo del folder, membrete, De/Para. | DcWB, DbvN, Dao, DblQtr |
-| Cifras con unidad en el mismo bloque | REGLA (5/5). Cada afirmación viaja con número; decimales solo si son propios; fuente en `pie` (corrección al antipatrón de 5/5). | «14 seconds later», «12-16 vídeos», 1994, 90 MINUTES |
-| Prueba social numérica visible | REGLA (4/5). Contadores de vistas, captura del perfil, «going viral». | DbvN L4, DblQtr L5, Dao, Dannc |
-| Oscuro para texto, claro para la prueba | REGLA (5/5). Alternancia oscuro → claro → oscuro. | Los cinco |
-| Una plantilla constante | REGLA (2/5 + 1 negativa). Dos zonas, documento a sangre o tarjetas: lo que no cambia es la altura del texto. DcWB la varía y se nota. | Dannc, DblQtr, Dao, DbvN |
+| Portada partida | OBSERVACIÓN (4/5 + variante). Imagen de reconocimiento en el 50-65% superior; franja oscura (35-50%) con el titular. Variante: foto a sangre con tarjeta oscura. | DcWB, DblQtr, Dao, Dannc; DbvN |
+| Reconocimiento del tema en 0.3 s | OBSERVACIÓN (5/5 nombre; 4/5 objeto). Nombre de la herramienta en el titular y su objeto visible (captura, logo en círculo, key visual, folder con el tema escrito). Manuel es la firma, el tema es el reconocimiento. | Dashboard, folder, Tesla, logo Stratton, esfera |
+| Titular condensado de 10-24 palabras | OBSERVACIÓN (4/5). Mayúsculas del look, 3-5 líneas, cada línea una unidad de sentido; el motor limita `titulo` a 9: repartir en `titulo` + `subtitulo`. | 15, 24, 11, 13 palabras |
+| Acento en 1-4 palabras | OBSERVACIÓN (4/5). Solo las que cargan el resultado; un acento por carrusel; segundo color una vez o nunca. | CLAUDE; STRATTON OAKMONT + GOING VIRAL; GPT-5.6 SOL |
+| Swipe explícito en portada, ausente en la última | OBSERVACIÓN (4/5). `pie: Desliza`; `cta-cara` sin barra inferior. | Mano amarilla, SWIPE FOR MORE, pastilla verde |
+| Gatillos del titular | OBSERVACIÓN (5/5). Hecho consumado + vigencia + prueba social + exclusividad honesta. MARCA: BRUTAL, INSANE y URGENTE rinden; Manuel las sustituye por decisión de voz. | Los cinco titulares |
+| Lámina 2 = prueba sola | OBSERVACIÓN (5/5 prueba; 4/5 sin texto). La captura, el antes/después, la foto del documento, la página 1: 0-30 palabras, sin promesa ni `loop`. | Dashboard, carpeta, memo 1/3, clip, «Así es» |
+| El tema escrito dentro de la prueba | OBSERVACIÓN (4/5). Título del dashboard, rótulo del folder, membrete, De/Para. | DcWB, DbvN, Dao, DblQtr |
+| Cifras con unidad en el mismo bloque | OBSERVACIÓN (5/5). Cada afirmación viaja con número; decimales solo si son propios; fuente en `pie` (corrección al antipatrón de 5/5). | «14 seconds later», «12-16 vídeos», 1994, 90 MINUTES |
+| Prueba social numérica visible | OBSERVACIÓN (4/5). Contadores de vistas, captura del perfil, «going viral». | DbvN L4, DblQtr L5, Dao, Dannc |
+| Oscuro para texto, claro para la prueba | OBSERVACIÓN (5/5). Alternancia oscuro → claro → oscuro. | Los cinco |
+| Una plantilla constante | OBSERVACIÓN (2/5 + 1 negativa). Dos zonas, documento a sangre o tarjetas: lo que no cambia es la altura del texto. DcWB la varía y se nota. | Dannc, DblQtr, Dao, DbvN |
 | Marca propia en portada | NOTA (4/5; 2/5 en todas; 2/5 la quitan del contenido). En la skill: barras superior e inferior. | Wordmarks y monogramas |
 | El giro «se ve increíble, pero» | NOTA (1/5) adoptada como MARCA: qué sí hace, qué no, qué exige. Corrige el «hype en láminas, matiz en caption». | DcWB L4; antiejemplo Dannc |
-| Antes / Ahora del mismo caso | REGLA (2/5). Ítems paralelos, mismo encuadre; posición libre. | DbvN L2 y L4; Dannc L5 |
-| Copiable regalado o retenido | REGLA (3/5 la regalan; 1/5 la esconde). Versión corta en lámina, completa por DM. | DcWB L3, Dao L7, DblQtr; DbvN pixelado |
-| Teaser del entregable | REGLA (3/5). Mostrar que hay algo más fuera de alcance, sin FOMO impersonal. | Clase pixelada, «never see this page», waitlist |
-| Cierre que cambia de registro | REGLA (4/5; clon exacto 1/5). `cta-cara` hermana de la portada. | Dao L10 clon; Dannc, DblQtr, DbvN |
-| CTA con palabra clave y su costo | REGLA por métricas. Sin palabra: 0.65-1.1%; pregunta abierta: 1.76%; palabra clave: 168%. Follow solo como P.D. Trade-off: los sin palabra tienen 7-12x más likes; medir ambas variantes. | Los cinco |
-| Densidad variable, idea por línea | REGLA (5/5). ≤12 palabras por línea, cuerpo ≈40-44 px; denso funciona con interlineado 2x. QA: ≤40 palabras en láminas de texto; el documento va como imagen. | Dannc 8-12; DblQtr 110-170 |
-| Permanencia | REGLA (4/5). Clips propios o documento que se lee con zoom; el número de láminas lo decide el material. | 2/8, 1/5, 7/8 con video; documentos |
-| Crudeza en la prueba, no en el diseño | REGLA (4/5). Captura tal cual, typo del original, foto con celular; portada y cierre pulidos. Las faltas de ortografía de DbvN no se copian. | DcWB, DblQtr, Dao, Dannc |
-| Tono | REGLA (4/5 sin humor; 4/5 impersonal; 1/5 segunda persona). Segunda persona en láminas (el único con leads), postura en el caption; la primera persona en lámina es HIPÓTESIS. | DbvN; DblQtr caption |
-| Logos de terceros | REGLA (3/5). Reales, pequeños, máximo dos. | Dao 1; DbvN 4 (antiejemplo) |
+| Antes / Ahora del mismo caso | OBSERVACIÓN (2/5). Ítems paralelos, mismo encuadre; posición libre. | DbvN L2 y L4; Dannc L5 |
+| Copiable regalado o retenido | OBSERVACIÓN (3/5 la regalan; 1/5 la esconde). Versión corta en lámina, completa por DM. | DcWB L3, Dao L7, DblQtr; DbvN pixelado |
+| Teaser del entregable | OBSERVACIÓN (3/5). Mostrar que hay algo más fuera de alcance, sin FOMO impersonal. | Clase pixelada, «never see this page», waitlist |
+| Cierre que cambia de registro | OBSERVACIÓN (4/5; clon exacto 1/5). `cta-cara` hermana de la portada. | Dao L10 clon; Dannc, DblQtr, DbvN |
+| CTA con palabra clave y su costo | OBSERVACIÓN de métricas distintas; no causalidad. Sin palabra: 0.65-1.1%; pregunta abierta: 1.76%; palabra clave: 168%. Follow solo como P.D. Trade-off: los sin palabra tienen 7-12x más likes; medir ambas variantes. | Los cinco |
+| Densidad variable, idea por línea | OBSERVACIÓN (5/5). ≤12 palabras por línea, cuerpo ≈40-44 px; denso funciona con interlineado 2x. QA: ≤40 palabras en láminas de texto; el documento va como imagen. | Dannc 8-12; DblQtr 110-170 |
+| Permanencia | OBSERVACIÓN (4/5). Clips propios o documento que se lee con zoom; el número de láminas lo decide el material. | 2/8, 1/5, 7/8 con video; documentos |
+| Crudeza en la prueba, no en el diseño | OBSERVACIÓN (4/5). Captura tal cual, typo del original, foto con celular; portada y cierre pulidos. Las faltas de ortografía de DbvN no se copian. | DcWB, DblQtr, Dao, Dannc |
+| Tono | OBSERVACIÓN (4/5 sin humor; 4/5 impersonal; 1/5 segunda persona). Segunda persona en láminas (el único con leads), postura en el caption; la primera persona en lámina es HIPÓTESIS. | DbvN; DblQtr caption |
+| Logos de terceros | OBSERVACIÓN (3/5). Reales, pequeños, máximo dos. | Dao 1; DbvN 4 (antiejemplo) |
 
 ### Portada
 
-`portada-foto` con scrim o `portada-titulo` con Manuel en `recorte` sobre `panel` + el objeto de la noticia (icono oficial pequeño, captura con nombre legible, documento con título). Titular 10-24 palabras en 3-5 líneas (frase fuerte en `titulo`, resto en `subtitulo`), 1-4 palabras en `*acento*`, fórmulas 4 y 5 de HOOKS-ES. Número en portada opcional (0/5 en el corpus). Gatillos apilados; registro sobrio. `sticker` opcional («Ya se puede», «Documento completo»). Logos reales ≤2. `pie: Desliza` obligatorio. Marca propia en posición fija. Concurso de 3-4 portadas juzgadas a 270 px. Registro emocional: asombro o exclusividad honesta; nunca miedo. Prohibido rostro ajeno, fotograma, deepfake o key visual ajeno como protagonista (por derechos y marca; en el corpus rinden).
+`portada-foto` con scrim o `portada-titulo` con Manuel en `recorte` sobre `panel` + el objeto de la noticia (icono oficial pequeño, captura con nombre legible, documento con título). Titular 10-24 palabras en 3-5 líneas (frase fuerte en `titulo`, resto en `subtitulo`), 1-4 palabras en `*acento*`, fórmulas 4 y 5 de HOOKS-ES. Número en portada opcional (0/5 en el corpus). Gatillos apilados; registro sobrio. `sticker` opcional («Ya se puede», «Documento completo»). Logos reales ≤2. `pie: Desliza` obligatorio. Marca propia en posición fija. Revisar la portada elegida a 270 px; no producir alternativas pagadas por rutina. Registro emocional: asombro o exclusividad honesta; nunca miedo. Prohibido rostro ajeno, fotograma, deepfake o key visual ajeno como protagonista (por derechos y marca; en el corpus rinden).
 
 ### Cuerpo
 
@@ -417,26 +419,26 @@ No cuando cada ítem necesita más de una o dos líneas (`guia` o `tutorial`); n
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Retícula única en las láminas de ítem | REGLA (4/4). Misma posición de número, título, imagen, razón y pie; cambian solo número, imagen y texto. | Las cuatro |
-| Eje del veredicto repetido | REGLA (3/4). Título del eje, etiquetas de columnas o header de bloque en cada lámina; cualquier lámina se entiende sola. `etiqueta_top` o `kicker` fijo. | «FAMA VS VALOR» ×10; IA/HUMANO ×5; «CAPA N» |
-| Un ítem por lámina, accionable, nombre exacto | REGLA (3/4 + adaptación 35-60). Comprar, instalar, ver, copiar; palabra exacta que el lector buscaría. DavhSnZDP4x mete 6-10 por lámina y exige zoom. | «modal», «cedar», 10 películas |
-| Una imagen por lámina con tratamiento idéntico | REGLA. Objeto-titular: logo real, producto, póster propio al 40-50%. Ítem-texto: personaje con atributo por bloque o misma foto clonada. Nunca la misma imagen en dos láminas seguidas. | Pósters, productos, mascotas, foto clonada |
-| Densidad por lámina | REGLA. Título 2-4 palabras; razón 7-12; total ≤20 (objeto) o ≤30 (par comparativo). | Db4IK3PmZVj, DaYqCibCD55, DaTPfaFkScW |
-| Fondo idéntico en interiores | REGLA. Portada y cierre pueden cambiarlo; foto de fondo solo con overlay oscuro. | 4/4 interiores; 2/4 cambian en extremos |
-| Uno o dos acentos con función fija | REGLA (3/4 usan dos). El segundo cumple una función en TODAS las láminas, no en cuatro de cinco. | Menta + turquesa; terracota + cian; azul + rojo |
-| Display grotesca pesada | REGLA (3/4). Mayúsculas opcionales (2/4). Vetos de marca: serif y mono fuera de `prompt`. | Bebas/Anton, Druk, Poppins |
-| Portada que se entiende sin leer y desinfla lo obvio | REGLA (4/4). Imagen-argumento + titular de 3-7 palabras con la comparación que más duele. 0/4 usan el rostro del autor. | Póster con Valor en cero; oso; DiCaprio; dos manos |
-| Portada y cierre rompen la retícula | REGLA (3/4). Variante: sin portada, la lámina 1 es el ítem 1. | DaYqCibCD55, DavhSnZDP4x, DaTPfaFkScW; Db4IK3PmZVj |
-| Lámina 2 = primer ítem | REGLA (4/4). Sin lámina de promesa intermedia. | Las cuatro |
+| Retícula única en las láminas de ítem | OBSERVACIÓN (4/4). Misma posición de número, título, imagen, razón y pie; cambian solo número, imagen y texto. | Las cuatro |
+| Eje del veredicto repetido | OBSERVACIÓN (3/4). Título del eje, etiquetas de columnas o header de bloque en cada lámina; cualquier lámina se entiende sola. `etiqueta_top` o `kicker` fijo. | «FAMA VS VALOR» ×10; IA/HUMANO ×5; «CAPA N» |
+| Un ítem por lámina, accionable, nombre exacto | OBSERVACIÓN (3/4 + adaptación 35-60). Comprar, instalar, ver, copiar; palabra exacta que el lector buscaría. DavhSnZDP4x mete 6-10 por lámina y exige zoom. | «modal», «cedar», 10 películas |
+| Una imagen por lámina con tratamiento idéntico | OBSERVACIÓN. Objeto-titular: logo real, producto, póster propio al 40-50%. Ítem-texto: personaje con atributo por bloque o misma foto clonada. Nunca la misma imagen en dos láminas seguidas. | Pósters, productos, mascotas, foto clonada |
+| Densidad por lámina | OBSERVACIÓN. Título 2-4 palabras; razón 7-12; total ≤20 (objeto) o ≤30 (par comparativo). | Db4IK3PmZVj, DaYqCibCD55, DaTPfaFkScW |
+| Fondo idéntico en interiores | OBSERVACIÓN. Portada y cierre pueden cambiarlo; foto de fondo solo con overlay oscuro. | 4/4 interiores; 2/4 cambian en extremos |
+| Uno o dos acentos con función fija | OBSERVACIÓN (3/4 usan dos). El segundo cumple una función en TODAS las láminas, no en cuatro de cinco. | Menta + turquesa; terracota + cian; azul + rojo |
+| Display grotesca pesada | OBSERVACIÓN (3/4). Mayúsculas opcionales (2/4). Vetos de marca: serif y mono fuera de `prompt`. | Bebas/Anton, Druk, Poppins |
+| Portada que se entiende sin leer y desinfla lo obvio | OBSERVACIÓN (4/4). Imagen-argumento + titular de 3-7 palabras con la comparación que más duele. 0/4 usan el rostro del autor. | Póster con Valor en cero; oso; DiCaprio; dos manos |
+| Portada y cierre rompen la retícula | OBSERVACIÓN (3/4). Variante: sin portada, la lámina 1 es el ítem 1. | DaYqCibCD55, DavhSnZDP4x, DaTPfaFkScW; Db4IK3PmZVj |
+| Lámina 2 = primer ítem | OBSERVACIÓN (4/4). Sin lámina de promesa intermedia. | Las cuatro |
 | Numeración continua visible | REGLA para Manuel (2/4). 01…N sin reiniciar, numeral bien escrito; N anunciado en portada. | DavhSnZDP4x; DaTPfaFkScW (numeral al revés) |
 | Razón de una línea | RECOMENDACIÓN (2/4). Razón + remate; el veredicto puro también funciona para likes. | DaYqCibCD55; Db4IK3PmZVj sin porqué |
 | Frase-takeaway al pie | OPCIONAL (1/4 + skill). `loop` ≤8 palabras sin flecha. | DavhSnZDP4x |
-| Orden | REGLA (1/4 + higiene). Abre el más discutible; alternar veredictos; sin evidencia de «la joya al final». | Db4IK3PmZVj |
-| CTA con palabra clave y entregable exclusivo | REGLA. Con palabra: 38% y 6.75%; sin ella: 0.34% y 0.05%. | Las cuatro |
-| Receta de la lámina CTA | REGLA (del mejor convertidor). Pregunta en display, palabra sola en caja con comillas, réplica dibujada de la caja de comentarios, remate de 3 palabras; moraleja de dos mitades opcional. | DavhSnZDP4x L7; DaTPfaFkScW L7 |
-| Caption como segundo gancho | REGLA. Repite casi textual el ítem más polémico; instrucción directa con la palabra (no «¿qué opinan?»); 0-3 hashtags. | DaTPfaFkScW, DavhSnZDP4x; Db4IK3PmZVj 32 comentarios |
+| Orden | OBSERVACIÓN (1/4 + higiene). Abre el más discutible; alternar veredictos; sin evidencia de «la joya al final». | Db4IK3PmZVj |
+| CTA con palabra clave y entregable exclusivo | OBSERVACIÓN. Con palabra: 38% y 6.75%; sin ella: 0.34% y 0.05%. | Las cuatro |
+| Receta de la lámina CTA | OBSERVACIÓN (del mejor convertidor). Pregunta en display, palabra sola en caja con comillas, réplica dibujada de la caja de comentarios, remate de 3 palabras; moraleja de dos mitades opcional. | DavhSnZDP4x L7; DaTPfaFkScW L7 |
+| Caption como segundo gancho | OBSERVACIÓN. Repite casi textual el ítem más polémico; instrucción directa con la palabra (no «¿qué opinan?»); 0-3 hashtags. | DaTPfaFkScW, DavhSnZDP4x; Db4IK3PmZVj 32 comentarios |
 | Firma discreta | HIGIENE (2/4). Handle al pie; el que más convirtió no firma. | Db4IK3PmZVj, DaYqCibCD55 |
-| Sin flechas de desliza, barras ni viñetas | REGLA (4/4). `pie` vacío en portada. | Las cuatro |
+| Sin flechas de desliza, barras ni viñetas | OBSERVACIÓN (4/4). `pie` vacío en portada. | Las cuatro |
 | Escala visual sin números | NOTA. Dos barras con etiqueta y sin cifra; mientras no exista `medidor`, `dato-hero` con palabra-veredicto o `comparativa`. | Db4IK3PmZVj |
 | Solape objeto-título | NOTA. Cuesta cero; nunca sobre la razón. | DaYqCibCD55 |
 | Misma imagen, dos textos | NOTA. Todas las láminas `comparativa`, títulos fijos, primera palabra del lado bueno en alerta. | DaTPfaFkScW |
@@ -444,7 +446,7 @@ No cuando cada ítem necesita más de una o dos líneas (`guia` o `tutorial`); n
 
 ### Portada
 
-Imagen-argumento obligatoria que cuente la comparación sin leer (la herramienta famosa con la utilidad en cero, dos objetos iguales en manos distintas, el objeto aburrido delante del glamoroso); el rostro de Manuel acompaña, no sustituye. Fórmulas HOOKS-ES 1, 8 o 2: «Antes de meterle IA a tu negocio, invierte en *estas 5*», «ChatGPT escribe *horrible*. Estas 7 instrucciones lo arreglan», «Famosas vs *útiles*». 3-7 palabras, una en acento (con `recorte`, ≤6 y ninguna de más de 11 letras). Promesa numérica visible (subtítulo con N, chips o sticker «1 de 7»): preferencia de la cuenta. Portada y cierre rompen la retícula. Provocación amable, nunca miedo. Sin «Desliza» (`pie` vacío). Concurso de 3-4. N de portada = N de ítems = N del caption.
+Imagen-argumento obligatoria que cuente la comparación sin leer (la herramienta famosa con la utilidad en cero, dos objetos iguales en manos distintas, el objeto aburrido delante del glamoroso); el rostro de Manuel acompaña, no sustituye. Fórmulas HOOKS-ES 1, 8 o 2: «Antes de meterle IA a tu negocio, invierte en *estas 5*», «ChatGPT escribe *horrible*. Estas 7 instrucciones lo arreglan», «Famosas vs *útiles*». 3-7 palabras, una en acento (con `recorte`, ≤6 y ninguna de más de 11 letras). Promesa numérica visible (subtítulo con N, chips o sticker «1 de 7»): preferencia de la cuenta. Portada y cierre rompen la retícula. Provocación amable, nunca miedo. Sin «Desliza» (`pie` vacío). Selección textual antes del arte. N de portada = N de ítems = N del caption.
 
 ### Cuerpo
 
@@ -510,27 +512,27 @@ No sin prueba real; no cuando el tema exige explicación; no cuando los elemento
 
 ### Referencias
 
-- DbdlyYlDYHg · @wallstreetoasis · 4 láminas (2 memes tier list + 2 capturas de Slack) · 3,249 / 4 (0.0012) · venta en caption con link in bio. La deconstrucción no registra fecha, dimensiones, coordenadas ni hora: todo dato de ese tipo aquí es propuesta. Etiquetas: REGLA (se repite dentro del post), NOTA (idiosincrasia), CONTRATO (skill), MARCA, HIPÓTESIS.
+- DbdlyYlDYHg · @wallstreetoasis · 4 láminas (2 memes tier list + 2 capturas de Slack) · 3,249 / 4 (0.0012) · venta en caption con link in bio. La deconstrucción no registra fecha, dimensiones, coordenadas ni hora: todo dato de ese tipo aquí es propuesta. Etiquetas: OBSERVACIÓN (se repite dentro del post), NOTA (idiosincrasia), CONTRATO (skill), MARCA, HIPÓTESIS.
 - Skill: SKILL.md (originalidad: cero fotogramas ajenos; un solo rostro; logo de tercero nunca protagonista; prohibido link en bio), PSICOLOGIA-VIRALIDAD (jerarquía de CTA: enviar > guardar > palabra clave; logos de otras apps no recomendados), IMAGENES.md (logo real desde App Store; Simple Icons; censurar capturas ANTES de guardarlas en `assets/`, el repo es público), MEDICION.md (diagnóstico a 48 h), MI-MARCA (emojis nunca en láminas: la captura necesita excepción; palabras ≤8 letras; Manuel en portada y CTA: el meme 1 necesita excepción).
 
 ### Anatomía
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Pastilla de título | REGLA. Rectángulo rojo #c00000 redondeado, texto blanco bold ~60 px, 2-3 palabras que nombran la CATEGORÍA con actitud de tribu (arquetipo o autoparodia), no el veredicto; arriba-izquierda sin tapar al rey. | «Finance bro vest», «Slop bowl» |
-| Pirámide 1-2-5 sobre figuras en pose | REGLA. Rey sentado (caja grande), dos guardias de pie (medianas), cinco arrodillados en fila (chicas); los logos van SOBRE figuras humanas en esas poses: la pose se lee como estatus. Sin lista escrita, numeración ni flechas. | L1 y L2 misma distribución |
-| Contenido reconocible sin leer | REGLA. Logo real, ícono o nombre ≤2 palabras en caja de contraste (blanca por omisión, oscura si el logo es blanco); tamaño por rango; ≤8 elementos y ~12 palabras por lámina. | 16 logos, cero palabras salvo pastilla; Dig Inn en negro |
-| Coherencia de tribu entre meme y prueba | REGLA. El meme retrata a la tribu; la prueba muestra a alguien de esa tribu consiguiendo lo que desea. No hace falta que el rey sea el tema de la prueba. | Chalecos y bowls → ofertas en JPM y GS |
-| Segunda ronda con el mismo molde | REGLA. Misma pastilla, escenario y pirámide; cambia categoría y elementos; puede saltar de dominio. Exactamente 2 memes en la referencia; sin evidencia sobre 3. | L2 = L1 con otro tema |
-| Corte brusco humor → prueba | REGLA. De escenario teñido a blanco plano vacío sin barras ni título. | L2 → L3 |
-| Captura de chat como prueba | REGLA. Chat real de la comunidad (WhatsApp para LATAM), centrada, ~20% de aire, cuerpo ≥40 px aunque quede pixelada; 60-70 palabras. | L3 y L4 |
-| Censura asimétrica | REGLA. Alumno tapado con rectángulos grises toscos #c8c8c8; fundador visible con foto real (es el aval); hora conservada. | L3 y L4 |
-| Subrayado rojo a mano | REGLA. Trazo irregular bajo UNA frase con el resultado concreto. | «accepeted an offer at JPM»; «offer to join GS» |
-| Testimonio en dos voces | REGLA. Alumno: la noticia con resultado en sus palabras (gratitud si la puso). Fundador: felicitación corta + UN detalle que sube la credibilidad (esfuerzo del alumno o dificultad del caso). | L3 (esfuerzo), L4 (visa) |
-| Escalada en la segunda prueba | REGLA. Firma más grande o dificultad extra; nunca dos pruebas iguales. | JPM → GS + visa |
-| Error humano del alumno y del creador | REGLA. Typos intactos, censura tosca, subrayado que se sale, cajas desiguales, captura pixelada: certificado de autenticidad. Límite: pastilla, rey y frase subrayada legibles; sin typos en pastilla ni caption. | «accepeted», «a good news», cajas inconsistentes |
-| Sin marca en memes ni pruebas | REGLA. Sin barra, handle ni paginación: parece captura reenviada. CONTRATO: la firma va solo en el CTA que añade la skill. | L1-L4 |
-| Densidad | REGLA. Memes 2-3 palabras (tope ~12 con cajas tipográficas); pruebas 60-70 en formato chat. | Medido |
+| Pastilla de título | OBSERVACIÓN. Rectángulo rojo #c00000 redondeado, texto blanco bold ~60 px, 2-3 palabras que nombran la CATEGORÍA con actitud de tribu (arquetipo o autoparodia), no el veredicto; arriba-izquierda sin tapar al rey. | «Finance bro vest», «Slop bowl» |
+| Pirámide 1-2-5 sobre figuras en pose | OBSERVACIÓN. Rey sentado (caja grande), dos guardias de pie (medianas), cinco arrodillados en fila (chicas); los logos van SOBRE figuras humanas en esas poses: la pose se lee como estatus. Sin lista escrita, numeración ni flechas. | L1 y L2 misma distribución |
+| Contenido reconocible sin leer | OBSERVACIÓN. Logo real, ícono o nombre ≤2 palabras en caja de contraste (blanca por omisión, oscura si el logo es blanco); tamaño por rango; ≤8 elementos y ~12 palabras por lámina. | 16 logos, cero palabras salvo pastilla; Dig Inn en negro |
+| Coherencia de tribu entre meme y prueba | OBSERVACIÓN. El meme retrata a la tribu; la prueba muestra a alguien de esa tribu consiguiendo lo que desea. No hace falta que el rey sea el tema de la prueba. | Chalecos y bowls → ofertas en JPM y GS |
+| Segunda ronda con el mismo molde | OBSERVACIÓN. Misma pastilla, escenario y pirámide; cambia categoría y elementos; puede saltar de dominio. Exactamente 2 memes en la referencia; sin evidencia sobre 3. | L2 = L1 con otro tema |
+| Corte brusco humor → prueba | OBSERVACIÓN. De escenario teñido a blanco plano vacío sin barras ni título. | L2 → L3 |
+| Captura de chat como prueba | OBSERVACIÓN. Chat real de la comunidad (WhatsApp para LATAM), centrada, ~20% de aire, cuerpo ≥40 px aunque quede pixelada; 60-70 palabras. | L3 y L4 |
+| Censura asimétrica | OBSERVACIÓN. Alumno tapado con rectángulos grises toscos #c8c8c8; fundador visible con foto real (es el aval); hora conservada. | L3 y L4 |
+| Subrayado rojo a mano | OBSERVACIÓN. Trazo irregular bajo UNA frase con el resultado concreto. | «accepeted an offer at JPM»; «offer to join GS» |
+| Testimonio en dos voces | OBSERVACIÓN. Alumno: la noticia con resultado en sus palabras (gratitud si la puso). Fundador: felicitación corta + UN detalle que sube la credibilidad (esfuerzo del alumno o dificultad del caso). | L3 (esfuerzo), L4 (visa) |
+| Escalada en la segunda prueba | OBSERVACIÓN. Firma más grande o dificultad extra; nunca dos pruebas iguales. | JPM → GS + visa |
+| Error humano del alumno y del creador | OBSERVACIÓN. Typos intactos, censura tosca, subrayado que se sale, cajas desiguales, captura pixelada: certificado de autenticidad. Límite: pastilla, rey y frase subrayada legibles; sin typos en pastilla ni caption. | «accepeted», «a good news», cajas inconsistentes |
+| Sin marca en memes ni pruebas | OBSERVACIÓN. Sin barra, handle ni paginación: parece captura reenviada. CONTRATO: la firma va solo en el CTA que añade la skill. | L1-L4 |
+| Densidad | OBSERVACIÓN. Memes 2-3 palabras (tope ~12 con cajas tipográficas); pruebas 60-70 en formato chat. | Medido |
 | Venta fuera de las láminas | NOTA adaptada. WSO vende en caption con link in bio, sin pregunta: 0.0012 comentarios/like. Lección: venta fuera + pregunta sobre el ranking. CONTRATO/MARCA: `cta-cara` con palabra clave; link en bio prohibido por decisión de skill. | Caption y métricas |
 | Caption en voz de mentor | REGLA parcial. Primera línea seria, 3 consejos de una línea, cierre comercial; 1-2 emojis en total (MARCA). | Caption |
 | Escenario del meme | NOTA no portable tal cual. Fotograma anime con derechos y plantilla ya conocida; lo portable es el concepto (jerarquía con figuras) y la repetición para construir familiaridad propia. | L1-L2 |
@@ -597,7 +599,7 @@ La captura de publicación en tres bloques. Una sola referencia (n=1) y sin imag
 
 ### Cuándo usarlo y cuándo no
 
-Úsalo cuando tienes UNA cifra concreta y rara con fuente citable sobre un tema que la audiencia ya conversa esa semana (lanzamiento de un modelo, cierre con el SAT, Buen Fin, cambio de WhatsApp Business), puedes adjuntarle una prueba visual real y tienes una respuesta humana de ≤20 palabras que desinfle la seriedad. Se lee entero sin zoom en 4-5 segundos y cuesta cero producirlo desde una publicación real. Hipótesis sin dato propio: su métrica es envíos. Úsalo como una de las 3-4 versiones de §3b y como pieza táctica sobre un pico; la frecuencia la decide la prueba A/B del primer mes.
+Úsalo cuando tienes UNA cifra concreta y rara con fuente citable sobre un tema que la audiencia ya conversa esa semana (lanzamiento de un modelo, cierre con el SAT, Buen Fin, cambio de WhatsApp Business), puedes adjuntarle una prueba visual real y tienes una respuesta humana de ≤20 palabras que desinfle la seriedad. Se lee entero sin zoom en 4-5 segundos y cuesta cero producirlo desde una publicación real. Hipótesis sin dato propio: su métrica es envíos. Úsalo como una de las propuestas textuales de §3 y como pieza táctica sobre un pico; la frecuencia la decide la prueba A/B del primer mes.
 
 No cuando el objetivo es guardados o leads (el carrusel guarda 9x más; la imagen única pierde alcance interanual). No sin fuente. No cuando la «prueba» sería una captura ajena sin crédito o algo retocado. No cuando el chiste necesita explicación o una referencia que un dueño de 50 años en Lima no tiene. No cuando el tema requiere pasos. No si el remate señala al lector desde fuera.
 
@@ -679,7 +681,7 @@ Perfil documental: «el poderoso que nadie conoce y que ya decide sobre tu negoc
 
 ### Cuándo usarlo y cuándo no
 
-Úsalo cuando hay un personaje, empresa o institución real, poco conocida por la audiencia (prueba: un dueño de 50 años en Guadalajara no lo reconoce por nombre), que toma decisiones que afectan al dueño: quién decide qué ve tu cliente en Google, quién fabrica los chips de la IA que pagas, quién diseña el dinero digital. Requisitos: 10-12 hechos verificables con fecha y fuente; cargo verificado como vigente (o narrado en pasado con rango de fechas); una cita textual real con foro y año; tres instituciones o marcas conocidas para dimensionar al desconocido; un puente concreto a facturación, efectivo, SAT, cobros por WhatsApp o precio de las herramientas. Objetivo medible: `comments` + `follows` (la referencia solo tiene comentarios medidos: 2,165 con likes ocultos). Guardados y compartidos son hipótesis.
+Úsalo cuando hay un personaje, empresa o institución real, poco conocida por la audiencia (prueba: un dueño de 50 años en Guadalajara no lo reconoce por nombre), que toma decisiones que afectan al dueño: quién decide qué ve tu cliente en Google, quién fabrica los chips de la IA que pagas, quién diseña el dinero digital. Requisitos: 10-12 hechos verificables con fecha y fuente; cargo verificado como vigente (o narrado en pasado con rango de fechas); una cita textual real con foro y año; tres instituciones o marcas conocidas para dimensionar al desconocido; un puente concreto a facturación, efectivo, SAT, cobros por WhatsApp o precio de las herramientas. Objetivo medible: `comments` + `follows` (la referencia solo tiene comentarios medidos: 2,165 con likes ocultos). Guardados y compartidos no están disponibles; su comportamiento es una hipótesis.
 
 No cuando el personaje es famoso para la audiencia (Musk, Altman). No cuando el hecho central caducó y no se puede narrar en pasado con fecha (el original presenta como actual un cargo terminado un año antes). No sin fuentes ni fotos con licencia. No para experiencias propias con conflicto y resultado (ese es el `historia` clásico). No cuando el único gancho es conspiración o miedo: fue el motor 1 de los comentarios del original y se renuncia a él por MI-MARCA §6 y PSICOLOGIA §1.6, aceptando el costo. No para criticar personas ni política. No cuando el tema no toca IA aplicada o el dinero del negocio.
 
@@ -692,19 +694,19 @@ No cuando el personaje es famoso para la audiencia (Musk, Altman). No cuando el 
 
 | Pieza | Regla | Evidencia |
 |---|---|---|
-| Portada: brecha de identidad en dos cláusulas | REGLA. Superlativo + «el hombre que dirige el banco que manda a los bancos»; en la skill la cláusula 1 va al título (4-7 palabras, una `*acento*`) y la 2 al `subtitulo` ≤12 con nombre y dos puntos. El look decide la caja. | Titular de 19 palabras en 4 líneas + «Meet Agustín Carstens…:» |
-| Plantilla interior: foto arriba + texto abajo | REGLA. `foto-texto` con `imagen.pos: arriba`, título ≤6 palabras, `cuerpo` ≤25 en 2-3 frases de una línea, total ≤40; dominante ≥60% pero nunca 4 seguidas. | 15 láminas idénticas de 25-45 palabras |
-| Guion dossier en 15 tiempos (se comprime a 10-12) | REGLA. Quién → qué es anclado en 3 conocidas → origen → escalada → carácter por contraste → logros → postura → cita + reacción → te afecta → ejemplo → bajo perfil en paralelo → críticas → cita-remate → síntesis en 3 frases → nombre. | Láminas 2 a 16 en ese orden |
-| Ancla en lo conocido | REGLA. La lámina «qué es» nombra tres instituciones que el lector sí conoce y las subordina al personaje. | «Fed, ECB, Bank of Japan… tell the money printers what to do» |
-| Negrita con función única | REGLA. `**frase**` solo en frase-etiqueta, citas y nombre del cierre; `*acento*` una por lámina; `==marcador==` uno. | Bold solo en 4 puntos |
-| Cita como prueba y detonador | REGLA. Layout `cita` una vez: ≤16 palabras, `autor` «Nombre · foro · año», reacción de una línea en `cuerpo` sin adjetivos de miedo; segunda cita solo verificable y como negrita. | Lámina 9 + «A chilling preview»; lámina 14 sin fuente |
-| «Te afecta a ti» + ejemplo | REGLA. Después de la cita, en la segunda mitad; `dato-hero` con cifra o año y ejemplo para un negocio de 10 personas. | Láminas 10-11 |
-| Dos toques de carácter | REGLA. Contraste temprano en prosa («no es tu CEO típico») y bajo perfil tardío en paralelo «Sin X. Sin Y. Solo Z.», una sola vez. | Láminas 6 y 12 |
-| Aceleradores de swipe | REGLA. Cliffhanger a mitad de idea; `loop` de 3-8 palabras sin flecha ni «…»; puntos suspensivos solo en `cuerpo`, ≤1 por lámina. | Láminas 10, 11, 14, 16 |
-| Contrapunto honesto | REGLA. Quién critica y por qué siguen escuchándolo; se describe, no se juzga. | Lámina 13 |
-| Síntesis en tres frases + nombre | REGLA. En la `cheatsheet`: título ≤5, subtítulo = 3 frases paralelas, 3 acciones del lunes; el nombre con epíteto en el título del CTA. | Láminas 15-16 |
-| Caption dossier de 4 párrafos + tesis | REGLA. Quién es con el dato de identidad más fuerte, qué es, postura, tesis citable; la skill añade primera línea ≤125, pregunta abierta, frase de envío, palabra clave, 3-5 hashtags (el original 0). | Caption real |
-| Mecanismo de los comentarios | REGLA con matiz. Tres motores (polémica ideológica, arquetipo del poderoso desconocido, comentarios sobre el físico); se renuncia al conspirativo y se compensa con pregunta abierta. | 2,165 comentarios sin CTA |
+| Portada: brecha de identidad en dos cláusulas | OBSERVACIÓN. Superlativo + «el hombre que dirige el banco que manda a los bancos»; en la skill la cláusula 1 va al título (4-7 palabras, una `*acento*`) y la 2 al `subtitulo` ≤12 con nombre y dos puntos. El look decide la caja. | Titular de 19 palabras en 4 líneas + «Meet Agustín Carstens…:» |
+| Plantilla interior: foto arriba + texto abajo | OBSERVACIÓN. `foto-texto` con `imagen.pos: arriba`, título ≤6 palabras, `cuerpo` ≤25 en 2-3 frases de una línea, total ≤40; dominante ≥60% pero nunca 4 seguidas. | 15 láminas idénticas de 25-45 palabras |
+| Guion dossier en 15 tiempos (se comprime a 10-12) | OBSERVACIÓN. Quién → qué es anclado en 3 conocidas → origen → escalada → carácter por contraste → logros → postura → cita + reacción → te afecta → ejemplo → bajo perfil en paralelo → críticas → cita-remate → síntesis en 3 frases → nombre. | Láminas 2 a 16 en ese orden |
+| Ancla en lo conocido | OBSERVACIÓN. La lámina «qué es» nombra tres instituciones que el lector sí conoce y las subordina al personaje. | «Fed, ECB, Bank of Japan… tell the money printers what to do» |
+| Negrita con función única | OBSERVACIÓN. `**frase**` solo en frase-etiqueta, citas y nombre del cierre; `*acento*` una por lámina; `==marcador==` uno. | Bold solo en 4 puntos |
+| Cita como prueba y detonador | OBSERVACIÓN. Layout `cita` una vez: ≤16 palabras, `autor` «Nombre · foro · año», reacción de una línea en `cuerpo` sin adjetivos de miedo; segunda cita solo verificable y como negrita. | Lámina 9 + «A chilling preview»; lámina 14 sin fuente |
+| «Te afecta a ti» + ejemplo | OBSERVACIÓN. Después de la cita, en la segunda mitad; `dato-hero` con cifra o año y ejemplo para un negocio de 10 personas. | Láminas 10-11 |
+| Dos toques de carácter | OBSERVACIÓN. Contraste temprano en prosa («no es tu CEO típico») y bajo perfil tardío en paralelo «Sin X. Sin Y. Solo Z.», una sola vez. | Láminas 6 y 12 |
+| Aceleradores de swipe | OBSERVACIÓN. Cliffhanger a mitad de idea; `loop` de 3-8 palabras sin flecha ni «…»; puntos suspensivos solo en `cuerpo`, ≤1 por lámina. | Láminas 10, 11, 14, 16 |
+| Contrapunto honesto | OBSERVACIÓN. Quién critica y por qué siguen escuchándolo; se describe, no se juzga. | Lámina 13 |
+| Síntesis en tres frases + nombre | OBSERVACIÓN. En la `cheatsheet`: título ≤5, subtítulo = 3 frases paralelas, 3 acciones del lunes; el nombre con epíteto en el título del CTA. | Láminas 15-16 |
+| Caption dossier de 4 párrafos + tesis | OBSERVACIÓN. Quién es con el dato de identidad más fuerte, qué es, postura, tesis citable; la skill añade primera línea ≤125, pregunta abierta, frase de envío, palabra clave, 3-5 hashtags (el original 0). | Caption real |
+| Mecanismo de los comentarios | OBSERVACIÓN con matiz. Tres motores (polémica ideológica, arquetipo del poderoso desconocido, comentarios sobre el físico); se renuncia al conspirativo y se compensa con pregunta abierta. | 2,165 comentarios sin CTA |
 | Fondo negro + acento solo en portada y CTA | NOTA. Lo portable: acento una vez por lámina; el look lo da `siguiente-look.mjs`. | #000000 + #3A8FB7 |
 | 17 láminas sin numeración ni flecha | NOTA con costo. Apuesta al tiempo de lectura; en la skill >12 es serie; no fusionar dos ideas por lámina; preferir 12 antes que 10. | 17 láminas, ≈520 palabras |
 | Fotos de prensa del personaje | NOTA y riesgo. Cambiar de escena en cada lámina sí; la fuente no (IMAGENES §6). | 16 fotos sin acreditar, dos pixeladas |
@@ -714,7 +716,7 @@ No cuando el personaje es famoso para la audiencia (Musk, Altman). No cuando el 
 
 ### Portada
 
-`portada-foto` en 3:4 con `imagen.pos: fondo` y `alinea: abajo`; sin foto con licencia, Manuel como narrador en `recorte` con `panel` y el nombre del personaje en el subtítulo. Título 4-7 palabras con UNA `*acento*` («El banquero más poderoso que *nadie* conoce», «El mexicano que le dice a la *Fed* qué hacer»); la segunda cláusula al subtítulo o al rehook. Subtítulo ≤12 palabras que presenta al personaje y TERMINA EN DOS PUNTOS. Caja y familia las decide el look. Asombro o indignación útil contra un sistema, nunca miedo. Kicker opcional («Dossier», «Los que deciden»); `serie` y `sticker` «1 de 5» si es serie. «Desliza» siempre. Concurso de 3-4 portadas (superlativo vs pregunta; foto/scrim vs recorte + panel), ≥16/20.
+`portada-foto` en 3:4 con `imagen.pos: fondo` y `alinea: abajo`; sin foto con licencia, Manuel como narrador en `recorte` con `panel` y el nombre del personaje en el subtítulo. Título 4-7 palabras con UNA `*acento*` («El banquero más poderoso que *nadie* conoce», «El mexicano que le dice a la *Fed* qué hacer»); la segunda cláusula al subtítulo o al rehook. Subtítulo ≤12 palabras que presenta al personaje y TERMINA EN DOS PUNTOS. Caja y familia las decide el look. Asombro o indignación útil contra un sistema, nunca miedo. Kicker opcional («Dossier», «Los que deciden»); `serie` y `sticker` «1 de 5» si es serie. «Desliza» siempre. Comparación opcional de composición sobre activos existentes, sin generaciones adicionales.
 
 ### Cuerpo
 
@@ -770,7 +772,7 @@ Cambia el sujeto, no el esqueleto: los que deciden la IA que usa el dueño y no 
 
 ## Cómo elegir el formato
 
-Árbol de decisión corto a partir del tipo de idea. La regla de trabajo sigue vigente: aun con la rama elegida, se renderizan 3-4 portadas en formatos distintos y se elige mirando.
+Árbol de decisión corto a partir del tipo de idea. La elección se hace con propuestas textuales antes del gasto; sólo se renderiza la elegida. La compatibilidad real del motor manda sobre este repertorio histórico.
 
 1. **¿Es un dato duro con fuente?**
    - Cabe en una cifra rara con un remate humano y hay un pico de conversación esta semana → `imagen-unica-tweet` (dato, prueba adjunta, credencial, respuesta).

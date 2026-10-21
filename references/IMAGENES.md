@@ -1,6 +1,8 @@
 # Imágenes del carrusel: qué va por código y qué va por IA
 
-Regla maestra: **todo el texto va por código (HTML). Las imágenes nunca llevan letras.**
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
+Regla maestra: **todo el texto va por código (HTML). Las imágenes generadas no inventan texto; capturas reales pueden mostrar su interfaz verificable.**
 
 Una lámina de carrusel tiene dos capas. La capa de texto la escribe `carrusel.json` y la dibuja `scripts/lib/construir-html.mjs` con las fuentes de `assets/fonts/`. La capa de imagen es un archivo PNG o JPG que se coloca debajo, arriba, a la derecha o al centro. Las dos capas no se mezclan: si una imagen generada trae tipografía, se regenera o se recorta. No se aprovecha "porque quedó bonita".
 
@@ -274,7 +276,7 @@ Si una lámina no pasa el checklist y no hay tiempo de arreglar la imagen, quít
 5. **`abajo` corta la parte baja.** Una imagen con `pos: "abajo"` termina 110 px arriba del borde para no chocar con la barra del handle; si la imagen es apaisada (16:9) queda chica. Genera en 4:3 o 1:1 y con el sujeto centrado.
 6. **Ilustración en el cuerpo: una, no cinco.** Un ícono 3D o personaje en una lámina de cuerpo reactiva la atención; en todas, cansa y compite con el texto.
 
-## Los tres bancos de rostro (obligatorio en cada carrusel)
+## Los tres bancos de rostro (cuando el concepto lo necesite)
 
 La cara del usuario en una situación del tema es lo que da personalidad y lo que la audiencia
 reconoce en el feed. La carpeta de trabajo guarda tres bancos, y se usan en este orden:
@@ -297,7 +299,7 @@ Reglas de uso:
    `media_confirm`). Los de generaciones, con `remove_background` y el `job_id`. El recorte local
    por inundación (`quitar-fondo.py`) solo sirve para ilustraciones sobre fondo liso.
 3. Un carrusel usa **una sola fuente de rostro** (todo real, todo avatar del mismo estilo o todo
-   Soul), dos o tres apariciones (portada, una lámina de cuerpo, CTA) y nunca la misma pose dos veces.
+   Soul). No hay cuota de apariciones; la misma pose puede repetirse si cambia la información y conserva legibilidad.
 4. Todo lo nuevo entra al banco con su línea en `catalogo.json` para la próxima vez.
 
 ### Cómo se alimenta el banco de fotos reales (`scripts/banco-fotos.py`)

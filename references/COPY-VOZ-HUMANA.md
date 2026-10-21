@@ -1,5 +1,7 @@
 # Copy con voz humana para carruseles
 
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
 Este documento es para quien escribe el `carrusel.json`: Claude, un agente o una persona. Dice cómo suena una lámina que alguien leería en voz alta sin pena. Los nombres de campos, layouts y looks son los de `templates/carrusel.schema.json`. `scripts/qa.mjs` mide una parte de estas reglas y bloquea el render cuando fallan. Lo que el QA no puede medir (si suena a folleto) lo mides tú con la prueba de la sección 9.
 
 Tres cosas que el render hace solo. No las escribas a mano:
@@ -10,7 +12,7 @@ Tres cosas que el render hace solo. No las escribas a mano:
 
 ## 1. Longitudes por nivel
 
-Una lámina se lee en menos de 3 segundos con el celular a brazo extendido. Estos topes salen de ahí.
+Estos topes son pautas de edición y restricciones del motor; no demuestran una velocidad universal de lectura. Verifica la legibilidad real y conserva el ejemplo necesario.
 
 | Campo | Layouts donde vive | Tope | Qué hace el QA |
 |---|---|---|---|
@@ -47,11 +49,11 @@ Tope general: 40 palabras por lámina (error) y 70 en las guardables (`lista`, `
 
 ## 3. Datos como arma
 
-- Toda afirmación fuerte lleva número o comparativa (antes/después, A contra B). Si no tiene número, es opinión: bájala de tono o quítala.
-- Números específicos, no redondos. `3,345` y no «más de 3 mil». `18%` y no «casi 20%». Los redondos suenan a promesa; los raros suenan a verdad.
+- Una afirmación factual necesita evidencia pertinente, con o sin números. Distingue hechos de opiniones; usa comparativas cuando aclaren una decisión.
+- Conserva la precisión que soporte la fuente. Un número raro no demuestra verdad ni justifica inventarlo; redondear puede ser útil si se identifica y no cambia la conclusión.
 - Formato: coma de miles (`98,609`), porcentaje pegado (`18%`), moneda cuando hay ambigüedad (`$6 USD`).
 - Sin fuente no se publica. La fuente va en `notas` del JSON (URL, o «Insights del post, fecha»). Si el dato es de un tercero, el tercero aparece en la lámina, en `pie` o en la `nota` del item.
-- El QA pide al menos 2 láminas con número. La meta real es 4 de cada 8.
+- No hay cuota editorial de números. Si un QA histórico avisa por cantidad, registra la preferencia retirada; no fabriques estadísticas ni plazos.
 - No inventes. Si no hay cifra, pon el hecho concreto: un día, una hora, un nombre de herramienta.
 
 ### Lo que enseñan los carruseles de @manueldeleonmjr
@@ -82,8 +84,8 @@ Las frases de la primera tabla son error en `qa.mjs`: bloquean el render. Bórra
 |---|---|
 | en la era digital · en el mundo actual · hoy en día | Nada. Empieza por el hecho. |
 | en un mundo donde · imagina un mundo | Nada. |
-| desbloquea tu potencial | Di qué va a poder hacer: «Cotiza en 3 minutos». |
-| lleva tu negocio al siguiente nivel | El número: «Pasa de 4 a 11 cotizaciones al día». |
+| desbloquea tu potencial | Di qué va a poder hacer: «Prepara esta cotización», con el tiempo sólo si se midió. |
+| lleva tu negocio al siguiente nivel | «Muestra cómo armar una cotización», con ejemplo real o rotulado. |
 | revoluciona · transforma tu vida/negocio | El verbo concreto: «cambia cómo cobras». |
 | el poder de la IA | «Lo que hace ChatGPT con tu lista de precios». |
 | descubre el secreto | «Así lo hago yo». |
@@ -119,12 +121,12 @@ Las cadencias no las detecta ningún programa. Las detectas tú al leer en voz a
 Adaptados de la skill sin-huella-ia (su archivo `COMO-REESCRIBIR.md`; no forma parte de esta skill) al tamaño de una lámina. Se aplican en este orden a cada lámina que suene a folleto.
 
 1. **Quita el arranque y entra por el hecho.** Borra la frase que anuncia. La lámina empieza en la frase más concreta que tengas.
-2. **Mete una cifra rara.** `18%`, `4 minutos`, `3,345`. Si no la tienes, un hecho concreto: «el martes», «en la sucursal de Zapopan».
+2. **Añade un ejemplo concreto o un hecho acreditado.** No inventes cifra, fecha ni ubicación para simular experiencia.
 3. **Rompe el ritmo.** Después del `cuerpo` de 18 palabras, un `loop` de 3.
 4. **Cambia el adjetivo por el dato.** Donde diga «robusto», «integral», «clave», pregúntate qué número estabas evitando.
 5. **Quita los conectores de encabezado.** Lee la primera palabra de cada `cuerpo`. Si tres empiezan con conector, quita dos.
 6. **Baja de registro.** Escribe como habla la persona de MI-MARCA: «platicar», «chamba», «ya quedó». Si la lámina se publicaría igual en Madrid y en Guadalajara, está en neutro de doblaje.
-7. **Mete una imperfección a propósito.** Una autocorrección o un paréntesis que se sale del tema. Una por carrusel, en el `rehook` o en el caption. Nunca en `dato-hero`.
+7. **Conserva una voz natural.** No inventes errores, vivencias o digresiones para parecer humano.
 8. **Léelo en voz alta.** Si te tropiezas o te da pena decirlo frente a alguien, esa frase se cambia.
 
 ## 6. Ortografía del español que delata máquina

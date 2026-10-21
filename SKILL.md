@@ -1,7 +1,7 @@
 ---
 name: carruseles-virales-ia
-description: Produce carruseles de Instagram de alto rendimiento (PNG 1080x1440 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel) o una captura de pantalla de referencia. Aplica la psicología del swipe, del guardado y del compartido; escribe con voz humana; diseña por código con 6 looks rotativos; pasa una puerta de calidad medible (índice de viralidad 0-100) y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
-version: 1.0 (2026-09-06)
+description: Produce carruseles de Instagram útiles y revisados (PNG 1080x1440 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel) o una captura de pantalla de referencia. Aplica la psicología del swipe, del guardado y del compartido; escribe con voz humana; diseña por código con 6 looks disponibles; pasa una puerta de calidad medible (QA técnico 0-100; no predice resultados) y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
+version: 1.1 (2026-09-22)
 author: Manuel de León
 license: MIT
 ---
@@ -19,16 +19,20 @@ Trabajas en la carpeta donde el usuario abrió Claude Code (la "carpeta de traba
 carrusel. La carpeta de esta skill (normalmente `~/.claude/skills/carruseles-virales-ia`) tiene el
 motor en `scripts/`, las plantillas en `templates/` y el conocimiento en `references/`.
 
+## Política vigente · 2026-09-22.1
+
+Lee **[CALIDAD-Y-EVIDENCIA.md](references/CALIDAD-Y-EVIDENCIA.md) completa** antes de planificar. Manda sobre reglas editoriales anteriores: máximo tres propuestas textuales por día y una final seleccionada; utilidad, evidencia y guion antes del gasto; activos existentes primero. Si ninguna propuesta cumple, cero finales. No hay garantía de viralidad ni cuota de fotos. Los contratos históricos conservan recibos y schema al reanudar, sin autorizar nuevas variantes pagadas. Los límites efectivos pertenecen al runtime.
+
 ## 0. Antes de escribir una lámina (en cada corrida)
 
 1. **Lee `MI-MARCA.md`** en la carpeta de trabajo. Si no existe, cópialo de `templates/MI-MARCA.md`
    y haz **una sola ronda de 6 preguntas** en un solo mensaje (quién eres, a quién le hablas, cómo
    suenas, qué regalas por DM, fotos/colores, qué te ha funcionado). Si el usuario ya dio parte de
    eso en su mensaje, no lo repitas: llénalo y marca `[CONFIRMAR]`. Sin ficha no se produce.
-2. **Lee `historico.json`** si existe: qué look se usó la última vez (no se repite), qué hooks
+2. **Lee `historico.json`** si existe: qué problemas, recompensas y looks se usaron, qué hooks
    y formatos ganaron, qué flopeó.
-3. **Lee `references/PSICOLOGIA-VIRALIDAD.md`** (las 10 reglas del resumen ejecutivo mandan) y
-   `references/FORMATOS.md`. Las demás referencias se leen cuando la fase lo indique.
+3. **Lee `references/CALIDAD-Y-EVIDENCIA.md` completa.** Consulta
+   `references/PSICOLOGIA-VIRALIDAD.md` como contexto de hipótesis y `references/FORMATOS.md` como contrato técnico. Las demás referencias se leen cuando la fase lo indique.
 4. **Decide el alcance** con lo que pidió el usuario y estos valores por omisión:
 
 | Dato | Si no lo dijo | 
@@ -36,11 +40,11 @@ motor en `scripts/`, las plantillas en `templates/` y el conocimiento en `refere
 | Tema | Es lo ÚNICO obligatorio. Si solo hay un link o una captura, el tema sale de ahí |
 | Objetivo | `saves` (guía/lista/recurso) o `shares` (contrarian/noticia). Nunca "likes" |
 | Tipo | El que dicte `FORMATOS.md` según el tema; guía o lista por omisión |
-| Láminas | 8 (portada + re-enganche + 4-5 de valor + guardable + CTA); 10 si el tema es rico; máximo 12 salvo guía larga |
+| Láminas | Las mínimas que entreguen el valor y admita el motor. No rellenar hasta ocho. Una imagen o un formato de tres sólo si su rama/adaptador pasa QA |
 | Look | El que diga `node "<skill>/scripts/siguiente-look.mjs" <carpeta-de-trabajo> --tipo <tipo>` (ver §2) |
-| Palabra clave | Una de las ya conectadas en `MI-MARCA.md` §4 **si su entregable coincide**; si no, una palabra nueva de ≤8 letras que nombre el entregable, y `caption.txt` avisa que hay que conectarla antes de publicar |
-| Entregable por DM | Algo que NO está en el carrusel (plantilla, prompt completo, guion, link). Confirma que existe o que se va a crear antes de publicar; queda en `metadata.entregable_existe` |
-| Formato | `3:4` (1080x1440): es el que Instagram prioriza desde 2026, da ~7% más alto que `4:5` y coincide con la cuadrícula del perfil, así que la portada no se recorta. `4:5` (1080x1350) sigue siendo válido para una prueba A/B. Nunca 1:1. Todas las láminas del carrusel llevan el mismo formato |
+| Palabra clave | Opcional. Sólo si recurso, destino y entrega están comprobados; si no, guardar o compartir según objetivo |
+| Entregable por DM | Opcional y existente. El valor prometido queda en la pieza; el recurso externo amplía o facilita copiar. Registrar `metadata.entregable_existe` sin inventar disponibilidad |
+| Formato | `3:4` (1080x1440) o `4:5` (1080x1350), uniforme y compatible con el destino. Es una elección de composición, no ranking demostrado |
 
 ## 1. La entrada: tema, link o captura → `referencia.md`
 
@@ -62,83 +66,32 @@ Guarda todo en `<carpeta-del-carrusel>/referencia.md` con la sección "Notas par
 llena. De ahí sale el **ángulo**: una frase, en la voz de la marca, que un dueño de negocio de
 50 años entiende sin contexto.
 
-## 2. Formato y look
+## 2. Formato, propuesta y selección
 
-1. Elige el **tipo** con el árbol de decisión de `references/FORMATOS.md` (guía, lista, recurso,
-   noticia, tutorial, contrarian, historia, comparativa, prompt) y su secuencia de roles y layouts.
-2. Elige el **look** con el script, que aplica las reglas de `references/DIRECCION-DE-ARTE.md`
-   en un solo orden (veta el look del carrusel más reciente, incluidas las carpetas hermanas que
-   aún no se midieron; máximo 2 iguales en los últimos 4; alterna claro/oscuro; el tipo desempata):
+Lee `references/FORMATOS.md` y el capítulo pertinente de `PROTOCOLOS-FORMATO.md` como repertorio de estructuras, no recetas causales. Primero decide qué obtiene el lector; después formato y longitud. El look se elige por legibilidad, función y marca. `scripts/siguiente-look.mjs` es una sugerencia de rotación, no una obligación de regenerar ni una prueba de rendimiento. Se permite mantener identidad de una serie.
 
-   ```bash
-   node "<skill>/scripts/siguiente-look.mjs" "<carpeta-de-trabajo>" --tipo <tipo>
-   ```
+## 3. Tres propuestas textuales, una producción
 
-   Usa `recomendado` salvo que `MI-MARCA.md` §5 lo prohíba (entonces el siguiente de `orden`).
-   Si haces una **serie**, el look se repite a propósito dentro de la serie y lo anotas en `notas`.
-3. Anota en una línea **por qué** ese look para ese tema. Si no puedes explicarlo, cambia.
+Prepara como máximo tres fichas siguiendo `CALIDAD-Y-EVIDENCIA.md`: situación, promesa, recompensa literal, ejemplo/prueba, fuentes, diferencia frente al histórico y activos existentes. Compara utilidad, especificidad, evidencia, encaje, novedad y coste. Elige una; si ninguna cumple, corrige el concepto sin imágenes pagadas. No renderices tres formatos ni compres cuatro portadas por rutina.
 
-## 3. Ideación: tres ángulos, uno gana
+Escribe el guion completo de la elegida y pasa la puerta editorial antes de producir arte. Por API, `scripts/escribir.mjs --formato-plan <imagen-unica|carrusel-5|carrusel-8|referencia>` sigue disponible según el contrato, pero no ejecutar todos los planes por defecto. Usa `--simular carrusel.json` para comprobar render y QA sin pagar API. Los encargos antiguos conservan sus banderas/recibos para reanudar sin repetir gasto.
 
-Escribe **3 ganchos** para la portada con ángulos distintos (seguro · punzante · lateral) usando
-las fórmulas de `references/HOOKS-ES.md`. Puntúa cada uno del 1 al 5 en: especificidad (número,
-nombre, dato), tensión (brecha de curiosidad o miedo vigente), utilidad visible (se entiende qué
-me llevo), identidad (el lector se reconoce) y verificable (la portada promete lo que las
-láminas cumplen). Gana el de mayor suma; empate → el más corto. Muestra los 3 solo si el usuario
-pidió opciones; si no, elige y sigue.
-
-### 3b. Versiones por formato (siempre, no solo cuando lo pidan)
-
-Una misma idea rinde distinto según el formato. Antes de escribir el guion completo, propón
-**3 o 4 versiones en formatos distintos** y renderiza solo su portada para compararlas mirando:
-la del formato de la referencia, una **imagen única** (meme, tuit o dato en una sola lámina), un
-**carrusel corto** de 5 láminas y un **carrusel de 8 a 10**. `references/PROTOCOLOS-FORMATO.md`
-dice qué exige cada formato y cómo elegir. Se produce entera la que gane; las portadas
-descartadas se guardan en `_versiones/` de la carpeta del carrusel por si el usuario quiere otra.
-
-Por API (un worker, un cron, sin Claude Code) cada versión la escribe Claude Opus con
-`node "<skill>/scripts/escribir.mjs" --formato-plan <imagen-unica|carrusel-5|carrusel-8|referencia>
---salida <carpeta>/_versiones/<plan> --json`: el prompt lleva solo el capítulo del protocolo que
-toca; `--banco <catalogo.json>` le da el banco de rostro, `--logos "CapCut,Claude"` los iconos
-oficiales, `--correccion "texto" --base carrusel.json` aplica una corrección del usuario y
-`--simular carrusel.json` prueba render, QA y entrega sin gastar API. Banderas completas en la
-cabecera del script; una imagen única se revisa con `qa.mjs --imagen-unica`.
-
-Las versiones de un mismo pedido se lanzan **una detrás de otra y sin cambiar las banderas comunes**
-(`--carpeta`, `--banco`, `--logos`, `--referencia`): todo lo que no cambia entre ellas —la ficha de la
-marca, el banco, el histórico y la referencia— viaja en un bloque cacheado del prompt y a partir de la
-segunda versión se lee a la décima parte de su precio. Si entre versión y versión pasan más de cinco
-minutos ese bloque caduca y se vuelve a pagar entero; para pedidos lentos está `--ttl-cache 1h`.
-`--esfuerzo` (por omisión `low`) decide cuánto razona el modelo antes de escribir: medido en tres
-formatos, bajarlo de `high` a `low` recorta la salida a la mitad **sin mover el índice de QA**. Y el
-paso que elige el formato con `--formato-plan referencia` no escribe el carrusel, así que va con
-`--modelo-auxiliar` (`claude-sonnet-5` por omisión).
-
-### 3c. La portada se decide a concurso, no de una
-
-La portada es el 80% del resultado. Genera **3 o 4 portadas** que crucen dos títulos con dos
-tratamientos visuales (avatar con el objeto del tema, iconos reales de las marcas, recorte grande,
-portada-foto) y júzgalas con un panel de 4 criterios, cada uno del 1 al 5: **gancho visual**
-(¿algo imponente o curioso obliga a entrar?), **legibilidad en la cuadrícula** (mírala en
-`portada-270.jpg`, no en el PNG grande), **promesa clara** (se entiende qué me llevo sin leer el
-caption) y **marca** (se reconoce a la persona y su tono). Gana la de mayor suma; en empate, la
-de título más corto. Si ninguna pasa de 16/20, ninguna sirve: cambia el gancho, no el color.
+Una duda concreta de composición puede compararse con dos portadas por código y el mismo activo. Mirar a 270 px y elegir por claridad de promesa y legibilidad; no crea autorización para otra generación. La portada merece revisión real, pero no se le atribuye “el 80% del resultado”.
 
 ## 4. Escribir `carrusel.json` (el guion)
 
 Sigue el contrato de `references/LAYOUTS.md` (campos y límites exactos) y las reglas de voz de
-`references/COPY-VOZ-HUMANA.md`. Estructura que no se negocia:
+`references/COPY-VOZ-HUMANA.md`. Roles del formato largo; adaptar al formato soportado sin inventar requisitos para piezas compactas:
 
 | Lámina | Rol | Qué hace |
 |---|---|---|
 | 1 | `portada` | Gancho de 4-7 palabras con UNA palabra en `*acento*`, subtítulo con número, chips o imagen que anuncian el recorrido, "Desliza" al pie |
-| 2 | `rehook` | La promesa concreta ("al final tienes X") + el dolor en una frase + open loop. Es la lámina que decide si siguen |
-| 3…N-2 | `cuerpo` | **Una idea por lámina**, numerada, con dato o comparativa, ≤25 palabras de cuerpo, `loop` al pie que obliga a deslizar. El insight más valioso va en la última de valor |
+| 2 | `rehook` | Primer ejemplo, prueba o paso que ya paga la promesa. Se entiende sola; no repite la portada |
+| 3…N-2 | `cuerpo` | **Una idea por lámina**, con paso, prueba, ejemplo o criterio; ≤25 palabras de cuerpo como pauta de lectura. Los loops son selectivos; aportar valor temprano |
 | N-1 | `cheatsheet` | Lámina guardable: lista, pasos, prompt o comparativa autocontenida. Es lo que justifica el guardado |
-| N | `cta` | Cara de la marca (`marca.avatar`) + UNA sola acción: título con la pregunta («¿Quieres la *plantilla*?»), cuerpo «Comenta PALABRA y te la mando por DM» (≤15 palabras) y `boton: "Comenta PALABRA"`. El guardado ya se pidió en la lámina guardable con el kicker «Guarda esto» |
+| N | `cta` | Una acción coherente. La cara es opcional. DM sólo con recurso y entrega comprobados; la recompensa prometida no se retiene para pedir interacción |
 
-Reglas de copy que QA revisa: ≤40 palabras por lámina (≤70 en la guardable), ≥2 láminas con
-número o porcentaje, cero frases de la lista negra (y las palabras prohibidas de `MI-MARCA.md`),
+Reglas de copy que QA revisa: ≤40 palabras por lámina (≤70 en la guardable), números sólo cuando orientan o tienen fuente, cero frases de la lista negra (y las palabras prohibidas de `MI-MARCA.md`),
 misma palabra clave en la lámina de CTA y en el caption, primera línea del caption ≤125
 caracteres y que funcione como segundo gancho, 3-5 hashtags de nicho (Instagram limita a 5), una
 sola palabra en acento por título. **Sin fuente no hay cifra**: si no la tienes, no la inventes;
@@ -162,8 +115,7 @@ Reglas que QA no puede medir y tú sí (léelas en voz alta antes de renderizar)
   («te cobran por algo que la IA hace gratis»); nunca lástima, nostalgia ni miedo que paraliza.
   Lo que activa se reenvía; lo que deprime, no.
 - **Frase de envío con destinatario**: en el caption (línea 2-4) o en el subtítulo de la lámina
-  guardable: «Mándaselo a tu socio que sigue cotizando a mano». Los envíos son la señal que más
-  pesa para llegar a no seguidores; «comparte con 5» y «comenta SÍ» son cebo y bajan alcance.
+  guardable: «Mándaselo a tu socio que sigue cotizando a mano». No convertir esta frase en obligación ni afirmar pesos de ranking no verificados; evitar cadenas de interacción.
 - **Originalidad explícita**: cero capturas ajenas, cero memes con texto encima; toda cita
   externa lleva ángulo propio. Desde abril de 2026 la política de contenido original cubre fotos
   y carruseles.
@@ -173,17 +125,11 @@ Reglas que QA no puede medir y tú sí (léelas en voz alta antes de renderizar)
 
 Guarda el JSON en `<carpeta-de-trabajo>/<AAAA-MM-DD>-<slug>/carrusel.json`.
 
-## 5. Imágenes y personalidad (obligatorio, no opcional)
+## 5. Recursos visuales con función
 
-Un carrusel sin imágenes se ve como un PDF. Antes de renderizar, escribe el **plan visual**
-lámina por lámina y cúmplelo. Mínimos que QA revisa:
+Antes de renderizar, identifica por lámina qué recurso explica, demuestra, permite reconocer el tema o aporta identidad. **No hay mínimo editorial de imágenes ni rostro obligatorio.** Una pieza tipográfica o un diagrama pueden resolverlo; respeta las restricciones reales del renderer/adaptador. Reutiliza banco, fotos y capturas propias antes de pagar. Una generación nueva necesita justificar qué añade y por qué un activo existente no basta.
 
-| Lámina | Qué lleva |
-|---|---|
-| Portada | La cara de la marca en una situación del tema (avatar del look, foto real del banco `assets/fotos/reales/` o retrato Soul) como `recorte` con `panel` de acento, `derecha`, `fondo` con scrim o `arriba`. Con `recorte` el título vive en la mitad izquierda: **máximo 6 palabras y ninguna de más de 11 letras**, o el ajuste automático lo encoge por debajo del mínimo (QA lo avisa). Más un `sticker` si el tema lo admite («gratis», «guía rápida», «paso 1 de 4») |
-| Cuerpo | Al menos **2 láminas de cuerpo con imagen**: un ícono 3D o ilustración del objeto del tema (`abajo` o `centro`), una foto de la marca en situación (`recorte` o `derecha`), una captura real de la herramienta si es tutorial (`arriba` con `foto-texto`). Tres láminas seguidas con el mismo layout **y** el mismo tratamiento visual (sin imagen, sin marcador, sin número) se ven como PDF: varía la imagen o el recurso, no necesariamente el layout |
-| Guardable | Tipográfica (es la que se lee), con `kicker` «Guarda esto» y, si sobra espacio, un ícono pequeño `abajo` |
-| CTA | La cara de la marca como `recorte` grande (o `marca.avatar`) señalando al botón, con la misma fuente de rostro que la portada (todo real o todo Soul) |
+Repetir foto o retícula es válido cuando la información avanza. No generar para rellenar espacio, rotar estilo o cumplir una cuota. Si el motor exige un activo, reutiliza uno pertinente; no simules soporte de cero assets. Para tutoriales, la captura real prueba la acción; una pantalla generada no la sustituye. Manuel aparece cuando aporta o el brief lo pide, con identidad y procedencia consistentes.
 
 Recursos de personalidad que existen en el motor (úsalos, con medida: dos o tres por carrusel):
 `==palabra==` marcador tipo plumón en título o cuerpo · `sticker` píldora girada ·
@@ -223,11 +169,11 @@ Cómo se consigue cada imagen (`references/IMAGENES.md`):
 
 ```bash
 node "<skill>/scripts/render.mjs" "<carpeta-del-carrusel>"   # slides/01.png… + preview.jpg
-node "<skill>/scripts/qa.mjs" "<carpeta-del-carrusel>"       # índice 0-100 + errores/avisos
+node "<skill>/scripts/qa.mjs" "<carpeta-del-carrusel>"       # QA técnico 0-100 + errores/avisos
 node "<skill>/scripts/qa.mjs" "<carpeta>" --imagen-unica      # pieza de 1 lámina: sin rehook, guardable ni lámina de CTA
 ```
 
-- QA **BLOQUEADO** → corrige el JSON (no el HTML) y vuelve a correr. Máximo tres rondas; si
+- QA **BLOQUEADO** → corrige el JSON (no el HTML) y vuelve a correr. Máximo una ronda automática de corrección material; si
   persiste, cambia de layout o recorta texto.
 - QA **LISTO** (≥80) → abre `preview.jpg` (mosaico) y `portada-270.jpg` (la portada al tamaño de
   la cuadrícula del perfil: si no se lee ahí, no se lee en el feed) con Read y pasa el checklist
@@ -264,10 +210,7 @@ indice_qa, veredicto_qa, rondas_qa, imagenes, fuentes, mediciones, notas`; `publ
 veredicto honesto de si lo subirías tal cual, y `palabra_clave_conectada` si el flujo de DM ya
 responde a esa palabra). Cierra con: qué palabra clave hay que conectar en la
 automatización de DM (ManyChat u otra) y si ya existe, qué entregable prometiste y si ya existe,
-y en qué orden subir las imágenes. En las notas de `caption.txt` van siempre dos avisos: al
-subir, agrega una pista de música de la librería (un carrusel 100% fotos con música es elegible
-para la pestaña Reels) y, si son más de 10 láminas, se suben a mano desde la app (la API acepta
-10). **Nunca publicas**: el usuario sube el post.
+y en qué orden subir las imágenes. En las notas de `caption.txt`, distingue restricciones del canal comprobadas de sugerencias. La música es opcional si el destino la permite; no genera audio ni vídeo por rutina. Verifica el límite vigente del canal antes de entregar una pieza larga. **Nunca publicas**: el usuario sube el post.
 
 ## 8. Medir y aprender
 
@@ -275,8 +218,7 @@ A las 48 h y a los 7 días: `python3 "<skill>/scripts/medir.py" <carpeta> --perm
 Windsor.ai) o `--manual reach=… saves=… shares=… comments=…` desde Insights de la app. El script
 anota `metadata.json` (con `save_rate`, `share_rate` y `like_rate` sobre alcance: se comparan
 tasas, no totales) y actualiza `historico.json`. Antes del siguiente carrusel, lee el histórico:
-hit (≥3x la mediana) → repite formato y haz serie; flop (<0.5x) → no repitas ese gancho ni ese
-tema tal cual. Detalle en `references/MEDICION.md`.
+compara edades, objetivos y formatos semejantes. ≥3x o <0.5x son alertas internas, no prueba causal; una pieza aislada no convierte un tema en ganador o perdedor. Detalle en `references/MEDICION.md`.
 
 ## 9. Autoentrenamiento (cada corrección se aprende en el momento)
 
@@ -284,8 +226,7 @@ Cuando el usuario corrige algo («no uses X», «así no», «me gustó Y, hazlo
 corrección se escribe en la skill **antes de terminar el turno**, no en una nota mental: la regla
 va al archivo de `references/` que corresponde (imágenes, avatares, layouts, copy, formatos), la
 excepción de marca va a `MI-MARCA.md`, y si el motor lo permite se convierte en una comprobación
-de `scripts/qa.mjs` para que no dependa de la memoria de nadie. Después se hace commit y push del
-repo público (sin datos privados) y se re-empaqueta el `.skill`. Cuando el usuario manda links de
+de `scripts/qa.mjs` para que no dependa de la memoria de nadie. No hagas commit, push ni publicación sin autorización explícita. Mantén cambios privados y comprobables; el empaquetado se hace cuando corresponda al alcance. Cuando el usuario manda links de
 referencia para aprender, se deconstruyen con `references/REFERENCIAS-ENTRADA.md` §«Estudio en
 lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`.
 
@@ -305,7 +246,7 @@ lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md
 | «Empaqueta la skill» | `bash scripts/empaquetar.sh` → `dist/*.skill` para subir a claude.ai |
 | «Haz una serie» | 3-5 carruseles con el mismo look y esqueleto, numerados, un tema por pieza (anota en `notas` que el look se repite a propósito) |
 | «Otro carrusel hoy» | Corre `siguiente-look.mjs`: mira las carpetas hermanas del día, no solo el histórico |
-| «Aprende de estos carruseles» / links de referencia | `REFERENCIAS-ENTRADA.md` §«Estudio en lote»: bajar los posts a `_entrenamiento/refs/`, un análisis por post con visión, clasificar por formato, protocolo por formato con refutador, escribir `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`, commit, push, `.skill` |
+| «Aprende de estos carruseles» / links de referencia | `REFERENCIAS-ENTRADA.md` §«Estudio en lote»: bajar los posts a `_entrenamiento/refs/`, un análisis por post con visión, clasificar por formato, protocolo por formato con refutador, escribir `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`; conservar cambios locales sin publicar ni hacer commit/push salvo autorización |
 | «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
 | «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
 | «Sube / baja mi banco a la nube» | `banco-fotos.py subir --mi-marca MI-MARCA.md` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`. Con `--rotar` cambia el prefijo y mata las URL viejas; el almacén publica `robots.txt` con `Disallow: /` para no indexarse |
@@ -313,27 +254,17 @@ lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md
 
 ## Reglas que no se rompen
 
-1. Sin `MI-MARCA.md` no hay carrusel. Sin tema no hay carrusel.
-2. Una idea por lámina. Si aparece "y además/también", son dos láminas.
-3. Cifras con fuente o no van. Nada de "300 videos al día" si no hay respaldo.
-4. Cero frases de la lista negra de IA. Lee el copy en voz alta antes de renderizar.
-5. Todo el texto por código; ninguna imagen con letras; ninguna persona real sin permiso.
-6. Un solo CTA, una sola palabra clave, un entregable que no está en el carrusel.
-7. El look rota: nunca el mismo que el carrusel más reciente (medido o no), salvo dentro de una
-   serie declarada. Fraunces y crema+latón no existen aquí.
-8. QA bloqueado = no se entrega. El checklist visual se pasa contando, no opinando.
-9. Nunca publicas ni tocas la cuenta del usuario. Entregas la carpeta.
-10. Lo que el usuario corrige a mano en el JSON se respeta en la siguiente ronda.
+1. Marca y tema respaldados; promesa cumplida y ejemplo o evidencia útiles antes de gastar.
+2. Un final seleccionado dentro del límite diario; propuestas no equivalen a imágenes pagadas.
+3. Hechos con fuente, experiencias acreditadas y ejemplos simulados identificados. No inventar métricas.
+4. Guardados/compartidos externos ausentes son `null`; likes/comentarios no los sustituyen.
+5. Texto legible, identidad consistente y recursos con procedencia; no fabricar pruebas de interfaz.
+6. Una acción realizable; no inventar DM, recurso ni comentarios de engagement.
+7. Reutilizar activos y recibos. No regenerar por estética rutinaria ni repetir cobros inciertos.
+8. QA técnico y revisión de todos los PNG son necesarios; una nota no predice viralidad.
+9. Esta skill entrega archivos, no publica ni concede permisos sobre cuentas.
+10. Respetar correcciones manuales; no convertir contratos históricos al reanudar.
 
-## Anti-patrones (los que matan el alcance)
+## Alcance
 
-Formato 1:1 · portada sin promesa ni palabra en acento · texto chico o párrafos · más de 12
-láminas sin serializar · "link en bio" o cinco CTA compitiendo · palabra clave solo en el caption ·
-lámina de venta sin valor antes · reciclar el diseño exacto de otro creador · logos ajenos como
-protagonistas · promesa de la portada que las láminas no cumplen · optimizar para likes.
-
-## Lo que esta skill NO hace
-
-Reels o video (usa una skill de video) · auditoría completa de la cuenta · publicar por API ·
-prometer resultados: el índice de viralidad mide si la pieza cumple las reglas que suben la
-probabilidad, no garantiza alcance.
+Tema, link o referencia → ficha y guion → arte justificado → PNG, caption, preview y evidencia de QA. No produce reels/vídeo ni sustituye una auditoría completa de cuenta. No promete resultados, ni hace commit/push o publicación por terminar una corrección.

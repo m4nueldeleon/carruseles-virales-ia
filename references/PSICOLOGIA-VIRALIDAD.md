@@ -1,10 +1,12 @@
 # Psicología y mecánica de un carrusel viral (Instagram 2026)
 
-Documento maestro de la skill `carruseles-virales-ia`. Sale de 180 hallazgos (`_investigacion/hallazgos.jsonl`) y de una verificación adversarial del 6-sep-2026. Cada regla lleva su cita `[n]` (sección 13, con fecha y tipo); inferencias y opiniones se marcan; lo no confirmado está en la sección 12 y no se usa como regla.
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
+Documento maestro de la skill `carruseles-virales-ia`. Sale de 180 hallazgos (`_investigacion/hallazgos.jsonl`) y de una verificación adversarial del 6-sep-2026. Cada regla lleva su cita `[n]` (sección 13, con fecha y tipo); inferencias y opiniones se marcan; lo no confirmado está en la sección 12. Las traducciones de estudios a carruseles son hipótesis editoriales y se subordinan a CALIDAD-Y-EVIDENCIA.md.
 
 Caso de referencia: @manueldeleonmjr (~500K seguidores, audiencia 35-60 hispanohablante, negocios e IA); solo cifras públicas de sus posts. Los roles (`portada`, `rehook`, `agitacion`, `cuerpo`, `cheatsheet`, `cta`), el campo `loop` y el índice de viralidad son los de `scripts/qa.mjs` y `FORMATOS.md`. Lo que pide cambiar el motor va en la sección 11.
 
-## 1. Resumen ejecutivo: las 10 reglas que más pesan
+## 1. Diez hipótesis y pautas históricas, no requisitos causales
 
 1. **La portada abre una brecha concreta y cerrable, anclada en algo que el lector ya conoce.** Número, nombre o resultado en 4-7 palabras, una en acento. Un tema no es una brecha; "el error que cometen 9 de 10 dueños al cotizar" sí [44][45][3].
 2. **La lámina 2 es una segunda portada.** Instagram "a menudo" vuelve a mostrar el carrusel a quien no deslizó, abriendo en la segunda pieza. La `rehook` se entiende sola y promete qué te llevas al final [4][5][35].
@@ -192,7 +194,7 @@ Hoy `qa.mjs` reparte gancho 24, estructura 41, legibilidad 28 y copy 15 (suma 10
 | 14 | `SKILL.md` §4 (reglas que QA no mide) | Nada sobre emoción ni originalidad | "La portada activa (asombro o indignación útil), nunca lástima ni miedo que paraliza" y "cero capturas ajenas o plantillas copiadas; toda cita externa lleva ángulo propio" | [57][13][14] |
 | 15 | `qa.mjs` (índice) | 24/41/28/15 | 30/35/20/15 y los 12 criterios de §10 | §10 |
 
-No cambian: 40 palabras por lámina y 70 en la guardable, 4-7 de portada, mínimos tipográficos, CTA único con palabra clave, rotación de looks y rango 7-12 láminas. La evidencia sobre >10 láminas y sobre finalización es débil en ambos sentidos: se mide con la cuenta antes de mover el aviso de 12.
+Corte histórico: los topes de legibilidad dependen del motor. La política vigente retira DM, rotación y 7–12 láminas como obligaciones editoriales; ninguna se acredita como efecto causal. La evidencia sobre >10 láminas y sobre finalización es débil en ambos sentidos: se mide con la cuenta antes de mover el aviso de 12.
 
 ## 12. Lo que NO pudimos confirmar y lo descartado
 

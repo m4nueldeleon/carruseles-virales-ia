@@ -1,5 +1,7 @@
 # Medir y aprender
 
+> **Política vigente 2026-09-22.1:** leer `CALIDAD-Y-EVIDENCIA.md` completa. Sus criterios sustituyen cualquier cuota editorial de formatos/portadas/imágenes, rostro o DM obligatorio, longitud fija y afirmación causal de estas notas. Las anatomías siguientes son referencias y contratos técnicos históricos: no autorizan gasto ni amplían el schema del runtime. El QA técnico vigente se respeta y sus incompatibilidades se corrigen en el adaptador, nunca se ocultan.
+
 Este documento dice qué medir después de publicar un carrusel, cuándo, con qué umbrales y qué decisión dispara cada resultado. También explica cómo `scripts/medir.py` guarda esos números y cómo la skill los usa para el siguiente carrusel. Los nombres de campos (`look`, `tipo`, `palabra_clave`, `entregable`, `objetivo`) son los del contrato `templates/carrusel.schema.json`. Los nombres de métricas son los que escribe `medir.py`.
 
 Regla de fondo: un carrusel que no se mide no enseña nada. Mide dos veces (48 h y 7 días), anota una línea de aprendizaje y sigue.
