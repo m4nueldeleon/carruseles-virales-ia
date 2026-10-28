@@ -226,7 +226,8 @@ Cuando el usuario corrige algo («no uses X», «así no», «me gustó Y, hazlo
 corrección se escribe en la skill **antes de terminar el turno**, no en una nota mental: la regla
 va al archivo de `references/` que corresponde (imágenes, avatares, layouts, copy, formatos), la
 excepción de marca va a `MI-MARCA.md`, y si el motor lo permite se convierte en una comprobación
-de `scripts/qa.mjs` para que no dependa de la memoria de nadie. No hagas commit, push ni publicación sin autorización explícita. Mantén cambios privados y comprobables; el empaquetado se hace cuando corresponda al alcance. Cuando el usuario manda links de
+de `scripts/qa.mjs` para que no dependa de la memoria de nadie. Registra en `LECCIONES.md` (raíz de la
+skill) la fecha, qué cambió y en qué archivo. No hagas commit, push ni publicación sin autorización explícita. Mantén cambios privados y comprobables; el empaquetado se hace cuando corresponda al alcance. Cuando el usuario manda links de
 referencia para aprender, se deconstruyen con `references/REFERENCIAS-ENTRADA.md` §«Estudio en
 lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`.
 

@@ -57,6 +57,12 @@ Estilos que **no** funcionaron: 3D tipo Pixar (redondea la cara y el parecido se
 cualquier estilo generado desde una foto oscura o de baja resolución (el modelo inventa
 rasgos). Descartado también «caricatura exagerada»: el público de 35-60 lo lee como burla.
 
+Matiz del 3D (19-oct-2026): el fallo de arriba fue con `nano_banana_pro`. Con `gpt_image_2` en
+calidad `high` y tres fotos reales nítidas del banco como referencia, un personaje 3D estilo
+animación sí conservó el parecido y quedó aprobado; `gpt_image_2_5` lo sacó con la cara ancha y
+genérica, y el Soul lo devuelve fotorrealista. Si se pide un avatar 3D, probar primero esa receta
+y auditar cada cuadro nuevo contra el aprobado (sin cambiarle rasgos ni vestuario).
+
 ## Receta (Higgsfield, desde Claude Code)
 
 1. **Referencias**: 2-3 fotos reales del banco (`assets/fotos/reales/`), nítidas, fondo liso,
