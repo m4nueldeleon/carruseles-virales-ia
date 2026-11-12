@@ -298,6 +298,23 @@ El `loop` es una transición opcional de 3 a 8 palabras que plantea una pregunta
 - [ ] Máximo 12 láminas. Si hay más, serie.
 - [ ] `node scripts/qa.mjs <carpeta>` sin errores.
 
+## Carrusel que lleva a un video: temático (APROBADO por Manuel, 1-nov-2026)
+
+«Estos carruseles sí me gustaron… entiende por qué esto es positivo para futuros videos.» Cuando el carrusel lleva a
+un video de YouTube (o a cualquier tutorial), **no se usa el esqueleto de este motor**: se hace el carrusel temático de
+`clase-a-youtube/references/CARRUSEL-TEMATICO.md` (receta de 1 h, el porqué completo y la plantilla
+`clase-a-youtube/lanzamiento/carrusel.html`). En corto:
+1. **Una metáfora visual** que cuente lo increíble del tema (Frankenstein = la herramienta «cobra vida»), con el mismo
+   personaje en todas las láminas (Higgsfield `gpt_image_2_5` con el logo real y el personaje aprobado de referencia).
+2. **Arco de 5 en voz de Manuel:** noticia que asombra → qué es → «yo lo usé para…» con 4 cuadros reales del video →
+   «en mi negocio lo usamos para…» → «el tutorial secreto de N minutos está dentro de este video, comenta PALABRA».
+3. **Cero señales de plantilla:** sin serie, sin números de lámina, sin paginador, sin frases de transición (el orden va
+   en el nombre del archivo).
+4. **El cierre muestra la miniatura del video** (su cara) como tarjeta de YouTube.
+Rechazados en el camino: la guía de 10 láminas en `guia-rapida` (QA 95, «más radical») y la noticia en `noticia`
+(«¿por qué hacemos carruseles tan feos?»). El QA de este motor no califica esa plantilla: se revisa a ojo y con el lint
+de voz.
+
 ## Ajustes que salieron de las pruebas (2026-09-06)
 
 - **Tutorial con 5 o más pasos**: la lámina guardable va en `lista` (el layout `pasos` cabe hasta 4). Si son 5-7 pasos, `lista` con `nota` corta por paso.

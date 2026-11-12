@@ -1,7 +1,7 @@
 ---
 name: carruseles-virales-ia
-description: Produce carruseles de Instagram útiles y revisados (PNG 1080x1440 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel) o una captura de pantalla de referencia. Aplica la psicología del swipe, del guardado y del compartido; escribe con voz humana; diseña por código con 6 looks disponibles; pasa una puerta de calidad medible (QA técnico 0-100; no predice resultados) y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
-version: 1.1 (2026-09-22)
+description: Produce carruseles de Instagram útiles y revisados (PNG 1080x1440 listos para subir + caption) a partir de un tema, un link (YouTube, artículo, reel), una captura de referencia o un post viral de otra cuenta que se remezcla con sus fotos reales y crédito. Escribe con voz humana, diseña por código (6 looks y plantillas temáticas), pasa una puerta de calidad medible y aprende de los resultados. Triggers "hazme un carrusel", "carrusel sobre", "carrusel de este link", "convierte esto en carrusel", "haz nuestra versión de este post", "carrusel con estas fotos", "inspírate en este carrusel", "slides para Instagram", "/carrusel". NO usar para reels ni video, ni para auditar una cuenta completa.
+version: 1.2 (2026-11-02)
 author: Manuel de León
 license: MIT
 ---
@@ -31,7 +31,7 @@ Lee **[CALIDAD-Y-EVIDENCIA.md](references/CALIDAD-Y-EVIDENCIA.md) completa** ant
    eso en su mensaje, no lo repitas: llénalo y marca `[CONFIRMAR]`. Sin ficha no se produce.
 2. **Lee `historico.json`** si existe: qué problemas, recompensas y looks se usaron, qué hooks
    y formatos ganaron, qué flopeó.
-3. **Lee `references/CALIDAD-Y-EVIDENCIA.md` completa.** Consulta
+3. **Lee `references/CALIDAD-Y-EVIDENCIA.md` completa** y, antes de diseñar, `references/ESTUDIO-50-VIRALES.md` §2 y §5 (lo que hacen visualmente 50 carruseles de más de 10k likes), `references/ESTUDIO-30K-VIRALES.md` §2, §7 y §9 (50 de más de 30k: formato, temática, animación, fotos, efectos y color) y `DIRECCION-DE-ARTE.md` §«Carrusel con contexto visual». Consulta
    `references/PSICOLOGIA-VIRALIDAD.md` como contexto de hipótesis y `references/FORMATOS.md` como contrato técnico. Las demás referencias se leen cuando la fase lo indique.
 4. **Decide el alcance** con lo que pidió el usuario y estos valores por omisión:
 
@@ -44,7 +44,7 @@ Lee **[CALIDAD-Y-EVIDENCIA.md](references/CALIDAD-Y-EVIDENCIA.md) completa** ant
 | Look | El que diga `node "<skill>/scripts/siguiente-look.mjs" <carpeta-de-trabajo> --tipo <tipo>` (ver §2) |
 | Palabra clave | Opcional. Sólo si recurso, destino y entrega están comprobados; si no, guardar o compartir según objetivo |
 | Entregable por DM | Opcional y existente. El valor prometido queda en la pieza; el recurso externo amplía o facilita copiar. Registrar `metadata.entregable_existe` sin inventar disponibilidad |
-| Formato | `3:4` (1080x1440) o `4:5` (1080x1350), uniforme y compatible con el destino. Es una elección de composición, no ranking demostrado |
+| Formato | `4:5` (1080x1350) por omisión en la plantilla temática; `3:4` (1080x1440) rinde igual o mejor en cuentas grandes. Datos del 3-nov-2026 en `DIRECCION-DE-ARTE.md` §7; ninguno es prueba causal. Uniforme en todo el carrusel |
 
 ## 1. La entrada: tema, link o captura → `referencia.md`
 
@@ -61,6 +61,10 @@ Lee **[CALIDAD-Y-EVIDENCIA.md](references/CALIDAD-Y-EVIDENCIA.md) completa** ant
   aplica a tu audiencia). **Se replica el ángulo y la estructura, nunca el texto, las imágenes ni
   el diseño exacto.**
 - **Carrusel propio anterior:** parte del `carrusel.json` viejo y del resultado en `historico.json`.
+- **Post viral de otra cuenta para hacer tu versión** («haz nuestra versión», «con estas fotos»): receta completa en
+  `references/REMIX-VIRAL.md` (bajar con `referencia.py`, por qué funcionó, verificar hechos, ángulo propio, fotos
+  reales con crédito y plantilla `templates/tematico-fotos/`). Se toman el momento y sus fotos; el texto y el diseño
+  son tuyos.
 
 Guarda todo en `<carpeta-del-carrusel>/referencia.md` con la sección "Notas para el carrusel"
 llena. De ahí sale el **ángulo**: una frase, en la voz de la marca, que un dueño de negocio de
@@ -116,8 +120,11 @@ Reglas que QA no puede medir y tú sí (léelas en voz alta antes de renderizar)
   Lo que activa se reenvía; lo que deprime, no.
 - **Frase de envío con destinatario**: en el caption (línea 2-4) o en el subtítulo de la lámina
   guardable: «Mándaselo a tu socio que sigue cotizando a mano». No convertir esta frase en obligación ni afirmar pesos de ranking no verificados; evitar cadenas de interacción.
-- **Originalidad explícita**: cero capturas ajenas, cero memes con texto encima; toda cita
-  externa lleva ángulo propio. Desde abril de 2026 la política de contenido original cubre fotos
+- **Capturas reales sí, con fuente y ángulo propio** (Manuel, 3-nov-2026: «no me pones las capturas de pantalla
+  sacadas de internet; eso es súper importante para que la gente tenga contexto»): el post o el tuit que circula, la
+  nota del medio, el verificador, la página oficial, cada una con fuente y fecha en la tarjeta y estampa «Sin
+  comprobar» o «Falso» cuando aplica. Lo que no va: memes ajenos con texto encima presentados como propios, y
+  capturas sin ángulo propio. Desde abril de 2026 la política de contenido original cubre fotos
   y carruseles.
 - **`alt` por lámina** (≤1,000 caracteres, lenguaje natural con la palabra clave del tema): no se
   renderiza, pero Instagram y Google indexan ese texto. `caption.txt` los lista para pegarlos al
@@ -160,7 +167,7 @@ Cómo se consigue cada imagen (`references/IMAGENES.md`):
   oscuro-tech; fotográfico para noticia), fondo liso del color del look o transparente.
 - **Escenas de fondo**: `soul_location` para portada-foto sin persona.
 - **Capturas reales** de la herramienta cuando el tema es un tutorial: sin datos personales.
-- **Un solo rostro por carrusel**: todo real o todo generado con el Soul. Nunca mezclar.
+- **Un solo estilo de Manuel por carrusel, de la portada al cierre**: o todo avatar (3D/Pixar, dibujo, Soul) o todo fotos reales. Manuel, 3-nov-2026, sobre el de Gates contra Musk: «me gustó mucho el estilo de prácticamente todo, nada más que al final pusiste mi foto… hay que mejorar la consistencia». Los personajes de apoyo y las escenas siguen el mismo mundo visual.
 - **Todo el texto va por código; ninguna imagen lleva letras.** Descarga con `curl` desde la URL
   del trabajo a `assets/img/NN-nombre.png` dentro de la carpeta del carrusel.
 - Logos de terceros: reales, pequeños, nunca protagonistas de la portada.
@@ -247,8 +254,9 @@ lote» y el resultado entra a `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md
 | «Empaqueta la skill» | `bash scripts/empaquetar.sh` → `dist/*.skill` para subir a claude.ai |
 | «Haz una serie» | 3-5 carruseles con el mismo look y esqueleto, numerados, un tema por pieza (anota en `notas` que el look se repite a propósito) |
 | «Otro carrusel hoy» | Corre `siguiente-look.mjs`: mira las carpetas hermanas del día, no solo el histórico |
+| «Haz nuestra versión de este post» / link de un post viral ajeno / «con estas fotos» | `references/REMIX-VIRAL.md`: `referencia.py` baja el post (o los dos, si mandan dos), ficha de por qué funcionó, hechos con dos fuentes, ángulo propio, arco impresa → sangre → antes/después → idea → cierre con `templates/tematico-fotos/render.mjs`, crédito en cada foto, aviso de derechos y revisión de que nada tape una cara |
 | «Aprende de estos carruseles» / links de referencia | `REFERENCIAS-ENTRADA.md` §«Estudio en lote»: bajar los posts a `_entrenamiento/refs/`, un análisis por post con visión, clasificar por formato, protocolo por formato con refutador, escribir `ANATOMIA-REFERENCIAS.md` y `PROTOCOLOS-FORMATO.md`; conservar cambios locales sin publicar ni hacer commit/push salvo autorización |
-| «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
+| «Arma / amplía mi banco de fotos» | `scripts/banco-fotos.py` cosechar (carpeta o álbum de Fotos) → hoja → mira las hojas con la herramienta de imágenes y elige → **revelar las elegidas con LightCraft** (flujo G de `suite-artcraft`, `revelar-fotos.py`; Manuel, 30-oct-2026) → curar → recortar → anotar → subir. Cuéntale qué entró y qué poses faltan |
 | «Hazme avatares» / «mi cara en dibujo» | `references/AVATARES.md`: 2-3 fotos reales limpias como referencia, un estilo por look, recorte con `remove_background`, registrar con `banco-fotos.py avatar` y subir |
 | «Sube / baja mi banco a la nube» | `banco-fotos.py subir --mi-marca MI-MARCA.md` (token en `~/.vercel-blob-cli/.env`) o `bajar <banco_url>`. Con `--rotar` cambia el prefijo y mata las URL viejas; el almacén publica `robots.txt` con `Disallow: /` para no indexarse |
 | «Móntame el generador en el servidor» | `worker/README.md`: el worker que atiende los pedidos del módulo «Generador de carruseles» del Centro de Control de Marca en un VPS con Docker (Supabase + Vercel Blob + esta skill); se despliega con `docker compose up -d --build` |

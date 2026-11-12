@@ -173,3 +173,162 @@ Se corre sobre `slides/*.png` después de `render.mjs` y de `qa.mjs`. Se cuenta,
 Si un punto falla, se corrige `carrusel.json` y se vuelve a renderizar. No se retoca el PNG a mano: el PNG es un derivado, el JSON es la fuente.
 
 Un atajo para revisar el lote entero de una vez: un mosaico de 2 filas por 5 columnas con los PNG al 20%. Si ahí se distingue cuál es la portada, cuál el CTA y cuál la lámina guardable sin leer el texto, el ritmo visual está bien. Si las diez se ven iguales, faltó la variación del 20%. Esta revisión por mosaico se adapta de Carrusel Studio de Ruva IA (youtube.com/@RuvaIA).
+
+## Lo que delata la plantilla (corrección del 1-nov-2026)
+
+Un dueño de cuenta reconoció el carrusel «hecho con IA» por cuatro cosas del motor: la etiqueta de serie arriba a la
+izquierda, el número de lámina arriba a la derecha, el paginador «2 de 5» y las frases de transición al pie con flecha.
+Si la ficha de marca lo pide (Manuel lo pide), se quitan todas: el orden vive en el nombre del archivo. Y un tema
+pedido («tipo Frankenstein») se lleva a TODA la pieza: ilustración a sangre, paleta del tema y tipografía de cartel,
+no solo una imagen dentro del look de siempre.
+
+## Lo que Manuel corrigió al ver 6 carruseles de prueba (4-nov-2026, «aprende de todo eso»)
+
+1. **Menos texto, más punch.** Sobre el de reacciones: «el texto me distrae, que es mucho y poco punch». En formatos de
+   meme o reacción el titular ES el golpe y el cuerpo, si va, cabe en un renglón (≤ 8 palabras).
+2. **Nada de fondos genéricos** (color plano con viñeta): «fondos genéricos, hay que cambiarlo». El fondo es un lugar:
+   escenario, oficina, estudio de podcast, el negocio del ejemplo; real o generado, con tono distinto por lámina.
+3. **La imagen nombra el tema.** Sobre el de WhatsApp: «pon el ícono, haz un avatar de WA o un robot de WA o Manuel
+   apuntando a una computadora de WA… agárrame la onda». Si el tema es una app, se ve la app: su logo real, un celular
+   o laptop con esa interfaz (sin texto legible), un personaje que la represente, Manuel señalándola.
+4. **Cuando manda un post para hacer «igual»**, la versión se parece al original en estructura y composición
+   (portada con foto y círculos, titular abajo con palabras en acento, tarjeta blanca de «detalles clave») y suma su
+   ángulo encima; no se reinventa el formato. Fotos ajenas de personas no: se cambian por las suyas integradas.
+5. **Lo que sí gustó:** el carrusel de Canva (portada con su foto integrada al escenario y círculos), el mundo Pixar con un personaje consistente en escenas de antes y después (la pastelería),
+   pidiendo más pares y que cada par tenga otra composición.
+6. **Para memes y reacciones prefiere a Manuel dibujado** («muñequito de Manuel dibujado con pizarrón»): ilustración 2D
+   de explicador, con pizarrón verde y dibujos de gis que cuentan cada idea (sin letras); la primera escena con
+   `gpt_image_2` y tres fotos suyas de referencia, las demás con `gpt_image_2_5` y esa escena como referencia.
+7. **Herramientas o empresas en el tema → sus logos reales y Manuel controlándolas** (las noticias de IA: el avatar
+   dirige pantallas con los logos reales de ChatGPT, Claude, Gemini, Copilot y Excel; logos de la App Store).
+8. **Lo que más le gustó** («me encantó»): Manuel dibujado con pizarrón y Manuel Pixar al mando de los logos reales.
+   Las ilustraciones con su personaje ganan a sus fotos recortadas.
+9. **Una frase sola no es «cool»:** sobre los tuits sobre fotos, «hay que ver algo cool». Cada tuit va sobre una
+   escena Pixar que actúa la frase literalmente (el de enfrente con un robot atendiendo la fila, la carrera de dos
+   burbujas de chat, la banda que escupe pósters iguales, la montaña de papeles mientras la IA saca punta a un lápiz).
+10. **Piel con color** («ponle más color a la piel»): las fotos del estudio salen pálidas; al integrarlas se les sube
+   saturación y calidez (`componer-recorte.sh` ya lo hace: saturación 145, rojo ×1.10, azul ×0.88).
+
+## Láminas que explican y portadas que frenan (correcciones del 5-nov-2026)
+
+Manuel, sobre el carrusel de Anthropic: «ponte más creativo con las diapositivas 2-5, con mejor enfoque explicativo,
+diagramas y creativo». Sobre el de noticias: «el hook ponlo más amarillista y llamativo».
+
+- **Cada lámina del cuerpo explica con un diagrama distinto**, no con otra tarjeta: datos (10 hojas con 8 tachadas
+  contra dos barras iguales), metáfora actuada (becario contra gerente), flujo numerado (cliente → cajón → respuesta),
+  balanza. Máximo una `comparativa` de chats por carrusel.
+- **La metáfora se actúa y el diagrama se monta encima.** Una escena Pixar cuenta la idea sin letras y deja dónde poner
+  cada etiqueta (placas en blanco, papel, tarjeta). Encima va una capa PNG transparente hecha por código, a 1080 de
+  ancho en `elementos`, con texto, flechas punteadas y números. El personaje de apoyo (robot) es el mismo en todas:
+  la primera escena sirve de referencia a las demás.
+- **El número se ve como se dice.** Si el titular dice 8 de cada 10, se ven 10 con 8 tachados; si solo caben cinco
+  etiquetas, el titular no dice diez.
+- **Portada amarillista = el hecho más fuerte como titular, con fuente:** verbo de golpe («hundió»), pregunta que señala
+  al lector («¿sigues tú?»), sello de alerta, reacción exagerada del personaje y logos reales en la escena; máximo 15
+  palabras contando el sello. Se exagera el tono, nunca el hecho: la lámina 2 y sus fuentes lo tienen que sostener.
+
+## Fotos de estudio: solo recortes, y bien integrados (correcciones del 4-nov-2026)
+
+Manuel, 4-nov-2026: «No quiero que NUNCA se vean las fotos del ciclorama blanco, solo eran para el recorte» y «que mis
+fotos entiendas de dónde nace el recorte, no solo las pongas ahí; edítalas si es necesario, ponles efectos y demás».
+
+- **Nunca** se usa como fondo, foto a sangre, `escena`, `tuit` ni `impresa` una foto de la sesión de estudio con la
+  cortina o el ciclorama blanco (banco `fotos-manuel-estudio-2026-11-02`, archivos `mdl-20261102-*` y los
+  `real-18…36-estudio-*` del agente). De esa sesión solo se usan los **recortes sin pantalón** (`05-sin-pantalon/`;
+  en el banco de la skill, los `recortes/real-18…36-estudio-*-recorte.png`, rehechos desde ahí el 11-nov-2026). Nunca
+  `03-recortes-png/`: es el cuerpo completo y enseña el pantalón (Manuel, 11-nov-2026: «solo permite que des las fotos
+  después del recorte para que no se vean los pantalones»). Las JPG del ciclorama salieron del banco a
+  `Carruseles/assets/fotos/_solo-para-recorte-no-usar/` y un candado (`fotos-solo-recorte.js`) frena copiarlas.
+- **El recorte nace de algún lado:** se corta en un borde natural (cintura o pecho) y ese borde se esconde en el
+  borde de la lámina, en la banda del titular o en un degradado; nunca flota a media lámina con el banco o las piernas
+  a la vista. Desde el 6-nov-2026 el corte ya viene hecho: `05-sin-pantalon/` del banco nunca enseña pantalón, y
+  `encuadrar.py` corta ahí por omisión.
+- **Foto metida en una escena:** `06-escenas/` del banco y el método de `clase-a-youtube`, MINIATURAS-PRO §13.
+- **Escenas generadas con IA donde sale Manuel (realistas), igual: de la cintura para arriba.** Piernas, regazo,
+  cinturón y pantalón fuera de cuadro; si la pose lo pide (sentado con la laptop), se cambia la pose, no se deja el
+  pantalón a la vista. El prompt lo dice dos veces: en la escena («framed from a little above his head down to his
+  waist… nothing below his waist is in the frame») y como regla de encuadre al final. Manuel, 12-nov-2026, al ver dos
+  láminas de «Las 5 etapas» con él de cuerpo entero: «hay que rehacerlo».
+- **Se edita para que pertenezca a la escena:** luz y color del fondo (gradación al tono de la lámina), «light wrap»
+  (la luz del fondo entra por el borde), sombra de contacto y grano común; B/N o duotono si el diseño lo pide.
+  **Nunca un halo o glow de contorno alrededor de Manuel** (Manuel, 4-nov-2026: «el glow… se ve muy chafa, como hecho
+  con Canva»). Fondos
+  de escena reales o generados (escenario, oficina, color con textura), no un plano vacío.
+- Herramientas: **`scripts/componer-recorte.sh FONDO RECORTE SALIDA X ABAJO ANCHO CORTE [BYN]`** (la buena: corte,
+  color y luz igualados al fondo, light wrap, sombra de contacto, grano; sin glow); `scripts/integrar-recorte.sh`
+  queda solo para recortes sueltos y siempre con `HALO none` y `scripts/circulo.sh ENTRADA SALIDA DIAMETRO` (insertos circulares con borde y sombra,
+  como la laptop y el logo de la portada de Canva). Componer con `magick` sobre el fondo y pasar el resultado como
+  `fondo`/`foto`, o el recorte integrado como `elementos` con su borde en el borde de la lámina.
+
+## Que no todas las láminas se vean iguales (corrección del 4-nov-2026)
+
+Manuel, viendo los mosaicos de 6 carruseles: «que no todos sean iguales todos los slides, si no es el formato, eso
+desconecta». La «plantilla fija» de los estudios se refiere al **hilo** (el mismo personaje, la misma tarjeta, el mismo
+color de acento), no a repetir la misma composición. Al ver el mosaico, ninguna lámina debe parecer copia de la anterior:
+
+- **Varía la composición en cada lámina:** plano abierto y acercamiento, sujeto a la derecha o a la izquierda, captura
+  grande e inclinada o chica con círculo, fondo de otro tono, una lámina a sangre entre dos de tarjeta.
+- **Alterna layouts** cuando el formato lo permita (`texto` → `comparativa` → `escena` → `capturas`), sin romper el hilo.
+- **Solo se repite idéntico lo que el formato exige** (la frase fija del meme «misma frase, distinta reacción», la
+  tarjeta de tuit en su lugar). Aun ahí cambia lo demás: encuadre, tamaño, fondo, gesto.
+- Revisión: en `preview.jpg`, si dos láminas seguidas se confunden a 270 px, cambia una.
+
+## Carrusel con contexto visual (correcciones del 3-nov-2026)
+
+La evidencia de mercado de estas reglas está en `ESTUDIO-50-VIRALES.md` (50 carruseles de más de 10,000 likes).
+
+Manuel revisó los 3 carruseles del agente del 3-nov y dijo, con estas palabras: «tiene mal orden de textos, no me gusta
+la estética visual y creo que los tamaños no son los correctos»; «otra vez los textos están desalineados»; «no me pones
+las capturas de pantalla sacadas de internet, eso es súper importante»; «pon elementos reales, muñequitos, animaciones
+tipo Pixar… para que la gente tenga contexto; si no, me estás teniendo a la mitad»; «no solo quiero fotos mías:
+animaciones, gráficos, efectos, muñecos en 3D, animados, dibujados, avatar míos, fotos de las nuevas».
+
+1. **Tamaño 4:5 (1080x1350).** Ver §7.
+2. **Alineación única:** todo el texto a la izquierda en el mismo margen (72 px), anclado arriba (abajo solo cuando la
+   foto a sangre lo pide). Nada centrado a media lámina; el cierre también va a la izquierda.
+3. **Ninguna lámina de puro texto.** Una lámina con titular y párrafo sobre fondo desenfocado es «la mitad». Cada
+   lámina lleva un recurso que da contexto, de este repertorio:
+   - **escena ilustrada** 3D/Pixar del tema (Higgsfield `gpt_image_2_5`, cuenta creator, 4:5, 2k, ~3 créditos),
+     con el tercio de arriba tranquilo para el titular;
+   - **captura real de internet** (post o tuit que circula, nota del medio, verificador, página oficial) en tarjeta
+     con fuente y fecha, y estampa «Sin comprobar» / «Falso» si aplica. Se toma con Playwright a 2x y se recorta a lo
+     que prueba;
+   - **comparativa ✕ / ✓** (antes y después, mal y bien, lo que te mandan contra lo que dice el banco), con imagen o
+     con **chat de ejemplo** (marcado «Ejemplo»);
+   - **personaje**: el avatar Pixar de Manuel (banco: «Manuel Pixar», referencia
+     `hf_20261021_190853_d0269719…png`) en pose que actúa el tema (lupa, alto, señala), PNG con transparencia
+     (`--background transparent`);
+   - **foto nueva de Manuel** (banco del 2-nov, `~/Fototeca-Sinergeticos/fotos-manuel-estudio-2026-11-02/`, recortes
+     en `03-recortes-png/`, cortados a la cintura) cuando el carrusel va en fotos reales;
+   - logos reales e íconos 3D cuando nombran una marca o un paso.
+4. **Cierre nuevo:** pregunta (titular) → una frase → botón con la acción → firma, a la izquierda; retrato recortado
+   grande abajo a la derecha. Se acabó la foto impresa centrada con texto centrado encima (la lámina 6 del 3-nov).
+5. **Consistencia de principio a fin:** un carrusel en mundo Pixar cierra con el avatar Pixar, no con la foto real
+   («al final pusiste mi foto… hay que mejorar la consistencia»); uno en fotos reales no mete el avatar a media
+   pieza. Tampoco se usa como fondo una escena donde ya aparece el personaje si encima va otro retrato suyo (sale
+   doble).
+6. **Sello recto y en el margen:** el sello girado se salía del margen del titular y se leía «desacomodado»; ahora
+   va sin giro y alineado al texto. Lo girado queda para estampas sobre capturas («Sin comprobar», «Falso»).
+7. **Los personajes de una escena de «el que engaña» no pueden ser el avatar de Manuel.** En la primera tienda del
+   3-nov el cliente que muestra la captura falsa salió con la cara de Manuel por pasar sus referencias a todo: las
+   escenas sin Manuel se generan sin referencias.
+
+Casos: `Carruseles/2026-11-03-gates-musk-comprobantes/` y `Carruseles/2026-11-03-dueno-peligroso-ia/` (la v1 de
+cada uno en `_v1/`). Plantilla: `templates/tematico-fotos/` (v2; la anterior en `_v1-3x4/`), campos en `CAMPOS.md`.
+
+## 7. Tamaño: lo que usan los carruseles que más funcionan
+
+Dos mediciones del 3-nov-2026:
+
+| Muestra | Proporción | Carruseles | Mediana de likes | ≥10,000 likes |
+|---|---|---|---|---|
+| Radar del nicho (232, ~150 cuentas de IA y negocios, 2 días) | 4:5 | 186 | 368 | 8 (todos los ≥10k) |
+| | 3:4 | 34 | 440 | 0 |
+| Cuentas grandes (558, 105 cuentas, 120 días; `Carruseles/_entrenamiento/estudio-2026-11-03/`) | 4:5 | 443 | 3,711 | 112 (25 %) |
+| | 3:4 | 93 | 5,938 | 33 (35 %) |
+| | 1:1 | 12 | 8,839 | 5 |
+
+Lectura honesta: 4:5 es el estándar (8 de cada 10 carruseles y el formato de anuncios), pero 3:4 no rinde peor; en
+cuentas grandes tuvo mejor mediana. Nada de esto es causal (cuentas distintas, temas distintos). La plantilla usa 4:5
+por omisión y acepta `"formato": "3:4"`; lo que importa es que todo el carrusel tenga la misma y que nada importante
+quede en los bordes que recorta la cuadrícula del perfil.

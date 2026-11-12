@@ -1,0 +1,57 @@
+{
+  "acento": "#00d7c0",
+  "sello": "#f5c84c",
+  "firma": "@tucuenta",
+  "laminas": [
+    {
+      "layout": "impresa",
+      "titulo": "Este niño le pidió una foto a *Max Verstappen*",
+      "foto": "assets/img/nino-max.jpg",
+      "pos": "50% 40%",
+      "credito": "Foto: Formula 1 (@f1)"
+    },
+    {
+      "layout": "impresa",
+      "titulo": "Y una selfie a *Lewis Hamilton*",
+      "foto": "assets/img/nino-lewis.jpg",
+      "pos": "50% 30%",
+      "marco": { "x": 150, "y": 370, "w": 780, "h": 1000, "giro": 2.4 },
+      "credito": "Foto: Formula 1 (@f1)"
+    },
+    {
+      "layout": "sangre",
+      "foto": "assets/img/podio.jpg",
+      "sello": "Campeón del mundo",
+      "titulo": "El domingo, los dos lo cargaron *en hombros*",
+      "cuerpo": "Kimi Antonelli tiene 20 años: **el campeón más joven** en la historia de la F1.",
+      "credito": "Foto: Formula 1 (@f1)"
+    },
+    {
+      "layout": "antes-despues",
+      "foto": "assets/img/2026-encima-mercedes.jpg",
+      "antes": { "src": "assets/img/2018-junto-mercedes.jpg", "etiqueta": "2018", "zoom": 1.5, "origen": "30% 40%" },
+      "titulo": "En 2018 se paró junto a un Mercedes.\n*El domingo,\nencima del suyo.*",
+      "credito": "Fotos: Formula 1 (@f1)"
+    },
+    {
+      "layout": "idea",
+      "fondo": "assets/img/podio.jpg",
+      "titulo": "Todo gran logro empieza porque *alguien te inspiró*",
+      "cuerpo": "De niño admiraba a Max y a Lewis. El domingo compartió el podio con ellos. En la pista y en los negocios, **nadie llega solo.**",
+      "recuerdos": [
+        { "src": "assets/img/nino-max.jpg", "pos": "50% 40%" },
+        { "src": "assets/img/nino-lewis.jpg", "pos": "50% 30%" }
+      ]
+    },
+    {
+      "layout": "cierre",
+      "fondo": "assets/img/podio.jpg",
+      "titulo": "¿Quién es tu *Max*?\n¿Quién es tu *Lewis*?",
+      "cuerpo": "Etiqueta a la persona que te inspira a ser mejor **todos los días.**",
+      "nota": "Y si no está en Instagram, mándale esto.",
+      "foto": "assets/img/podio.jpg",
+      "pos": "50% 12%",
+      "credito": "Foto: Formula 1 (@f1)"
+    }
+  ]
+}
